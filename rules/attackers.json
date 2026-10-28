@@ -172,6 +172,17 @@
       "hp"
     ]
   },
+  "pathfinding": {
+    "notes": "Route cost per cell = travel time + safety_weight x expected damage. Wave 1 is mostly about speed; from wave 2 safety comes first, speed second.",
+    "safety_weight": {
+      "wave_1": 0.1,
+      "later_waves": 30
+    },
+    "safety_weight_meaning": "Seconds of extra travel an attacker accepts to avoid 1 HP of expected damage.",
+    "memory_decay_per_wave": 0.3,
+    "danger_spread_m": 4,
+    "knowledge": "Defender positions that fired or were seen, plus damage taken per cell, as of adaptation_lag waves ago. Newer positions are unknown to that unit."
+  },
   "units": {
     "recruit": {
       "name": "Recruit",
