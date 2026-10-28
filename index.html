@@ -4,7 +4,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
 <style>
-/* Layout: drone-feed field on the left (top on phones), a field-kit control panel beside it. Deliberately single dark theme: it is a night-vision / drone-feed world. */
+/* Layout: drone-feed field on the left (top on phones), a field-kit control panel beside it. Deliberately single dark theme: a drone-feed world. */
 :root {
   --bg: #11140f;
   --panel: #191d16;
@@ -27,7 +27,7 @@ body {
   padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-block: 16px 24px;
 }
-.app { display: grid; grid-template-columns: auto minmax(0, 320px); gap: 24px; justify-content: center; align-items: start; }
+.app { display: grid; grid-template-columns: auto minmax(0, 330px); gap: 24px; justify-content: center; align-items: start; }
 @media (max-width: 720px) { .app { grid-template-columns: minmax(0, 1fr); gap: 16px; } }
 
 .stage { display: flex; justify-content: center; min-width: 0; }
@@ -36,10 +36,10 @@ canvas { display: block; touch-action: none; cursor: crosshair; }
 .feed::after {
   content: ""; position: absolute; inset: 0; pointer-events: none;
   background:
-    repeating-linear-gradient(0deg, rgba(0,0,0,.10) 0 1px, transparent 1px 3px),
-    radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.45) 100%);
+    repeating-linear-gradient(0deg, rgba(0,0,0,.08) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at center, transparent 58%, rgba(0,0,0,.42) 100%);
 }
-.hud { position: absolute; font: 600 11px/1 var(--font-display); letter-spacing: .08em; text-transform: uppercase; color: var(--hud); text-shadow: 0 1px 2px rgba(0,0,0,.8); pointer-events: none; z-index: 1; }
+.hud { position: absolute; font: 600 11px/1 var(--font-display); letter-spacing: .08em; text-transform: uppercase; color: var(--hud); text-shadow: 0 1px 2px rgba(0,0,0,.85); pointer-events: none; z-index: 1; }
 .hud.tl { top: 8px; left: 8px; }
 .hud.tr { top: 8px; right: 8px; }
 .hud.tc { top: 24px; left: 0; right: 0; text-align: center; color: var(--hostile); opacity: .9; }
@@ -59,14 +59,20 @@ h1 { margin: 0; font: 600 28px/1.05 var(--font-display); letter-spacing: .04em; 
 .btn {
   font: 600 14px/1 var(--font-display); letter-spacing: .08em; text-transform: uppercase;
   color: var(--fg); background: transparent; border: 1px solid var(--rule); border-radius: 4px;
-  padding: 12px 14px; cursor: pointer;
+  padding: 12px 14px; cursor: pointer; text-align: center;
 }
 .btn:hover { border-color: var(--muted); }
-.btn:focus-visible, .seg button:focus-visible, .brush:focus-visible { outline: 2px solid var(--hud); outline-offset: 2px; }
+.btn:focus-visible, .seg button:focus-visible, .brush:focus-visible, .map:focus-visible { outline: 2px solid var(--hud); outline-offset: 2px; }
 .btn.primary { background: var(--hud); border-color: var(--hud); color: #15170f; width: 100%; padding: 16px; font-size: 16px; }
 .btn.primary:disabled { opacity: .45; cursor: default; }
 .row { display: flex; gap: 8px; flex-wrap: wrap; }
 .row .btn { flex: 1 1 0; }
+
+.maps { display: flex; flex-direction: column; gap: 6px; }
+.map { display: flex; flex-direction: column; gap: 2px; text-align: left; background: transparent; color: var(--fg); border: 1px solid var(--rule); border-radius: 4px; padding: 10px 12px; cursor: pointer; font: inherit; }
+.map strong { font: 600 14px/1.2 var(--font-display); letter-spacing: .04em; text-transform: uppercase; }
+.map span { font-size: 12px; color: var(--muted); line-height: 1.35; }
+.map[aria-pressed="true"] { border-color: var(--hud); background: rgba(212,191,99,.08); }
 
 .stats { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--rule); border-radius: 4px; }
 .stat { padding: 10px 8px; display: flex; flex-direction: column; gap: 4px; border-left: 1px solid var(--rule); }
@@ -88,13 +94,14 @@ h1 { margin: 0; font: 600 28px/1.05 var(--font-display); letter-spacing: .04em; 
 .brush strong { font-size: 13px; line-height: 1.2; }
 .brush small { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .note { font-size: 13px; color: var(--muted); margin: 8px 0 0; max-width: 60ch; }
+#fileIn { display: none; }
 </style>
 
 <div class="app">
   <div class="stage">
     <div class="feed" id="feed">
-      <canvas id="field" aria-label="Battlefield grid, 10 by 20 cells"></canvas>
-      <div class="hud tl"><span class="rec">● REC</span> &nbsp;Sector 07</div>
+      <canvas id="field" aria-label="Battlefield, 100 by 200 metres"></canvas>
+      <div class="hud tl"><span class="rec">● REC</span> &nbsp;<span id="hudName">Sector 07</span></div>
       <div class="hud tr">100 × 200 m</div>
       <div class="hud tc">Enemy approach</div>
       <div class="hud bc">Our line</div>
@@ -105,12 +112,17 @@ h1 { margin: 0; font: 600 28px/1.05 var(--font-display); letter-spacing: .04em; 
   <aside class="panel">
     <div class="brand">
       <h1>Treeline</h1>
-      <span class="sub">Milestone 1 · terrain and pathfinding</span>
+      <span class="sub">Test build · free terrain and pathfinding</span>
     </div>
 
     <section>
+      <p class="label">Field</p>
+      <div class="maps" id="maps"></div>
+    </section>
+
+    <section>
       <button class="btn primary" id="send">Send wave 1</button>
-      <p class="status" id="status">Attackers take the cheapest route across the terrain. Paint the field, then send a wave.</p>
+      <p class="status" id="status">Attackers take the cheapest route across the terrain. Draw on the field, then send a wave.</p>
       <div class="stats">
         <div class="stat"><b id="sWave">0</b><span>Wave</span></div>
         <div class="stat"><b id="sSent">0</b><span>Sent</span></div>
@@ -129,292 +141,504 @@ h1 { margin: 0; font: 600 28px/1.05 var(--font-display); letter-spacing: .04em; 
     </section>
 
     <section>
-      <p class="label">Terrain brush · move cost inf / veh</p>
+      <p class="label">Draw terrain · move cost inf / veh</p>
       <div class="brushes" id="brushes"></div>
-      <p class="note">Tap or drag on the field to paint. Painting locks while a wave runs; attackers plan their route when the wave starts.</p>
+      <p class="note">Drag on the field to draw. Drawing locks while a wave runs; attackers plan their route when the wave starts.</p>
+      <div class="row" style="margin-top:10px">
+        <button class="btn" id="undo" type="button">Undo stroke</button>
+        <button class="btn" id="reset" type="button">Reset field</button>
+      </div>
     </section>
 
-    <section class="row">
-      <button class="btn" id="reset" type="button">Default field</button>
-      <button class="btn" id="random" type="button">Random field</button>
+    <section>
+      <label class="btn" for="fileIn" style="display:block">Load field file</label>
+      <input type="file" id="fileIn" accept=".json,application/json">
+      <p class="note">Field files come from the OpenStreetMap import script in the repo.</p>
     </section>
   </aside>
 </div>
 
 <script>
 (() => {
-  const COLS = 10, ROWS = 20, N = COLS * ROWS, EXIT = -2;
-  const TERRAIN = {
-    open:   { label: 'Open field',  inf: 1, veh: 1,        chip: '#4f5537' },
-    tree:   { label: 'Tree line',   inf: 2, veh: 3,        chip: '#2f3d24' },
-    island: { label: 'Tree island', inf: 2, veh: Infinity, chip: '#212d19' },
-    hill:   { label: 'Hill',        inf: 2, veh: 2,        chip: '#6b6640' },
-    river:  { label: 'River',       inf: 4, veh: Infinity, chip: '#3e5560' },
-    ford:   { label: 'Ford',        inf: 2, veh: 2,        chip: '#6a8088' },
-    pipe:   { label: 'Pipeline',    inf: 2, veh: Infinity, chip: '#a8a89a' },
+  // ---------- World ----------
+  const W = 100, H = 200;                 // metres
+  const CELL = 2, GC = W / CELL, GR = H / CELL, NG = GC * GR, EXIT = -2;
+  const TYPES = {
+    open:       { label: 'Open field',      inf: 1,        veh: 1 },
+    hill:       { label: 'Hill',            inf: 1.6,      veh: 1.8 },
+    heap:       { label: 'Slag heap',       inf: 3,        veh: Infinity },
+    grove:      { label: 'Grove',           inf: 2,        veh: Infinity },
+    belt:       { label: 'Forest belt',     inf: 2,        veh: 3,        width: 14, chip: '#2f3d24' },
+    pond:       { label: 'Pond',            inf: Infinity, veh: Infinity },
+    river:      { label: 'River',           inf: 4,        veh: Infinity, width: 10, chip: '#3b525c' },
+    embankment: { label: 'Rail embankment', inf: 2,        veh: Infinity, width: 7,  chip: '#7a7458' },
+    balka:      { label: 'Balka',           inf: 1.2,      veh: Infinity, width: 15, chip: '#353d28' },
+    pipe:       { label: 'Pipeline',        inf: 2,        veh: Infinity, width: 3,  chip: '#b9b8aa' },
+    road:       { label: 'Dirt road',       inf: 0.8,      veh: 0.5,      width: 5,  chip: '#8a7f5c' },
+    ford:       { label: 'Ford',            inf: 2,        veh: 2 },
   };
-  const ORDER = ['open', 'tree', 'island', 'hill', 'river', 'ford', 'pipe'];
-  const SPEED = { inf: 1.4, veh: 2.6 }; // cells per second on open field
+  const PRIORITY = ['hill', 'heap', 'grove', 'belt', 'pond', 'river', 'embankment', 'balka', 'pipe', 'road', 'ford'];
+  const BRUSHES = ['belt', 'river', 'road', 'pipe', 'balka', 'embankment'];
+  const TKEYS = ['open', ...PRIORITY];
+  const SPEED = { inf: 10, veh: 16 };      // m/s on open field (game speed)
+  const RADIUS = { inf: 0.8, veh: 2.4 };
+
+  // ---------- Seeded helpers ----------
+  function rng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  function blob(cx, cy, rx, ry, seed, n = 16) {
+    const R = rng(seed), pts = [];
+    for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2, j = .8 + R() * .35; pts.push([cx + Math.cos(a) * rx * j, cy + Math.sin(a) * ry * j]); }
+    return pts;
+  }
+  function craters(seed, n, box) {
+    const R = rng(seed), pts = [];
+    for (let k = 0; k < n; k++) pts.push([box[0] + R() * (box[2] - box[0]), box[1] + R() * (box[3] - box[1]), .6 + R() * 1.6]);
+    return pts;
+  }
+
+  // ---------- Test fields (hand-built from typical eastern Ukrainian terrain) ----------
+  // @maps-begin
+  function buildMaps() {
+    return [
+      {
+        name: 'Forest belts', sector: 'Sector 07',
+        subtitle: 'Open farmland split by windbreak tree belts, a dirt road through the gaps. The typical Donbas field mosaic.',
+        features: [
+          { type: 'field', poly: [[0,0],[100,0],[100,52],[0,58]], tone: 'stubble', angle: 82 },
+          { type: 'field', poly: [[0,58],[100,52],[100,134],[0,118]], tone: 'plowed', angle: 8 },
+          { type: 'field', poly: [[0,118],[100,134],[100,200],[0,200]], tone: 'sunflower', angle: 86 },
+          { type: 'tracks', line: [[38,-2],[44,30],[58,50]] },
+          { type: 'tracks', line: [[90,140],[70,170],[64,202]] },
+          { type: 'craters', points: craters(11, 26, [0, 0, 100, 200]) },
+          { type: 'grove', poly: blob(30, 88, 9, 6, 3) },
+          { type: 'grove', poly: blob(12, 170, 7, 5, 4) },
+          { type: 'belt', line: [[-4,57],[30,55],[57,53]], width: 15 },
+          { type: 'belt', line: [[71,52],[104,51]], width: 15 },
+          { type: 'belt', line: [[86,60],[84,95],[85,127]], width: 12 },
+          { type: 'belt', line: [[-4,118],[14,121]], width: 14 },
+          { type: 'belt', line: [[28,123],[104,136]], width: 14 },
+          { type: 'pond', poly: blob(76, 170, 7, 4.5, 5) },
+          { type: 'road', line: [[66,-2],[64,30],[64,54],[58,90],[50,125],[42,160],[36,202]], width: 5 },
+        ],
+      },
+      {
+        name: 'Balka and railway', sector: 'Sector 12',
+        subtitle: 'A wooded ravine winding through the steppe and a rail embankment with one level crossing.',
+        features: [
+          { type: 'field', poly: [[0,0],[100,0],[100,96],[0,96]], tone: 'plowed', angle: 20 },
+          { type: 'field', poly: [[0,104],[100,104],[100,200],[0,200]], tone: 'stubble', angle: 95 },
+          { type: 'tracks', line: [[60,-2],[50,40],[30,70],[18,96]] },
+          { type: 'craters', points: craters(21, 30, [0, 0, 100, 200]) },
+          { type: 'grove', poly: blob(28, 30, 10, 7, 6) },
+          { type: 'grove', poly: blob(80, 142, 8, 6, 7) },
+          { type: 'pond', poly: blob(20, 164, 5, 4, 8) },
+          { type: 'embankment', line: [[-2,100],[102,100]], width: 7 },
+          { type: 'balka', line: [[93,-2],[82,28],[64,58],[56,92],[44,122],[30,146],[22,158]], width: 15 },
+          { type: 'pipe', line: [[50,176],[102,176]], width: 3 },
+          { type: 'road', line: [[8,-2],[12,50],[16,100],[24,150],[34,202]], width: 5 },
+        ],
+      },
+      {
+        name: 'River crossing', sector: 'Sector 19',
+        subtitle: 'A meandering river with floodplain woods, one ford, a broken bridge and a slag heap behind our line.',
+        features: [
+          { type: 'field', poly: [[0,0],[100,0],[100,82],[0,78]], tone: 'stubble', angle: 75 },
+          { type: 'field', poly: [[0,126],[100,126],[100,200],[0,200]], tone: 'plowed', angle: 5 },
+          { type: 'tracks', line: [[20,-2],[28,40],[36,84]] },
+          { type: 'craters', points: craters(31, 18, [20, 70, 60, 130]) },
+          { type: 'craters', points: craters(32, 14, [0, 0, 100, 200]) },
+          { type: 'hill', poly: blob(84, 40, 13, 10, 9) },
+          { type: 'heap', poly: blob(16, 168, 11, 10, 10) },
+          { type: 'grove', poly: blob(18, 113, 12, 6, 11) },
+          { type: 'grove', poly: blob(52, 119, 9, 5, 12) },
+          { type: 'grove', poly: blob(91, 123, 8, 5, 13) },
+          { type: 'pond', poly: blob(22, 66, 9, 3.5, 14) },
+          { type: 'river', line: [[-4,86],[18,96],[38,90],[54,101],[68,114],[84,108],[104,96]], width: 12 },
+          { type: 'road', line: [[78,-2],[74,40],[72,103]], width: 5 },
+          { type: 'road', line: [[70,121],[76,160],[82,202]], width: 5 },
+          { type: 'ford', poly: blob(36, 91, 6, 7, 15) },
+        ],
+      },
+    ];
+  }
+  // @maps-end
+
+  const MAPS = buildMaps();
+  let current = 0, features = [], strokes = [];
+
+  // ---------- Geometry ----------
+  function distSeg(px, py, ax, ay, bx, by) {
+    const dx = bx - ax, dy = by - ay, l = dx * dx + dy * dy;
+    let t = l ? ((px - ax) * dx + (py - ay) * dy) / l : 0;
+    t = Math.max(0, Math.min(1, t));
+    return Math.hypot(ax + t * dx - px, ay + t * dy - py);
+  }
+  function distLine(px, py, pts) { let m = Infinity; for (let i = 1; i < pts.length; i++) m = Math.min(m, distSeg(px, py, pts[i-1][0], pts[i-1][1], pts[i][0], pts[i][1])); return m; }
+  function inPoly(px, py, pts) {
+    let c = false;
+    for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+      const xi = pts[i][0], yi = pts[i][1], xj = pts[j][0], yj = pts[j][1];
+      if ((yi > py) !== (yj > py) && px < (xj - xi) * (py - yi) / (yj - yi) + xi) c = !c;
+    }
+    return c;
+  }
+  const half = f => Math.max((f.width || 0) / 2, CELL * .75);
+  function bbox(f) {
+    const pts = f.poly || f.line, pad = f.line ? half(f) : 0;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const [x, y] of pts) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
+    return [x0 - pad, y0 - pad, x1 + pad, y1 + pad];
+  }
+  const covers = (f, x, y) => f.poly ? inPoly(x, y, f.poly) : distLine(x, y, f.line) <= half(f);
+
+  // ---------- Nav grid (hidden) ----------
+  const terr = new Uint8Array(NG);
+  const costs = { inf: new Float32Array(NG), veh: new Float32Array(NG) };
+  function rasterize() {
+    const list = features.filter(f => PRIORITY.includes(f.type) && (f.poly || f.line))
+      .map(f => ({ f, p: PRIORITY.indexOf(f.type), b: bbox(f) }))
+      .sort((a, b) => a.p - b.p);
+    for (let r = 0; r < GR; r++) for (let c = 0; c < GC; c++) {
+      const x = (c + .5) * CELL, y = (r + .5) * CELL, i = r * GC + c;
+      let t = 0;
+      for (const e of list) {
+        if (x < e.b[0] || x > e.b[2] || y < e.b[1] || y > e.b[3]) continue;
+        if (covers(e.f, x, y)) t = e.p + 1;
+      }
+      terr[i] = t;
+      const T = TYPES[TKEYS[t]];
+      costs.inf[i] = T.inf; costs.veh[i] = T.veh;
+    }
+  }
+
+  // Binary heap for Dijkstra
+  function makeHeap(cap) {
+    const d = new Float64Array(cap * 8), v = new Int32Array(cap * 8); let n = 0;
+    return {
+      get size() { return n; },
+      push(dd, vv) { let i = n++; d[i] = dd; v[i] = vv; while (i > 0) { const p = (i - 1) >> 1; if (d[p] <= d[i]) break; [d[p], d[i]] = [d[i], d[p]]; [v[p], v[i]] = [v[i], v[p]]; i = p; } },
+      pop() { const rd = d[0], rv = v[0]; n--; d[0] = d[n]; v[0] = v[n]; let i = 0; for (;;) { const l = 2 * i + 1, r = l + 1; let m = i; if (l < n && d[l] < d[m]) m = l; if (r < n && d[r] < d[m]) m = r; if (m === i) break; [d[m], d[i]] = [d[i], d[m]]; [v[m], v[i]] = [v[i], v[m]]; i = m; } return [rd, rv]; },
+    };
+  }
   const DIRS = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
-  const C = {
-    field: '#4f5537', speckA: '#5b6242', speckB: '#444a2f', grid: 'rgba(0,0,0,.20)',
-    tree: '#2c3a22', treeHi: '#3a4b2b', island: '#1f2b18', islandHi: '#2c3b22',
-    hill: '#5f5b3a', contour: '#7d7650', river: '#3b525c', riverHi: '#55707b',
-    ford: '#587078', stone: '#9aa79c', pipe: '#b3b3a4', pipeEdge: '#2a2a24',
-    arrow: 'rgba(235,230,195,.5)', route: '#d4bf63', blocked: 'rgba(255,90,64,.32)',
-    hostile: '#ff5a40', hostileEdge: '#1b0b06', friendly: '#6fb1e6',
-  };
-
-  const idx = (c, r) => r * COLS + c;
-  const inside = (c, r) => c >= 0 && c < COLS && r >= 0 && r < ROWS;
-  const hash = (i, k) => { const x = Math.sin(i * 127.1 + k * 311.7) * 43758.5453; return x - Math.floor(x); };
-
-  let grid = presetField();
-  const cost = (i, cls) => TERRAIN[grid[i]][cls];
-
-  function blank() { return new Array(N).fill('open'); }
-  function setter(g) { return (c, r, t) => { if (inside(c, r)) g[idx(c, r)] = t; }; }
-
-  function presetField() {
-    const g = blank(), set = setter(g);
-    for (let c = 0; c <= 6; c++) set(c, 4, 'tree');
-    set(8, 4, 'tree'); set(9, 4, 'tree');
-    set(6, 7, 'island'); set(7, 7, 'island'); set(6, 8, 'island');
-    for (let c = 0; c < COLS; c++) set(c, 10, 'river');
-    set(1, 10, 'ford'); set(8, 10, 'ford');
-    for (let c = 3; c <= 9; c++) set(c, 13, 'tree');
-    set(1, 15, 'hill'); set(2, 15, 'hill'); set(1, 16, 'hill'); set(2, 16, 'hill');
-    for (let c = 4; c <= 9; c++) set(c, 17, 'pipe');
-    return g;
-  }
-
-  function randomField() {
-    const g = blank(), set = setter(g), R = Math.random, ri = n => Math.floor(R() * n);
-    const lines = 2 + ri(2);
-    for (let k = 0; k < lines; k++) {
-      const r = 2 + ri(16), len = 4 + ri(6), start = ri(COLS - len + 1), gap = start + ri(len);
-      for (let c = start; c < start + len; c++) if (c !== gap) set(c, r, 'tree');
-    }
-    for (let k = 0, n = 1 + ri(2); k < n; k++) {
-      const c = ri(COLS - 1), r = 1 + ri(ROWS - 3);
-      set(c, r, 'island'); set(c + 1, r, 'island'); if (R() < .6) set(c, r + 1, 'island');
-    }
-    if (R() < .75) {
-      const r = 6 + ri(8);
-      for (let c = 0; c < COLS; c++) set(c, r, 'river');
-      for (let k = 0, n = 1 + ri(2); k < n; k++) set(ri(COLS), r, 'ford');
-    }
-    if (R() < .8) { const c = ri(COLS - 1), r = 2 + ri(ROWS - 4); set(c, r, 'hill'); set(c + 1, r, 'hill'); set(c, r + 1, 'hill'); set(c + 1, r + 1, 'hill'); }
-    if (R() < .6) {
-      const r = 3 + ri(ROWS - 5), len = 4 + ri(4), fromLeft = R() < .5;
-      for (let k = 0; k < len; k++) set(fromLeft ? k : COLS - 1 - k, r, 'pipe');
-    }
-    return g;
-  }
-
-  // Flow field: Dijkstra from the rear edge. next[i] = the cell to step into, EXIT = leave through the rear edge, -1 = no path.
   function computeFlow(cls) {
-    const dist = new Float64Array(N).fill(Infinity), next = new Int16Array(N).fill(-1), done = new Uint8Array(N);
-    for (let c = 0; c < COLS; c++) {
-      const i = idx(c, ROWS - 1), k = cost(i, cls);
-      if (k < Infinity) { dist[i] = k / 2; next[i] = EXIT; }
-    }
-    for (;;) {
-      let best = -1, bd = Infinity;
-      for (let i = 0; i < N; i++) if (!done[i] && dist[i] < bd) { bd = dist[i]; best = i; }
-      if (best < 0) break;
-      done[best] = 1;
-      const bc = best % COLS, br = (best - bc) / COLS, kb = cost(best, cls);
+    const k = costs[cls], dist = new Float64Array(NG).fill(Infinity), next = new Int32Array(NG).fill(-1), heap = makeHeap(NG);
+    for (let c = 0; c < GC; c++) { const i = (GR - 1) * GC + c; if (k[i] < Infinity) { dist[i] = k[i] / 2; next[i] = EXIT; heap.push(dist[i], i); } }
+    while (heap.size) {
+      const [d, i] = heap.pop();
+      if (d > dist[i]) continue;
+      const c = i % GC, r = (i - c) / GC;
       for (const [dx, dy] of DIRS) {
-        const nc = bc + dx, nr = br + dy;
-        if (!inside(nc, nr)) continue;
-        const n = idx(nc, nr);
-        if (done[n]) continue;
-        const kn = cost(n, cls);
-        if (kn === Infinity) continue;
-        if (dx && dy && (cost(idx(bc + dx, br), cls) === Infinity || cost(idx(bc, br + dy), cls) === Infinity)) continue;
-        const w = (kb + kn) / 2 * (dx && dy ? Math.SQRT2 : 1);
-        if (bd + w < dist[n]) { dist[n] = bd + w; next[n] = best; }
+        const nc = c + dx, nr = r + dy;
+        if (nc < 0 || nc >= GC || nr < 0 || nr >= GR) continue;
+        const n = nr * GC + nc;
+        if (k[n] === Infinity) continue;
+        if (dx && dy && (k[r * GC + nc] === Infinity || k[nr * GC + c] === Infinity)) continue;
+        const nd = d + (k[i] + k[n]) / 2 * (dx && dy ? Math.SQRT2 : 1);
+        if (nd < dist[n]) { dist[n] = nd; next[n] = i; heap.push(nd, n); }
       }
     }
     return { dist, next };
   }
+  let flows = null;
+  const refresh = () => { rasterize(); flows = { inf: computeFlow('inf'), veh: computeFlow('veh') }; terrainDirty = true; };
+  const cellAt = (x, y) => Math.min(GR - 1, Math.max(0, Math.floor(y / CELL))) * GC + Math.min(GC - 1, Math.max(0, Math.floor(x / CELL)));
+  const ccx = i => (i % GC + .5) * CELL, ccy = i => (Math.floor(i / GC) + .5) * CELL;
 
-  let flows = { inf: computeFlow('inf'), veh: computeFlow('veh') };
-  const refreshFlows = () => { flows = { inf: computeFlow('inf'), veh: computeFlow('veh') }; };
-
-  // ---------- Canvas ----------
+  // ---------- Rendering ----------
   const canvas = document.getElementById('field'), ctx = canvas.getContext('2d');
   const feed = document.getElementById('feed');
-  let S = 32, dpr = 1;
+  const layer = document.createElement('canvas'), lctx = layer.getContext('2d');
+  let S = 3.6, dpr = 1, terrainDirty = true;
+  const P = {
+    ground: '#535a3a', grass: '#4b5234',
+    stubble: ['#6b6b45', 'rgba(150,140,90,.35)'], plowed: ['#4a4430', 'rgba(25,20,10,.35)'], sunflower: ['#4c5530', 'rgba(30,45,18,.55)'],
+    track: 'rgba(50,46,30,.45)', crater: '#2c2a1e', craterRim: 'rgba(160,150,110,.35)',
+    hill: '#5d5c3d', contour: 'rgba(150,140,95,.55)', heap: '#34332d', heapRing: 'rgba(120,115,100,.5)',
+    canopy: '#2b3a22', canopyHi: '#3a4c2b', grove: '#22301b', groveHi: '#2f4024', shadow: 'rgba(10,12,6,.38)',
+    water: '#3a5058', waterHi: 'rgba(130,160,165,.35)', bank: '#4a4630',
+    ford: '#5a7178', stone: '#a3ab9e', balka: '#3d442d', balkaIn: '#30382a',
+    gravel: '#7a7458', rail: '#2d2b25', pipe: '#b9b8aa', pipeEdge: '#2b2a24',
+    road: '#8a7f5c', rut: '#6f6648',
+    route: '#d4bf63', blocked: 'rgba(255,90,64,.5)',
+    hostile: '#d24a34', hostileEdge: '#2a0f08', friendly: '#6fb1e6',
+  };
 
   function resize() {
     const stageW = feed.parentElement.clientWidth;
     const narrow = window.innerWidth <= 720;
     const maxH = Math.max(360, window.innerHeight - (narrow ? 72 : 40));
-    S = Math.max(14, Math.floor(Math.min(stageW / COLS, maxH / ROWS)));
+    S = Math.max(1.6, Math.min(stageW / W, maxH / H));
+    S = Math.floor(S * 10) / 10;
     dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = S * COLS * dpr; canvas.height = S * ROWS * dpr;
-    canvas.style.width = S * COLS + 'px'; canvas.style.height = S * ROWS + 'px';
-    document.getElementById('scalebar').style.width = S * 5 + 'px';
-    draw();
+    for (const cv of [canvas, layer]) { cv.width = Math.round(W * S * dpr); cv.height = Math.round(H * S * dpr); }
+    canvas.style.width = W * S + 'px'; canvas.style.height = H * S + 'px';
+    document.getElementById('scalebar').style.width = 50 * S + 'px';
+    terrainDirty = true;
   }
 
-  function drawCell(i) {
-    const c = i % COLS, r = (i - c) / COLS, x = c * S, y = r * S, t = grid[i];
-    const base = t === 'river' ? C.river : t === 'ford' ? C.ford : t === 'hill' ? C.hill : C.field;
-    ctx.fillStyle = base; ctx.fillRect(x, y, S, S);
-    if (t === 'open' || t === 'pipe' || t === 'tree' || t === 'island') {
-      for (let k = 0; k < 6; k++) {
-        ctx.fillStyle = k % 2 ? C.speckA : C.speckB;
-        ctx.fillRect(x + hash(i, k) * S, y + hash(i, k + 9) * S, S * .07, S * .07);
-      }
-    }
-    if (t === 'tree' || t === 'island') {
-      const n = t === 'island' ? 9 : 6;
-      for (let k = 0; k < n; k++) {
-        const cx = x + (.15 + hash(i, k + 20) * .7) * S, cy = y + (.15 + hash(i, k + 40) * .7) * S;
-        const rr = S * (t === 'island' ? .2 : .15) * (.75 + hash(i, k + 60) * .5);
-        ctx.fillStyle = t === 'island' ? C.island : C.tree;
-        ctx.beginPath(); ctx.arc(cx, cy, rr, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = t === 'island' ? C.islandHi : C.treeHi;
-        ctx.beginPath(); ctx.arc(cx - rr * .3, cy - rr * .3, rr * .45, 0, Math.PI * 2); ctx.fill();
-      }
-    }
-    if (t === 'hill') {
-      ctx.strokeStyle = C.contour; ctx.lineWidth = 1;
-      for (let k = 1; k <= 3; k++) { ctx.beginPath(); ctx.ellipse(x + S / 2, y + S / 2, S * .14 * k, S * .1 * k, 0, 0, Math.PI * 2); ctx.stroke(); }
-    }
-    if (t === 'river' || t === 'ford') {
-      ctx.strokeStyle = C.riverHi; ctx.lineWidth = 1;
-      for (let k = 0; k < 2; k++) {
-        const yy = y + S * (.3 + k * .4);
-        ctx.beginPath(); ctx.moveTo(x, yy);
-        ctx.bezierCurveTo(x + S * .33, yy - S * .08, x + S * .66, yy + S * .08, x + S, yy); ctx.stroke();
-      }
-      if (t === 'ford') {
-        ctx.fillStyle = C.stone;
-        for (let k = 0; k < 7; k++) { ctx.beginPath(); ctx.arc(x + hash(i, k + 80) * S, y + hash(i, k + 90) * S, S * .05, 0, Math.PI * 2); ctx.fill(); }
-      }
-    }
-    if (t === 'pipe') {
-      const nb = (dc, dr) => inside(c + dc, r + dr) && grid[idx(c + dc, r + dr)] === 'pipe';
-      const ends = [[1,0],[-1,0],[0,1],[0,-1]].filter(([a, b]) => nb(a, b));
-      if (!ends.length) ends.push([1,0],[-1,0]);
-      for (const [lw, col] of [[S * .22, C.pipeEdge], [S * .14, C.pipe]]) {
-        ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.lineCap = 'butt';
-        for (const [a, b] of ends) { ctx.beginPath(); ctx.moveTo(x + S / 2, y + S / 2); ctx.lineTo(x + S / 2 + a * S / 2, y + S / 2 + b * S / 2); ctx.stroke(); }
-      }
+  function pathLine(g, pts) { g.beginPath(); g.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1]); }
+  function polyPath(g, pts) { pathLine(g, pts); g.closePath(); }
+  function strokeLine(g, pts, w, col, dash) { g.save(); g.lineWidth = w; g.strokeStyle = col; g.lineJoin = 'round'; g.lineCap = 'round'; if (dash) g.setLineDash(dash); pathLine(g, pts); g.stroke(); g.restore(); }
+  function along(pts, step, fn) {
+    for (let i = 1; i < pts.length; i++) {
+      const [ax, ay] = pts[i-1], [bx, by] = pts[i], len = Math.hypot(bx - ax, by - ay);
+      const ux = (bx - ax) / len, uy = (by - ay) / len;
+      for (let s = 0; s < len; s += step) fn(ax + ux * s, ay + uy * s, ux, uy);
     }
   }
+  function scaled(pts, k) {
+    let cx = 0, cy = 0; for (const [x, y] of pts) { cx += x; cy += y; } cx /= pts.length; cy /= pts.length;
+    return pts.map(([x, y]) => [cx + (x - cx) * k, cy + (y - cy) * k]);
+  }
+  function canopy(g, circles, dark, hi) {
+    g.fillStyle = P.shadow;
+    for (const [x, y, r] of circles) { g.beginPath(); g.arc(x + .9, y + 1.1, r, 0, 7); g.fill(); }
+    g.fillStyle = dark;
+    for (const [x, y, r] of circles) { g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); }
+    g.fillStyle = hi;
+    for (const [x, y, r] of circles) { g.beginPath(); g.arc(x - r * .3, y - r * .3, r * .45, 0, 7); g.fill(); }
+  }
+  function lineCircles(f, seed) {
+    const R = rng(seed), out = [], hw = f.width / 2;
+    along(f.line, 1.3, (x, y, ux, uy) => {
+      for (let k = 0; k < 2; k++) {
+        const r = 1.2 + R() * 1.3, off = (R() * 2 - 1) * Math.max(0, hw - r * .8);
+        out.push([x - uy * off, y + ux * off, r]);
+      }
+    });
+    return out;
+  }
+  function polyCircles(f, seed) {
+    const R = rng(seed), b = bbox(f), out = [];
+    const area = (b[2] - b[0]) * (b[3] - b[1]), n = Math.round(area / 2.6);
+    for (let k = 0; k < n; k++) {
+      const x = b[0] + R() * (b[2] - b[0]), y = b[1] + R() * (b[3] - b[1]);
+      if (inPoly(x, y, f.poly)) out.push([x, y, 1.3 + R() * 1.4]);
+    }
+    return out;
+  }
+
+  function renderTerrain() {
+    const g = lctx;
+    g.setTransform(S * dpr, 0, 0, S * dpr, 0, 0);
+    g.fillStyle = P.ground; g.fillRect(0, 0, W, H);
+    const byType = t => features.filter(f => f.type === t);
+    // crop fields with furrows
+    for (const f of byType('field')) {
+      const [base, line] = P[f.tone] || P.stubble;
+      g.save(); polyPath(g, f.poly); g.fillStyle = base; g.fill(); g.clip();
+      const a = (f.angle || 0) * Math.PI / 180, ux = Math.cos(a), uy = Math.sin(a), L = 260;
+      if (f.tone === 'sunflower') {
+        g.fillStyle = line;
+        for (let s = -L; s < L; s += 1.8) for (let t = -L; t < L; t += 1.4) {
+          const x = 50 + ux * t - uy * s, y = 100 + uy * t + ux * s;
+          if (x > -2 && x < W + 2 && y > -2 && y < H + 2) { g.beginPath(); g.arc(x, y, .38, 0, 7); g.fill(); }
+        }
+      } else {
+        g.strokeStyle = line; g.lineWidth = .35;
+        g.beginPath();
+        for (let s = -L; s < L; s += 1.6) { const x = 50 - uy * s, y = 100 + ux * s; g.moveTo(x - ux * L, y - uy * L); g.lineTo(x + ux * L, y + uy * L); }
+        g.stroke();
+      }
+      g.restore();
+    }
+    for (const f of byType('tracks')) { strokeLine(g, f.line.map(([x, y]) => [x - 1, y]), .5, P.track); strokeLine(g, f.line.map(([x, y]) => [x + 1, y]), .5, P.track); }
+    for (const f of byType('craters')) for (const [x, y, r] of f.points) {
+      g.fillStyle = P.craterRim; g.beginPath(); g.arc(x, y, r * 1.45, 0, 7); g.fill();
+      g.fillStyle = P.crater; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill();
+    }
+    for (const f of byType('hill')) {
+      polyPath(g, f.poly); g.fillStyle = P.hill; g.fill();
+      g.strokeStyle = P.contour; g.lineWidth = .4;
+      for (const k of [1, .72, .46, .22]) { polyPath(g, scaled(f.poly, k)); g.stroke(); }
+    }
+    for (const f of byType('heap')) {
+      for (const [k, col] of [[1, '#3c3a33'], [.75, '#34332d'], [.5, '#2c2b26'], [.25, '#25241f']]) { polyPath(g, scaled(f.poly, k)); g.fillStyle = col; g.fill(); }
+      g.strokeStyle = P.heapRing; g.lineWidth = .35;
+      for (const k of [.88, .62, .37]) { polyPath(g, scaled(f.poly, k)); g.stroke(); }
+    }
+    for (const f of byType('pond')) {
+      polyPath(g, f.poly); g.fillStyle = P.bank; g.lineWidth = 2.2; g.strokeStyle = P.bank; g.stroke();
+      g.fillStyle = P.water; g.fill();
+    }
+    for (const f of byType('river')) {
+      if (f.poly) { polyPath(g, f.poly); g.lineWidth = 2.5; g.strokeStyle = P.bank; g.stroke(); g.fillStyle = P.water; g.fill(); continue; }
+      strokeLine(g, f.line, f.width + 2.5, P.bank);
+      strokeLine(g, f.line, f.width, P.water);
+      strokeLine(g, f.line, .5, P.waterHi, [3, 4]);
+    }
+    for (const f of byType('ford')) {
+      const R = rng(77);
+      polyPath(g, f.poly); g.fillStyle = P.ford; g.fill();
+      g.fillStyle = P.stone; const b = bbox(f);
+      for (let k = 0; k < 40; k++) { const x = b[0] + R() * (b[2] - b[0]), y = b[1] + R() * (b[3] - b[1]); if (inPoly(x, y, f.poly)) { g.beginPath(); g.arc(x, y, .35 + R() * .3, 0, 7); g.fill(); } }
+    }
+    for (const f of byType('embankment')) {
+      strokeLine(g, f.line, f.width, P.gravel);
+      strokeLine(g, f.line, f.width * .45, '#6a654c');
+      g.strokeStyle = P.rail; g.lineWidth = .3;
+      along(f.line, 1.4, (x, y, ux, uy) => { g.beginPath(); g.moveTo(x - uy * 1.4, y + ux * 1.4); g.lineTo(x + uy * 1.4, y - ux * 1.4); g.stroke(); });
+      strokeLine(g, f.line.map(([x, y]) => [x, y - .75]), .25, P.rail);
+      strokeLine(g, f.line.map(([x, y]) => [x, y + .75]), .25, P.rail);
+    }
+    for (const f of byType('balka')) {
+      strokeLine(g, f.line, f.width, P.balka);
+      strokeLine(g, f.line, f.width * .55, P.balkaIn);
+    }
+    for (const f of byType('road')) {
+      strokeLine(g, f.line, f.width, P.road);
+      strokeLine(g, f.line, f.width * .55, P.rut);
+      strokeLine(g, f.line, f.width * .2, P.road);
+    }
+    for (const f of byType('pipe')) {
+      strokeLine(g, f.line, 1.5, P.pipeEdge);
+      strokeLine(g, f.line, 1, P.pipe);
+      g.fillStyle = P.pipeEdge; along(f.line, 14, (x, y) => { g.fillRect(x - .4, y - .9, .8, 1.8); });
+    }
+    features.forEach((f, i) => {
+      if (f.type === 'belt') canopy(g, f.line ? lineCircles(f, 100 + i) : polyCircles(f, 100 + i), P.canopy, P.canopyHi);
+      if (f.type === 'grove') canopy(g, polyCircles(f, 200 + i), P.grove, P.groveHi);
+      if (f.type === 'balka') canopy(g, lineCircles({ line: f.line, width: f.width * .45 }, 300 + i), P.grove, P.groveHi);
+    });
+    terrainDirty = false;
+  }
+
+  const hatch = (() => {
+    const c = document.createElement('canvas'); c.width = c.height = 8;
+    const g = c.getContext('2d'); g.strokeStyle = P.blocked; g.lineWidth = 1.4;
+    g.beginPath(); g.moveTo(0, 8); g.lineTo(8, 0); g.moveTo(-2, 2); g.lineTo(2, -2); g.moveTo(6, 10); g.lineTo(10, 6); g.stroke();
+    return c;
+  })();
 
   function drawOverlay(cls) {
+    ctx.save();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = ctx.strokeStyle = ctx.createPattern(hatch, 'repeat');
+    for (const f of features) {
+      const T = TYPES[f.type];
+      if (!T || T[cls] !== Infinity) continue;
+      if (f.poly) { ctx.beginPath(); f.poly.forEach(([x, y], k) => k ? ctx.lineTo(x * S, y * S) : ctx.moveTo(x * S, y * S)); ctx.closePath(); ctx.fill(); }
+      else { ctx.lineWidth = f.width * S; ctx.lineJoin = ctx.lineCap = 'round'; ctx.beginPath(); f.line.forEach(([x, y], k) => k ? ctx.lineTo(x * S, y * S) : ctx.moveTo(x * S, y * S)); ctx.stroke(); }
+    }
+    ctx.restore();
     const F = flows[cls];
-    for (let i = 0; i < N; i++) {
-      const c = i % COLS, r = (i - c) / COLS, x = c * S, y = r * S;
-      if (cost(i, cls) === Infinity || F.next[i] === -1) {
-        ctx.strokeStyle = C.blocked; ctx.lineWidth = 1;
-        ctx.save(); ctx.beginPath(); ctx.rect(x, y, S, S); ctx.clip();
-        for (let d = -S; d < S; d += S / 4) { ctx.beginPath(); ctx.moveTo(x + d, y + S); ctx.lineTo(x + d + S, y); ctx.stroke(); }
-        ctx.restore();
-        continue;
-      }
-      const n = F.next[i];
-      const tx = n === EXIT ? c : n % COLS, ty = n === EXIT ? r + 1 : Math.floor(n / COLS);
-      const dx = tx - c, dy = ty - r, len = Math.hypot(dx, dy);
-      const ux = dx / len, uy = dy / len, cx = x + S / 2, cy = y + S / 2, a = S * .17;
-      ctx.strokeStyle = C.arrow; ctx.lineWidth = 1.2;
-      ctx.beginPath();
-      ctx.moveTo(cx - ux * a, cy - uy * a); ctx.lineTo(cx + ux * a, cy + uy * a);
-      ctx.lineTo(cx + ux * a - (ux * .6 - uy * .45) * a, cy + uy * a - (uy * .6 + ux * .45) * a);
-      ctx.moveTo(cx + ux * a, cy + uy * a);
-      ctx.lineTo(cx + ux * a - (ux * .6 + uy * .45) * a, cy + uy * a - (uy * .6 - ux * .45) * a);
-      ctx.stroke();
-    }
-    // Cheapest full route from the best entry cell
     let start = -1, bd = Infinity;
-    for (let c = 0; c < COLS; c++) { const d = F.dist[idx(c, 0)]; if (d < bd) { bd = d; start = idx(c, 0); } }
+    for (let c = 0; c < GC; c++) if (F.dist[c] < bd) { bd = F.dist[c]; start = c; }
     if (start < 0) return;
-    ctx.strokeStyle = C.route; ctx.lineWidth = Math.max(2, S * .08); ctx.lineJoin = 'round'; ctx.setLineDash([S * .25, S * .15]);
-    ctx.beginPath();
-    let i = start, sc = i % COLS;
-    ctx.moveTo(sc * S + S / 2, 0);
-    for (let guard = 0; guard < N && i >= 0; guard++) {
-      const c = i % COLS, r = (i - c) / COLS;
-      ctx.lineTo(c * S + S / 2, r * S + S / 2);
-      if (F.next[i] === EXIT) { ctx.lineTo(c * S + S / 2, ROWS * S); break; }
-      i = F.next[i];
-    }
-    ctx.stroke(); ctx.setLineDash([]);
+    const raw = [[ccx(start), 0]];
+    for (let i = start, guard = 0; i >= 0 && guard < NG; guard++) { raw.push([ccx(i), ccy(i)]); if (F.next[i] === EXIT) { raw.push([ccx(i), H]); break; } i = F.next[i]; }
+    const pts = raw.map((p, k) => {
+      if (k === 0 || k === raw.length - 1) return p;
+      let sx = 0, sy = 0, n = 0;
+      for (let j = Math.max(0, k - 3); j <= Math.min(raw.length - 1, k + 3); j++) { sx += raw[j][0]; sy += raw[j][1]; n++; }
+      return [sx / n, sy / n];
+    });
+    ctx.save(); ctx.setTransform(S * dpr, 0, 0, S * dpr, 0, 0);
+    strokeLine(ctx, pts, 1.4, 'rgba(0,0,0,.35)');
+    strokeLine(ctx, pts, .8, P.route, [3, 2]);
+    ctx.restore();
   }
 
   function drawUnits() {
+    ctx.save(); ctx.setTransform(S * dpr, 0, 0, S * dpr, 0, 0);
     for (const u of units) {
       if (u.state === 'through') continue;
-      const px = (u.x + u.jx) * S, py = (u.y + u.jy) * S;
-      ctx.lineWidth = 1.5; ctx.strokeStyle = C.hostileEdge;
-      ctx.fillStyle = u.state === 'stuck' ? 'rgba(255,90,64,.45)' : C.hostile;
+      ctx.globalAlpha = u.state === 'stuck' ? .5 : 1;
       if (u.cls === 'inf') {
-        ctx.beginPath(); ctx.arc(px, py, Math.max(2.5, S * .11), 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = P.shadow; ctx.beginPath(); ctx.arc(u.x + .35, u.y + .45, RADIUS.inf, 0, 7); ctx.fill();
+        ctx.fillStyle = P.hostile; ctx.strokeStyle = P.hostileEdge; ctx.lineWidth = .3;
+        ctx.beginPath(); ctx.arc(u.x, u.y, RADIUS.inf, 0, 7); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = P.hostileEdge; ctx.beginPath(); ctx.arc(u.x, u.y, RADIUS.inf * .4, 0, 7); ctx.fill();
       } else {
-        const h = Math.max(5, S * .24);
-        ctx.beginPath(); ctx.moveTo(px, py - h); ctx.lineTo(px + h, py); ctx.lineTo(px, py + h); ctx.lineTo(px - h, py); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.save(); ctx.translate(u.x, u.y); ctx.rotate(u.heading);
+        ctx.fillStyle = P.shadow; ctx.fillRect(-3.1 + .5, -1.75 + .6, 6.2, 3.5);
+        ctx.fillStyle = P.hostile; ctx.strokeStyle = P.hostileEdge; ctx.lineWidth = .3;
+        ctx.fillRect(-3.1, -1.75, 6.2, 3.5); ctx.strokeRect(-3.1, -1.75, 6.2, 3.5);
+        ctx.fillStyle = '#a83a28'; ctx.fillRect(-3.1, -1.75, 6.2, .55); ctx.fillRect(-3.1, 1.2, 6.2, .55);
+        ctx.strokeStyle = P.hostileEdge; ctx.lineWidth = .45; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(4.4, 0); ctx.stroke();
+        ctx.fillStyle = '#b8402d'; ctx.beginPath(); ctx.arc(-.2, 0, 1.15, 0, 7); ctx.fill(); ctx.lineWidth = .25; ctx.stroke();
+        ctx.restore();
       }
     }
+    ctx.globalAlpha = 1;
+    ctx.restore();
   }
 
   function draw() {
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    for (let i = 0; i < N; i++) drawCell(i);
-    ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
-    ctx.beginPath();
-    for (let c = 1; c < COLS; c++) { ctx.moveTo(c * S + .5, 0); ctx.lineTo(c * S + .5, ROWS * S); }
-    for (let r = 1; r < ROWS; r++) { ctx.moveTo(0, r * S + .5); ctx.lineTo(COLS * S, r * S + .5); }
-    ctx.stroke();
+    if (terrainDirty) renderTerrain();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(layer, 0, 0);
     if (view !== 'off') drawOverlay(view);
-    ctx.strokeStyle = C.friendly; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
-    ctx.beginPath(); ctx.moveTo(0, ROWS * S - 1); ctx.lineTo(COLS * S, ROWS * S - 1); ctx.stroke(); ctx.setLineDash([]);
+    ctx.save(); ctx.setTransform(S * dpr, 0, 0, S * dpr, 0, 0);
+    if (drawing && drawing.length > 1) strokeLine(ctx, drawing, TYPES[brush].width, 'rgba(212,191,99,.45)');
+    strokeLine(ctx, [[0, H - .4], [W, H - .4]], .8, P.friendly, [3, 2]);
+    ctx.restore();
     drawUnits();
   }
 
-  // ---------- Waves ----------
+  // ---------- Units and waves ----------
   let units = [], queue = [], running = false, wave = 0, view = 'inf', last = 0;
   const stats = { sent: 0, through: 0, stuck: 0 };
   const $ = id => document.getElementById(id);
+  const passable = (cls, x, y) => x >= 0 && x <= W && y >= 0 && costs[cls][cellAt(x, y)] < Infinity;
 
   function spawn(cls, F) {
-    const tops = [];
-    for (let c = 0; c < COLS; c++) { const d = F.dist[idx(c, 0)]; if (d < Infinity) tops.push({ c, d }); }
     stats.sent++;
-    const jx = (Math.random() - .5) * .36, jy = (Math.random() - .5) * .36;
-    if (!tops.length) {
-      const c = Math.floor(Math.random() * COLS);
-      units.push({ cls, x: c + .5, y: .5, jx, jy, state: 'stuck' }); stats.stuck++; return;
-    }
+    const tops = [];
+    for (let c = 0; c < GC; c++) if (F.dist[c] < Infinity) tops.push({ c, d: F.dist[c] });
+    if (!tops.length) { units.push({ cls, x: Math.random() * W, y: 2, heading: Math.PI / 2, state: 'stuck', flow: F }); stats.stuck++; return; }
     tops.sort((a, b) => a.d - b.d);
-    const pool = tops.slice(0, cls === 'inf' ? 4 : 2), pick = pool[Math.floor(Math.random() * pool.length)];
-    units.push({ cls, x: pick.c + .5, y: -.6, jx, jy, target: idx(pick.c, 0), cell: -1, state: 'move', flow: F });
+    const pool = tops.slice(0, Math.max(2, Math.ceil(tops.length * (cls === 'inf' ? .3 : .15))));
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    units.push({ cls, x: (pick.c + .5) * CELL + (Math.random() - .5) * 3, y: .5, vx: 0, vy: 0, heading: Math.PI / 2, state: 'move', flow: F, lane: (Math.random() * 2 - 1) * (cls === 'inf' ? 4 : 1.5) });
   }
 
   function step(dt) {
-    while (queue.length && queue[0].t <= 0) { const q = queue.shift(); spawn(q.cls, q.flow); }
     for (const q of queue) q.t -= dt;
+    while (queue.length && queue[0].t <= 0) { const q = queue.shift(); spawn(q.cls, q.flow); }
     for (const u of units) {
       if (u.state !== 'move') continue;
-      const exiting = u.target === EXIT;
-      const tx = exiting ? u.x : (u.target % COLS) + .5;
-      const ty = exiting ? ROWS + .8 : Math.floor(u.target / COLS) + .5;
-      const k = exiting ? cost(u.cell, u.cls) : cost(u.target, u.cls);
-      let move = SPEED[u.cls] / k * dt;
-      const dx = tx - u.x, dy = ty - u.y, d = Math.hypot(dx, dy);
-      if (d > move) { u.x += dx / d * move; u.y += dy / d * move; continue; }
-      u.x = tx; u.y = ty;
-      if (exiting) { u.state = 'through'; stats.through++; continue; }
-      u.cell = u.target;
-      const nx = u.flow.next[u.cell];
-      if (nx === EXIT) u.target = EXIT;
-      else if (nx < 0) { u.state = 'stuck'; stats.stuck++; }
-      else u.target = nx;
+      const F = u.flow, i = cellAt(u.x, u.y), n1 = F.next[i];
+      if (n1 === -1) { u.state = 'stuck'; stats.stuck++; continue; }
+      let tx, ty;
+      if (n1 === EXIT) { tx = u.x; ty = H + 6; }
+      else {
+        const n2 = F.next[n1];
+        if (n2 === EXIT) { tx = ccx(n1); ty = H + 6; }
+        else if (n2 >= 0) { const n3 = F.next[n2]; const t = n3 >= 0 ? n3 : n2; tx = ccx(t); ty = ccy(t); }
+        else { tx = ccx(n1); ty = ccy(n1); }
+      }
+      let dx = tx - u.x, dy = ty - u.y, d = Math.hypot(dx, dy) || 1;
+      dx /= d; dy /= d;
+      // each unit keeps its own lane beside the route, where the terrain allows
+      const lx = tx - dy * u.lane, ly = ty + dx * u.lane;
+      if (passable(u.cls, lx, ly) && costs[u.cls][cellAt(lx, ly)] <= costs[u.cls][cellAt(tx, ty)] * 1.5) {
+        dx = lx - u.x; dy = ly - u.y; d = Math.hypot(dx, dy) || 1; dx /= d; dy /= d;
+      }
+      // separation from neighbours
+      let sx = 0, sy = 0;
+      for (const o of units) {
+        if (o === u || o.state === 'through') continue;
+        const rx = u.x - o.x, ry = u.y - o.y, rr = Math.hypot(rx, ry), want = RADIUS[u.cls] + RADIUS[o.cls] + .9;
+        if (rr > 0 && rr < want) { const k = (want - rr) / want; sx += rx / rr * k; sy += ry / rr * k; }
+      }
+      dx += sx * 1.6; dy += sy * 1.6;
+      d = Math.hypot(dx, dy) || 1; dx /= d; dy /= d;
+      const sp = SPEED[u.cls] / costs[u.cls][i];
+      const blend = Math.min(1, dt * 5);
+      u.vx += (dx * sp - u.vx) * blend; u.vy += (dy * sp - u.vy) * blend;
+      const nx = u.x + u.vx * dt, ny = u.y + u.vy * dt;
+      if (ny >= H) { u.state = 'through'; stats.through++; continue; }
+      if (passable(u.cls, nx, ny)) { u.x = nx; u.y = ny; }
+      else if (passable(u.cls, nx, u.y)) { u.x = nx; u.vy = 0; }
+      else if (passable(u.cls, u.x, ny)) { u.y = ny; u.vx = 0; }
+      else { u.vx = u.vy = 0; }
+      if (Math.hypot(u.vx, u.vy) > .3) {
+        const want = Math.atan2(u.vy, u.vx);
+        let diff = want - u.heading; diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+        u.heading += diff * Math.min(1, dt * 6);
+      }
     }
     if (running && !queue.length && units.every(u => u.state !== 'move')) endWave();
   }
@@ -422,32 +646,24 @@ h1 { margin: 0; font: 600 28px/1.05 var(--font-display); letter-spacing: .04em; 
   function startWave() {
     if (running) return;
     wave++; running = true; units = []; queue = [];
-    stats.sent = 0; stats.through = 0; stats.stuck = 0;
-    refreshFlows();
+    stats.sent = stats.through = stats.stuck = 0;
     const snap = { inf: flows.inf, veh: flows.veh };
-    const inf = 6 + 2 * wave, veh = 1 + Math.floor(wave / 2), list = [];
+    const inf = 8 + 3 * wave, veh = 1 + Math.floor(wave / 2), list = [];
     for (let k = 0; k < inf; k++) list.push('inf');
     for (let k = 0; k < veh; k++) list.splice(Math.floor(Math.random() * (list.length + 1)), 0, 'veh');
     list.forEach((cls, k) => queue.push({ cls, flow: snap[cls], t: k * .35 }));
     $('send').disabled = true; $('send').textContent = `Wave ${wave} in progress`;
-    $('status').textContent = `${inf} infantry and ${veh} vehicle${veh > 1 ? 's' : ''} advancing. Painting is locked.`;
+    $('status').textContent = `${inf} infantry and ${veh} vehicle${veh > 1 ? 's' : ''} advancing. Drawing is locked.`;
     syncStats();
   }
-
   function endWave() {
     running = false;
     $('send').disabled = false; $('send').textContent = `Send wave ${wave + 1}`;
-    const msg = [`Wave ${wave} over: ${stats.through} of ${stats.sent} broke through.`];
-    if (stats.stuck) msg.push(`${stats.stuck} found no path and stopped. In the full game they will breach obstacles instead.`);
-    else msg.push('Reshape the terrain and see how their route changes.');
-    $('status').textContent = msg.join(' ');
+    $('status').textContent = `Wave ${wave} over: ${stats.through} of ${stats.sent} broke through.` +
+      (stats.stuck ? ` ${stats.stuck} found no path and stopped; later they will breach obstacles instead.` : ' Reshape the terrain and see how their route changes.');
     syncStats();
   }
-
-  function syncStats() {
-    $('sWave').textContent = wave; $('sSent').textContent = stats.sent;
-    $('sThrough').textContent = stats.through; $('sStuck').textContent = stats.stuck;
-  }
+  function syncStats() { $('sWave').textContent = wave; $('sSent').textContent = stats.sent; $('sThrough').textContent = stats.through; $('sStuck').textContent = stats.stuck; }
 
   function loop(ts) {
     const dt = Math.min(.05, (ts - (last || ts)) / 1000); last = ts;
@@ -456,51 +672,81 @@ h1 { margin: 0; font: 600 28px/1.05 var(--font-display); letter-spacing: .04em; 
     requestAnimationFrame(loop);
   }
 
-  // ---------- Controls ----------
-  let brush = 'tree', painting = false;
-  const brushesEl = $('brushes');
-  const fmt = v => v === Infinity ? 'blocked' : v;
-  ORDER.forEach(key => {
-    const t = TERRAIN[key], b = document.createElement('button');
-    b.type = 'button'; b.className = 'brush'; b.id = 'brush-' + key; b.dataset.key = key;
-    b.setAttribute('aria-pressed', key === brush ? 'true' : 'false');
-    b.innerHTML = `<i style="background:${t.chip}"></i><strong>${t.label}</strong><small>${fmt(t.inf)} / ${fmt(t.veh)}</small>`;
-    b.addEventListener('click', () => {
-      brush = key;
-      brushesEl.querySelectorAll('.brush').forEach(x => x.setAttribute('aria-pressed', x.dataset.key === key ? 'true' : 'false'));
-    });
-    brushesEl.appendChild(b);
+  // ---------- Fields ----------
+  function loadField(k, custom) {
+    if (running) return;
+    const m = custom || MAPS[k];
+    current = custom ? -1 : k;
+    features = m.features.map(f => ({ ...f })); strokes = []; units = []; wave = 0;
+    stats.sent = stats.through = stats.stuck = 0; syncStats();
+    $('send').textContent = 'Send wave 1';
+    $('hudName').textContent = m.sector || m.name;
+    $('status').textContent = m.subtitle || 'Field loaded. Send a wave.';
+    document.querySelectorAll('.map').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.k === current)));
+    refresh();
+  }
+  MAPS.forEach((m, k) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'map'; b.id = 'map-' + k; b.dataset.k = k;
+    b.innerHTML = `<strong>${m.name}</strong><span>${m.subtitle}</span>`;
+    b.addEventListener('click', () => loadField(k));
+    $('maps').appendChild(b);
   });
 
-  function paintAt(e) {
-    if (running) return;
-    const rect = canvas.getBoundingClientRect();
-    const c = Math.floor((e.clientX - rect.left) / S), r = Math.floor((e.clientY - rect.top) / S);
-    if (!inside(c, r)) return;
-    const i = idx(c, r);
-    if (grid[i] === brush) return;
-    grid[i] = brush; refreshFlows(); units = [];
-  }
-  canvas.addEventListener('pointerdown', e => {
-    if (running) { $('status').textContent = 'Painting is locked until the wave ends.'; return; }
-    painting = true; canvas.setPointerCapture(e.pointerId); paintAt(e);
+  $('fileIn').addEventListener('change', async e => {
+    const file = e.target.files[0]; e.target.value = '';
+    if (!file) return;
+    try {
+      const m = JSON.parse(await file.text());
+      if (!Array.isArray(m.features)) throw new Error('no features list');
+      m.features = m.features.filter(f => f && f.type && (f.poly || f.line || f.points));
+      loadField(-1, { name: m.name || file.name, sector: m.name || 'Imported field', subtitle: `Loaded ${file.name}: ${m.features.length} terrain features.`, features: m.features });
+    } catch (err) {
+      $('status').textContent = `Could not read ${file.name}: ${err.message}. Use a file made by the import script.`;
+    }
   });
-  canvas.addEventListener('pointermove', e => { if (painting) paintAt(e); });
-  const stop = () => { painting = false; };
-  canvas.addEventListener('pointerup', stop); canvas.addEventListener('pointercancel', stop);
+
+  // ---------- Drawing ----------
+  let brush = 'belt', drawing = null;
+  const fmt = v => v === Infinity ? 'blocked' : v;
+  BRUSHES.forEach(key => {
+    const t = TYPES[key], b = document.createElement('button');
+    b.type = 'button'; b.className = 'brush'; b.id = 'brush-' + key; b.dataset.key = key;
+    b.setAttribute('aria-pressed', String(key === brush));
+    b.innerHTML = `<i style="background:${t.chip}"></i><strong>${t.label}</strong><small>${fmt(t.inf)} / ${fmt(t.veh)}</small>`;
+    b.addEventListener('click', () => { brush = key; document.querySelectorAll('.brush').forEach(x => x.setAttribute('aria-pressed', String(x === b))); });
+    $('brushes').appendChild(b);
+  });
+  const toWorld = e => { const r = canvas.getBoundingClientRect(); return [(e.clientX - r.left) / S, (e.clientY - r.top) / S]; };
+  canvas.addEventListener('pointerdown', e => {
+    if (running) { $('status').textContent = 'Drawing is locked until the wave ends.'; return; }
+    canvas.setPointerCapture(e.pointerId); drawing = [toWorld(e)];
+  });
+  canvas.addEventListener('pointermove', e => {
+    if (!drawing) return;
+    const p = toWorld(e), q = drawing[drawing.length - 1];
+    if (Math.hypot(p[0] - q[0], p[1] - q[1]) > 2.5) drawing.push(p);
+  });
+  const finish = () => {
+    if (!drawing) return;
+    if (drawing.length === 1) drawing.push([drawing[0][0] + .5, drawing[0][1] + .5]);
+    const f = { type: brush, line: drawing, width: TYPES[brush].width };
+    features.push(f); strokes.push(f); drawing = null; units = []; refresh();
+  };
+  canvas.addEventListener('pointerup', finish); canvas.addEventListener('pointercancel', finish);
+  $('undo').addEventListener('click', () => { if (running || !strokes.length) return; const f = strokes.pop(); features.splice(features.indexOf(f), 1); units = []; refresh(); });
+  $('reset').addEventListener('click', () => { if (current >= 0) loadField(current); else { features = features.filter(f => !strokes.includes(f)); strokes = []; units = []; refresh(); } });
 
   $('view').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
     view = b.dataset.v;
-    $('view').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+    $('view').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
   });
   $('send').addEventListener('click', startWave);
-  const newField = g => { if (running) return; grid = g; refreshFlows(); units = []; };
-  $('reset').addEventListener('click', () => newField(presetField()));
-  $('random').addEventListener('click', () => newField(randomField()));
 
   window.addEventListener('resize', resize);
   resize();
+  loadField(0);
   requestAnimationFrame(loop);
 })();
 </script>
