@@ -120,9 +120,9 @@ h1 { margin: 0; font: 600 28px/1.05 var(--font-display); letter-spacing: .04em; 
           <div class="stat"><b id="sStuck">0</b><span>No path</span></div>
         </div>
         <div class="seg" id="speed" role="group" aria-label="Game speed" style="margin-top:8px">
-          <button type="button" id="x1" data-x="1" aria-pressed="true">Real time</button>
+          <button type="button" id="x1" data-x="1" aria-pressed="true">1×</button>
+          <button type="button" id="x2" data-x="2" aria-pressed="false">2×</button>
           <button type="button" id="x4" data-x="4" aria-pressed="false">4×</button>
-          <button type="button" id="x16" data-x="16" aria-pressed="false">16×</button>
         </div>
     </section>
   </div>
@@ -201,7 +201,7 @@ h1 { margin: 0; font: 600 28px/1.05 var(--font-display); letter-spacing: .04em; 
   const PRIORITY = ['hill', 'heap', 'grove', 'belt', 'pond', 'river', 'embankment', 'balka', 'pipe', 'road', 'ford'];
   const BRUSHES = ['belt', 'river', 'road', 'pipe', 'balka', 'embankment'];
   const TKEYS = ['open', ...PRIORITY];
-  const SPEED = { inf: 1.4, veh: 6 };     // real m/s on open field: loaded infantry walking, IFV cross-country (~22 km/h)
+  const SPEED = { inf: 5.6, veh: 6 };     // m/s on open field. Infantry at 4x real walking pace (1.4 m/s) so a wave fits a phone session; vehicles at real IFV cross-country speed (~22 km/h)
   const RADIUS = { inf: 0.8, veh: 2.4 };
 
   // ---------- Seeded helpers ----------
@@ -685,7 +685,7 @@ h1 { margin: 0; font: 600 28px/1.05 var(--font-display); letter-spacing: .04em; 
     const inf = 12 + 4 * wave, veh = 2 + Math.floor(wave / 2), list = [];
     for (let k = 0; k < inf; k++) list.push('inf');
     for (let k = 0; k < veh; k++) list.splice(Math.floor(Math.random() * (list.length + 1)), 0, 'veh');
-    list.forEach((cls, k) => queue.push({ cls, flow: snap[cls], t: k * 1.6 }));
+    list.forEach((cls, k) => queue.push({ cls, flow: snap[cls], t: k * .6 }));
     $('send').disabled = true; $('send').textContent = `Wave ${wave} in progress`;
     $('status').textContent = `${inf} infantry and ${veh} vehicle${veh > 1 ? 's' : ''} advancing. Drawing is locked.`;
     syncStats();
