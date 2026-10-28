@@ -1,0 +1,506 @@
+<title>Treeline</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: drone-feed field on the left (top on phones), a field-kit control panel beside it. Deliberately single dark theme: it is a night-vision / drone-feed world. */
+:root {
+  --bg: #11140f;
+  --panel: #191d16;
+  --rule: #2c3326;
+  --fg: #e2e5d5;
+  --muted: #98a089;
+  --hud: #d4bf63;
+  --hostile: #ff5a40;
+  --friendly: #6fb1e6;
+  --font-display: "Chakra Petch", "Bahnschrift", "DIN Alternate", "Arial Narrow", sans-serif;
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  color-scheme: dark;
+}
+html, body { background: var(--bg); color: var(--fg); }
+body {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px 24px;
+}
+.app { display: grid; grid-template-columns: auto minmax(0, 320px); gap: 24px; justify-content: center; align-items: start; }
+@media (max-width: 720px) { .app { grid-template-columns: minmax(0, 1fr); gap: 16px; } }
+
+.stage { display: flex; justify-content: center; min-width: 0; }
+.feed { position: relative; border: 1px solid var(--rule); border-radius: 4px; overflow: hidden; line-height: 0; }
+canvas { display: block; touch-action: none; cursor: crosshair; }
+.feed::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background:
+    repeating-linear-gradient(0deg, rgba(0,0,0,.10) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.45) 100%);
+}
+.hud { position: absolute; font: 600 11px/1 var(--font-display); letter-spacing: .08em; text-transform: uppercase; color: var(--hud); text-shadow: 0 1px 2px rgba(0,0,0,.8); pointer-events: none; z-index: 1; }
+.hud.tl { top: 8px; left: 8px; }
+.hud.tr { top: 8px; right: 8px; }
+.hud.tc { top: 24px; left: 0; right: 0; text-align: center; color: var(--hostile); opacity: .9; }
+.hud.bc { bottom: 10px; left: 0; right: 0; text-align: center; color: var(--friendly); }
+.hud.bl { bottom: 10px; left: 8px; display: flex; flex-direction: column; gap: 4px; }
+.scalebar { height: 4px; border: 1px solid var(--hud); border-top: 0; }
+.rec { color: var(--hostile); }
+@media (prefers-reduced-motion: no-preference) { .rec { animation: blink 1.6s steps(2) infinite; } }
+@keyframes blink { 50% { opacity: .2; } }
+
+.panel { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.brand { display: flex; flex-direction: column; gap: 2px; }
+h1 { margin: 0; font: 600 28px/1.05 var(--font-display); letter-spacing: .04em; text-transform: uppercase; }
+.sub { color: var(--muted); font-size: 13px; }
+.label { font: 600 11px/1 var(--font-display); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+
+.btn {
+  font: 600 14px/1 var(--font-display); letter-spacing: .08em; text-transform: uppercase;
+  color: var(--fg); background: transparent; border: 1px solid var(--rule); border-radius: 4px;
+  padding: 12px 14px; cursor: pointer;
+}
+.btn:hover { border-color: var(--muted); }
+.btn:focus-visible, .seg button:focus-visible, .brush:focus-visible { outline: 2px solid var(--hud); outline-offset: 2px; }
+.btn.primary { background: var(--hud); border-color: var(--hud); color: #15170f; width: 100%; padding: 16px; font-size: 16px; }
+.btn.primary:disabled { opacity: .45; cursor: default; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+.row .btn { flex: 1 1 0; }
+
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--rule); border-radius: 4px; }
+.stat { padding: 10px 8px; display: flex; flex-direction: column; gap: 4px; border-left: 1px solid var(--rule); }
+.stat:first-child { border-left: 0; }
+.stat b { font: 600 22px/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.stat span { font-size: 11px; color: var(--muted); line-height: 1.2; }
+.stat.bad b { color: var(--hostile); }
+.status { font-size: 13px; color: var(--muted); min-height: 2.9em; margin: 8px 0 0; }
+
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--rule); border-radius: 4px; overflow: hidden; }
+.seg button { font: 600 12px/1 var(--font-display); letter-spacing: .08em; text-transform: uppercase; background: transparent; color: var(--muted); border: 0; border-left: 1px solid var(--rule); padding: 11px 6px; cursor: pointer; }
+.seg button:first-child { border-left: 0; }
+.seg button[aria-pressed="true"] { background: var(--rule); color: var(--fg); }
+
+.brushes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.brush { display: grid; grid-template-columns: 22px minmax(0, 1fr); grid-template-rows: auto auto; column-gap: 8px; align-items: center; text-align: left; background: transparent; color: var(--fg); border: 1px solid var(--rule); border-radius: 4px; padding: 8px; cursor: pointer; font: inherit; }
+.brush[aria-pressed="true"] { border-color: var(--hud); background: rgba(212,191,99,.08); }
+.brush i { grid-row: 1 / 3; width: 22px; height: 22px; border-radius: 3px; border: 1px solid rgba(0,0,0,.4); }
+.brush strong { font-size: 13px; line-height: 1.2; }
+.brush small { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.note { font-size: 13px; color: var(--muted); margin: 8px 0 0; max-width: 60ch; }
+</style>
+
+<div class="app">
+  <div class="stage">
+    <div class="feed" id="feed">
+      <canvas id="field" aria-label="Battlefield grid, 10 by 20 cells"></canvas>
+      <div class="hud tl"><span class="rec">● REC</span> &nbsp;Sector 07</div>
+      <div class="hud tr">100 × 200 m</div>
+      <div class="hud tc">Enemy approach</div>
+      <div class="hud bc">Our line</div>
+      <div class="hud bl"><div class="scalebar" id="scalebar"></div><span>50 m</span></div>
+    </div>
+  </div>
+
+  <aside class="panel">
+    <div class="brand">
+      <h1>Treeline</h1>
+      <span class="sub">Milestone 1 · terrain and pathfinding</span>
+    </div>
+
+    <section>
+      <button class="btn primary" id="send">Send wave 1</button>
+      <p class="status" id="status">Attackers take the cheapest route across the terrain. Paint the field, then send a wave.</p>
+      <div class="stats">
+        <div class="stat"><b id="sWave">0</b><span>Wave</span></div>
+        <div class="stat"><b id="sSent">0</b><span>Sent</span></div>
+        <div class="stat bad"><b id="sThrough">0</b><span>Broke through</span></div>
+        <div class="stat"><b id="sStuck">0</b><span>No path</span></div>
+      </div>
+    </section>
+
+    <section>
+      <p class="label">Route view</p>
+      <div class="seg" id="view">
+        <button type="button" id="vInf" data-v="inf" aria-pressed="true">Infantry</button>
+        <button type="button" id="vVeh" data-v="veh" aria-pressed="false">Vehicles</button>
+        <button type="button" id="vOff" data-v="off" aria-pressed="false">Off</button>
+      </div>
+    </section>
+
+    <section>
+      <p class="label">Terrain brush · move cost inf / veh</p>
+      <div class="brushes" id="brushes"></div>
+      <p class="note">Tap or drag on the field to paint. Painting locks while a wave runs; attackers plan their route when the wave starts.</p>
+    </section>
+
+    <section class="row">
+      <button class="btn" id="reset" type="button">Default field</button>
+      <button class="btn" id="random" type="button">Random field</button>
+    </section>
+  </aside>
+</div>
+
+<script>
+(() => {
+  const COLS = 10, ROWS = 20, N = COLS * ROWS, EXIT = -2;
+  const TERRAIN = {
+    open:   { label: 'Open field',  inf: 1, veh: 1,        chip: '#4f5537' },
+    tree:   { label: 'Tree line',   inf: 2, veh: 3,        chip: '#2f3d24' },
+    island: { label: 'Tree island', inf: 2, veh: Infinity, chip: '#212d19' },
+    hill:   { label: 'Hill',        inf: 2, veh: 2,        chip: '#6b6640' },
+    river:  { label: 'River',       inf: 4, veh: Infinity, chip: '#3e5560' },
+    ford:   { label: 'Ford',        inf: 2, veh: 2,        chip: '#6a8088' },
+    pipe:   { label: 'Pipeline',    inf: 2, veh: Infinity, chip: '#a8a89a' },
+  };
+  const ORDER = ['open', 'tree', 'island', 'hill', 'river', 'ford', 'pipe'];
+  const SPEED = { inf: 1.4, veh: 2.6 }; // cells per second on open field
+  const DIRS = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+  const C = {
+    field: '#4f5537', speckA: '#5b6242', speckB: '#444a2f', grid: 'rgba(0,0,0,.20)',
+    tree: '#2c3a22', treeHi: '#3a4b2b', island: '#1f2b18', islandHi: '#2c3b22',
+    hill: '#5f5b3a', contour: '#7d7650', river: '#3b525c', riverHi: '#55707b',
+    ford: '#587078', stone: '#9aa79c', pipe: '#b3b3a4', pipeEdge: '#2a2a24',
+    arrow: 'rgba(235,230,195,.5)', route: '#d4bf63', blocked: 'rgba(255,90,64,.32)',
+    hostile: '#ff5a40', hostileEdge: '#1b0b06', friendly: '#6fb1e6',
+  };
+
+  const idx = (c, r) => r * COLS + c;
+  const inside = (c, r) => c >= 0 && c < COLS && r >= 0 && r < ROWS;
+  const hash = (i, k) => { const x = Math.sin(i * 127.1 + k * 311.7) * 43758.5453; return x - Math.floor(x); };
+
+  let grid = presetField();
+  const cost = (i, cls) => TERRAIN[grid[i]][cls];
+
+  function blank() { return new Array(N).fill('open'); }
+  function setter(g) { return (c, r, t) => { if (inside(c, r)) g[idx(c, r)] = t; }; }
+
+  function presetField() {
+    const g = blank(), set = setter(g);
+    for (let c = 0; c <= 6; c++) set(c, 4, 'tree');
+    set(8, 4, 'tree'); set(9, 4, 'tree');
+    set(6, 7, 'island'); set(7, 7, 'island'); set(6, 8, 'island');
+    for (let c = 0; c < COLS; c++) set(c, 10, 'river');
+    set(1, 10, 'ford'); set(8, 10, 'ford');
+    for (let c = 3; c <= 9; c++) set(c, 13, 'tree');
+    set(1, 15, 'hill'); set(2, 15, 'hill'); set(1, 16, 'hill'); set(2, 16, 'hill');
+    for (let c = 4; c <= 9; c++) set(c, 17, 'pipe');
+    return g;
+  }
+
+  function randomField() {
+    const g = blank(), set = setter(g), R = Math.random, ri = n => Math.floor(R() * n);
+    const lines = 2 + ri(2);
+    for (let k = 0; k < lines; k++) {
+      const r = 2 + ri(16), len = 4 + ri(6), start = ri(COLS - len + 1), gap = start + ri(len);
+      for (let c = start; c < start + len; c++) if (c !== gap) set(c, r, 'tree');
+    }
+    for (let k = 0, n = 1 + ri(2); k < n; k++) {
+      const c = ri(COLS - 1), r = 1 + ri(ROWS - 3);
+      set(c, r, 'island'); set(c + 1, r, 'island'); if (R() < .6) set(c, r + 1, 'island');
+    }
+    if (R() < .75) {
+      const r = 6 + ri(8);
+      for (let c = 0; c < COLS; c++) set(c, r, 'river');
+      for (let k = 0, n = 1 + ri(2); k < n; k++) set(ri(COLS), r, 'ford');
+    }
+    if (R() < .8) { const c = ri(COLS - 1), r = 2 + ri(ROWS - 4); set(c, r, 'hill'); set(c + 1, r, 'hill'); set(c, r + 1, 'hill'); set(c + 1, r + 1, 'hill'); }
+    if (R() < .6) {
+      const r = 3 + ri(ROWS - 5), len = 4 + ri(4), fromLeft = R() < .5;
+      for (let k = 0; k < len; k++) set(fromLeft ? k : COLS - 1 - k, r, 'pipe');
+    }
+    return g;
+  }
+
+  // Flow field: Dijkstra from the rear edge. next[i] = the cell to step into, EXIT = leave through the rear edge, -1 = no path.
+  function computeFlow(cls) {
+    const dist = new Float64Array(N).fill(Infinity), next = new Int16Array(N).fill(-1), done = new Uint8Array(N);
+    for (let c = 0; c < COLS; c++) {
+      const i = idx(c, ROWS - 1), k = cost(i, cls);
+      if (k < Infinity) { dist[i] = k / 2; next[i] = EXIT; }
+    }
+    for (;;) {
+      let best = -1, bd = Infinity;
+      for (let i = 0; i < N; i++) if (!done[i] && dist[i] < bd) { bd = dist[i]; best = i; }
+      if (best < 0) break;
+      done[best] = 1;
+      const bc = best % COLS, br = (best - bc) / COLS, kb = cost(best, cls);
+      for (const [dx, dy] of DIRS) {
+        const nc = bc + dx, nr = br + dy;
+        if (!inside(nc, nr)) continue;
+        const n = idx(nc, nr);
+        if (done[n]) continue;
+        const kn = cost(n, cls);
+        if (kn === Infinity) continue;
+        if (dx && dy && (cost(idx(bc + dx, br), cls) === Infinity || cost(idx(bc, br + dy), cls) === Infinity)) continue;
+        const w = (kb + kn) / 2 * (dx && dy ? Math.SQRT2 : 1);
+        if (bd + w < dist[n]) { dist[n] = bd + w; next[n] = best; }
+      }
+    }
+    return { dist, next };
+  }
+
+  let flows = { inf: computeFlow('inf'), veh: computeFlow('veh') };
+  const refreshFlows = () => { flows = { inf: computeFlow('inf'), veh: computeFlow('veh') }; };
+
+  // ---------- Canvas ----------
+  const canvas = document.getElementById('field'), ctx = canvas.getContext('2d');
+  const feed = document.getElementById('feed');
+  let S = 32, dpr = 1;
+
+  function resize() {
+    const stageW = feed.parentElement.clientWidth;
+    const narrow = window.innerWidth <= 720;
+    const maxH = Math.max(360, window.innerHeight - (narrow ? 72 : 40));
+    S = Math.max(14, Math.floor(Math.min(stageW / COLS, maxH / ROWS)));
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = S * COLS * dpr; canvas.height = S * ROWS * dpr;
+    canvas.style.width = S * COLS + 'px'; canvas.style.height = S * ROWS + 'px';
+    document.getElementById('scalebar').style.width = S * 5 + 'px';
+    draw();
+  }
+
+  function drawCell(i) {
+    const c = i % COLS, r = (i - c) / COLS, x = c * S, y = r * S, t = grid[i];
+    const base = t === 'river' ? C.river : t === 'ford' ? C.ford : t === 'hill' ? C.hill : C.field;
+    ctx.fillStyle = base; ctx.fillRect(x, y, S, S);
+    if (t === 'open' || t === 'pipe' || t === 'tree' || t === 'island') {
+      for (let k = 0; k < 6; k++) {
+        ctx.fillStyle = k % 2 ? C.speckA : C.speckB;
+        ctx.fillRect(x + hash(i, k) * S, y + hash(i, k + 9) * S, S * .07, S * .07);
+      }
+    }
+    if (t === 'tree' || t === 'island') {
+      const n = t === 'island' ? 9 : 6;
+      for (let k = 0; k < n; k++) {
+        const cx = x + (.15 + hash(i, k + 20) * .7) * S, cy = y + (.15 + hash(i, k + 40) * .7) * S;
+        const rr = S * (t === 'island' ? .2 : .15) * (.75 + hash(i, k + 60) * .5);
+        ctx.fillStyle = t === 'island' ? C.island : C.tree;
+        ctx.beginPath(); ctx.arc(cx, cy, rr, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = t === 'island' ? C.islandHi : C.treeHi;
+        ctx.beginPath(); ctx.arc(cx - rr * .3, cy - rr * .3, rr * .45, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    if (t === 'hill') {
+      ctx.strokeStyle = C.contour; ctx.lineWidth = 1;
+      for (let k = 1; k <= 3; k++) { ctx.beginPath(); ctx.ellipse(x + S / 2, y + S / 2, S * .14 * k, S * .1 * k, 0, 0, Math.PI * 2); ctx.stroke(); }
+    }
+    if (t === 'river' || t === 'ford') {
+      ctx.strokeStyle = C.riverHi; ctx.lineWidth = 1;
+      for (let k = 0; k < 2; k++) {
+        const yy = y + S * (.3 + k * .4);
+        ctx.beginPath(); ctx.moveTo(x, yy);
+        ctx.bezierCurveTo(x + S * .33, yy - S * .08, x + S * .66, yy + S * .08, x + S, yy); ctx.stroke();
+      }
+      if (t === 'ford') {
+        ctx.fillStyle = C.stone;
+        for (let k = 0; k < 7; k++) { ctx.beginPath(); ctx.arc(x + hash(i, k + 80) * S, y + hash(i, k + 90) * S, S * .05, 0, Math.PI * 2); ctx.fill(); }
+      }
+    }
+    if (t === 'pipe') {
+      const nb = (dc, dr) => inside(c + dc, r + dr) && grid[idx(c + dc, r + dr)] === 'pipe';
+      const ends = [[1,0],[-1,0],[0,1],[0,-1]].filter(([a, b]) => nb(a, b));
+      if (!ends.length) ends.push([1,0],[-1,0]);
+      for (const [lw, col] of [[S * .22, C.pipeEdge], [S * .14, C.pipe]]) {
+        ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.lineCap = 'butt';
+        for (const [a, b] of ends) { ctx.beginPath(); ctx.moveTo(x + S / 2, y + S / 2); ctx.lineTo(x + S / 2 + a * S / 2, y + S / 2 + b * S / 2); ctx.stroke(); }
+      }
+    }
+  }
+
+  function drawOverlay(cls) {
+    const F = flows[cls];
+    for (let i = 0; i < N; i++) {
+      const c = i % COLS, r = (i - c) / COLS, x = c * S, y = r * S;
+      if (cost(i, cls) === Infinity || F.next[i] === -1) {
+        ctx.strokeStyle = C.blocked; ctx.lineWidth = 1;
+        ctx.save(); ctx.beginPath(); ctx.rect(x, y, S, S); ctx.clip();
+        for (let d = -S; d < S; d += S / 4) { ctx.beginPath(); ctx.moveTo(x + d, y + S); ctx.lineTo(x + d + S, y); ctx.stroke(); }
+        ctx.restore();
+        continue;
+      }
+      const n = F.next[i];
+      const tx = n === EXIT ? c : n % COLS, ty = n === EXIT ? r + 1 : Math.floor(n / COLS);
+      const dx = tx - c, dy = ty - r, len = Math.hypot(dx, dy);
+      const ux = dx / len, uy = dy / len, cx = x + S / 2, cy = y + S / 2, a = S * .17;
+      ctx.strokeStyle = C.arrow; ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(cx - ux * a, cy - uy * a); ctx.lineTo(cx + ux * a, cy + uy * a);
+      ctx.lineTo(cx + ux * a - (ux * .6 - uy * .45) * a, cy + uy * a - (uy * .6 + ux * .45) * a);
+      ctx.moveTo(cx + ux * a, cy + uy * a);
+      ctx.lineTo(cx + ux * a - (ux * .6 + uy * .45) * a, cy + uy * a - (uy * .6 - ux * .45) * a);
+      ctx.stroke();
+    }
+    // Cheapest full route from the best entry cell
+    let start = -1, bd = Infinity;
+    for (let c = 0; c < COLS; c++) { const d = F.dist[idx(c, 0)]; if (d < bd) { bd = d; start = idx(c, 0); } }
+    if (start < 0) return;
+    ctx.strokeStyle = C.route; ctx.lineWidth = Math.max(2, S * .08); ctx.lineJoin = 'round'; ctx.setLineDash([S * .25, S * .15]);
+    ctx.beginPath();
+    let i = start, sc = i % COLS;
+    ctx.moveTo(sc * S + S / 2, 0);
+    for (let guard = 0; guard < N && i >= 0; guard++) {
+      const c = i % COLS, r = (i - c) / COLS;
+      ctx.lineTo(c * S + S / 2, r * S + S / 2);
+      if (F.next[i] === EXIT) { ctx.lineTo(c * S + S / 2, ROWS * S); break; }
+      i = F.next[i];
+    }
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  function drawUnits() {
+    for (const u of units) {
+      if (u.state === 'through') continue;
+      const px = (u.x + u.jx) * S, py = (u.y + u.jy) * S;
+      ctx.lineWidth = 1.5; ctx.strokeStyle = C.hostileEdge;
+      ctx.fillStyle = u.state === 'stuck' ? 'rgba(255,90,64,.45)' : C.hostile;
+      if (u.cls === 'inf') {
+        ctx.beginPath(); ctx.arc(px, py, Math.max(2.5, S * .11), 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      } else {
+        const h = Math.max(5, S * .24);
+        ctx.beginPath(); ctx.moveTo(px, py - h); ctx.lineTo(px + h, py); ctx.lineTo(px, py + h); ctx.lineTo(px - h, py); ctx.closePath(); ctx.fill(); ctx.stroke();
+      }
+    }
+  }
+
+  function draw() {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    for (let i = 0; i < N; i++) drawCell(i);
+    ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let c = 1; c < COLS; c++) { ctx.moveTo(c * S + .5, 0); ctx.lineTo(c * S + .5, ROWS * S); }
+    for (let r = 1; r < ROWS; r++) { ctx.moveTo(0, r * S + .5); ctx.lineTo(COLS * S, r * S + .5); }
+    ctx.stroke();
+    if (view !== 'off') drawOverlay(view);
+    ctx.strokeStyle = C.friendly; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+    ctx.beginPath(); ctx.moveTo(0, ROWS * S - 1); ctx.lineTo(COLS * S, ROWS * S - 1); ctx.stroke(); ctx.setLineDash([]);
+    drawUnits();
+  }
+
+  // ---------- Waves ----------
+  let units = [], queue = [], running = false, wave = 0, view = 'inf', last = 0;
+  const stats = { sent: 0, through: 0, stuck: 0 };
+  const $ = id => document.getElementById(id);
+
+  function spawn(cls, F) {
+    const tops = [];
+    for (let c = 0; c < COLS; c++) { const d = F.dist[idx(c, 0)]; if (d < Infinity) tops.push({ c, d }); }
+    stats.sent++;
+    const jx = (Math.random() - .5) * .36, jy = (Math.random() - .5) * .36;
+    if (!tops.length) {
+      const c = Math.floor(Math.random() * COLS);
+      units.push({ cls, x: c + .5, y: .5, jx, jy, state: 'stuck' }); stats.stuck++; return;
+    }
+    tops.sort((a, b) => a.d - b.d);
+    const pool = tops.slice(0, cls === 'inf' ? 4 : 2), pick = pool[Math.floor(Math.random() * pool.length)];
+    units.push({ cls, x: pick.c + .5, y: -.6, jx, jy, target: idx(pick.c, 0), cell: -1, state: 'move', flow: F });
+  }
+
+  function step(dt) {
+    while (queue.length && queue[0].t <= 0) { const q = queue.shift(); spawn(q.cls, q.flow); }
+    for (const q of queue) q.t -= dt;
+    for (const u of units) {
+      if (u.state !== 'move') continue;
+      const exiting = u.target === EXIT;
+      const tx = exiting ? u.x : (u.target % COLS) + .5;
+      const ty = exiting ? ROWS + .8 : Math.floor(u.target / COLS) + .5;
+      const k = exiting ? cost(u.cell, u.cls) : cost(u.target, u.cls);
+      let move = SPEED[u.cls] / k * dt;
+      const dx = tx - u.x, dy = ty - u.y, d = Math.hypot(dx, dy);
+      if (d > move) { u.x += dx / d * move; u.y += dy / d * move; continue; }
+      u.x = tx; u.y = ty;
+      if (exiting) { u.state = 'through'; stats.through++; continue; }
+      u.cell = u.target;
+      const nx = u.flow.next[u.cell];
+      if (nx === EXIT) u.target = EXIT;
+      else if (nx < 0) { u.state = 'stuck'; stats.stuck++; }
+      else u.target = nx;
+    }
+    if (running && !queue.length && units.every(u => u.state !== 'move')) endWave();
+  }
+
+  function startWave() {
+    if (running) return;
+    wave++; running = true; units = []; queue = [];
+    stats.sent = 0; stats.through = 0; stats.stuck = 0;
+    refreshFlows();
+    const snap = { inf: flows.inf, veh: flows.veh };
+    const inf = 6 + 2 * wave, veh = 1 + Math.floor(wave / 2), list = [];
+    for (let k = 0; k < inf; k++) list.push('inf');
+    for (let k = 0; k < veh; k++) list.splice(Math.floor(Math.random() * (list.length + 1)), 0, 'veh');
+    list.forEach((cls, k) => queue.push({ cls, flow: snap[cls], t: k * .35 }));
+    $('send').disabled = true; $('send').textContent = `Wave ${wave} in progress`;
+    $('status').textContent = `${inf} infantry and ${veh} vehicle${veh > 1 ? 's' : ''} advancing. Painting is locked.`;
+    syncStats();
+  }
+
+  function endWave() {
+    running = false;
+    $('send').disabled = false; $('send').textContent = `Send wave ${wave + 1}`;
+    const msg = [`Wave ${wave} over: ${stats.through} of ${stats.sent} broke through.`];
+    if (stats.stuck) msg.push(`${stats.stuck} found no path and stopped. In the full game they will breach obstacles instead.`);
+    else msg.push('Reshape the terrain and see how their route changes.');
+    $('status').textContent = msg.join(' ');
+    syncStats();
+  }
+
+  function syncStats() {
+    $('sWave').textContent = wave; $('sSent').textContent = stats.sent;
+    $('sThrough').textContent = stats.through; $('sStuck').textContent = stats.stuck;
+  }
+
+  function loop(ts) {
+    const dt = Math.min(.05, (ts - (last || ts)) / 1000); last = ts;
+    if (running) { step(dt); syncStats(); }
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  // ---------- Controls ----------
+  let brush = 'tree', painting = false;
+  const brushesEl = $('brushes');
+  const fmt = v => v === Infinity ? 'blocked' : v;
+  ORDER.forEach(key => {
+    const t = TERRAIN[key], b = document.createElement('button');
+    b.type = 'button'; b.className = 'brush'; b.id = 'brush-' + key; b.dataset.key = key;
+    b.setAttribute('aria-pressed', key === brush ? 'true' : 'false');
+    b.innerHTML = `<i style="background:${t.chip}"></i><strong>${t.label}</strong><small>${fmt(t.inf)} / ${fmt(t.veh)}</small>`;
+    b.addEventListener('click', () => {
+      brush = key;
+      brushesEl.querySelectorAll('.brush').forEach(x => x.setAttribute('aria-pressed', x.dataset.key === key ? 'true' : 'false'));
+    });
+    brushesEl.appendChild(b);
+  });
+
+  function paintAt(e) {
+    if (running) return;
+    const rect = canvas.getBoundingClientRect();
+    const c = Math.floor((e.clientX - rect.left) / S), r = Math.floor((e.clientY - rect.top) / S);
+    if (!inside(c, r)) return;
+    const i = idx(c, r);
+    if (grid[i] === brush) return;
+    grid[i] = brush; refreshFlows(); units = [];
+  }
+  canvas.addEventListener('pointerdown', e => {
+    if (running) { $('status').textContent = 'Painting is locked until the wave ends.'; return; }
+    painting = true; canvas.setPointerCapture(e.pointerId); paintAt(e);
+  });
+  canvas.addEventListener('pointermove', e => { if (painting) paintAt(e); });
+  const stop = () => { painting = false; };
+  canvas.addEventListener('pointerup', stop); canvas.addEventListener('pointercancel', stop);
+
+  $('view').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    view = b.dataset.v;
+    $('view').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+  });
+  $('send').addEventListener('click', startWave);
+  const newField = g => { if (running) return; grid = g; refreshFlows(); units = []; };
+  $('reset').addEventListener('click', () => newField(presetField()));
+  $('random').addEventListener('click', () => newField(randomField()));
+
+  window.addEventListener('resize', resize);
+  resize();
+  requestAnimationFrame(loop);
+})();
+</script>
