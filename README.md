@@ -24,6 +24,14 @@ python3 tools/osm_to_field.py 48.2915 37.1720 --enemy-from east --name "Belts ne
 
 This downloads OpenStreetMap data for a 200 × 400 m box around the point (change it with `--size`) and writes `fields/<name>.json`. Load it in the game with **Load field file**. Standard-library Python 3.8+, no installs. Map data © OpenStreetMap contributors (ODbL).
 
+## Rules
+
+`rules/attackers.json` holds every attacker number (HP, armour, damage, accuracy, range, speed, adaptation, special traits) plus the armour and cover tables. Check it and print the roster table with:
+
+```
+python3 tools/check_rules.py --table
+```
+
 ## Engine notes
 
 - Terrain is vector shapes (polygons and lines with width) in metres.

@@ -1,0 +1,628 @@
+{
+  "version": 1,
+  "notes": [
+    "Single source of truth for attacker units. The game and the balance simulator both read this file.",
+    "Numbers are starting values for balancing. Fields listed in a unit's 'proposed' array were not specified by Yaroslav and are Claude's suggestions.",
+    "Speeds are game speeds in m/s on open field at 1x (infantry run at 4x real walking pace). Terrain move cost divides speed.",
+    "Damage is per second of fire while the target is visible and in range, before accuracy, armour and cover."
+  ],
+  "unit_types": [
+    "troops",
+    "vehicle",
+    "aviation"
+  ],
+  "tiers": {
+    "hp": {
+      "troops": {
+        "low": 12,
+        "medium": 30
+      },
+      "vehicle": {
+        "low": 60,
+        "medium": 150,
+        "high": 300
+      },
+      "aviation": {
+        "low": 8,
+        "high": 150
+      }
+    },
+    "armour": [
+      "none",
+      "low",
+      "medium",
+      "high"
+    ],
+    "damage": {
+      "none": 0,
+      "low": 2,
+      "medium": 5,
+      "high": 12
+    },
+    "accuracy": {
+      "low": 0.25,
+      "medium": 0.45,
+      "high": 0.65
+    },
+    "speed": {
+      "low": 4.5,
+      "medium": 6,
+      "high": 11
+    },
+    "adaptation_lag_waves": {
+      "immediate": 1,
+      "medium": 2,
+      "low": 4
+    }
+  },
+  "damage_types": {
+    "small_arms": {
+      "desc": "rifles and machine guns",
+      "vs_armour": {
+        "none": 1.0,
+        "low": 0.5,
+        "medium": 0.0,
+        "high": 0.0
+      }
+    },
+    "heavy": {
+      "desc": "sniper rifles, heavy MG, autocannon",
+      "vs_armour": {
+        "none": 1.0,
+        "low": 0.8,
+        "medium": 0.3,
+        "high": 0.0
+      }
+    },
+    "explosive": {
+      "desc": "mortar, grenades, FPV, tank HE",
+      "vs_armour": {
+        "none": 1.0,
+        "low": 0.9,
+        "medium": 0.6,
+        "high": 0.35
+      }
+    },
+    "anti_tank": {
+      "desc": "ATGM, anti-tank FPV warhead",
+      "vs_armour": {
+        "none": 1.0,
+        "low": 1.0,
+        "medium": 1.0,
+        "high": 0.85
+      }
+    }
+  },
+  "cover": {
+    "notes": "Multipliers applied to shots at a target standing in this cover, chosen by the shooter's type. 1.0 = no penalty. 'indirect' (mortar, artillery) is a Claude proposal.",
+    "levels": {
+      "none": 1.0,
+      "low": 0.85,
+      "modest": 0.7,
+      "high": 0.5
+    },
+    "tree": {
+      "accuracy": {
+        "troops": "high",
+        "vehicle": "none",
+        "aviation": "none",
+        "indirect": "none"
+      },
+      "damage": {
+        "troops": "modest",
+        "vehicle": "modest",
+        "aviation": "modest",
+        "indirect": "low"
+      }
+    },
+    "trench": {
+      "accuracy": {
+        "troops": "low",
+        "vehicle": "high",
+        "aviation": "modest",
+        "indirect": "none"
+      },
+      "damage": {
+        "troops": "low",
+        "vehicle": "high",
+        "aviation": "low",
+        "indirect": "modest"
+      }
+    }
+  },
+  "defender_weapon_tags": {
+    "notes": "What can hit what. A unit's 'targetable_by' lists these tags or a tag group. Against ground units, armour then decides how much damage lands.",
+    "small_arms": "rifles, troops in trenches",
+    "machine_gun": "machine guns",
+    "sniper": "sniper team",
+    "explosive": "mortar, grenades, mines",
+    "fpv": "our FPV drones",
+    "atgm": "anti-tank guided missiles",
+    "air_defence": "mobile air-defence group",
+    "radar": "detects aviation; does no damage"
+  },
+  "tag_groups": {
+    "ground": [
+      "small_arms",
+      "machine_gun",
+      "sniper",
+      "explosive",
+      "fpv",
+      "atgm"
+    ]
+  },
+  "ew": {
+    "radius_m": 40,
+    "effect": "Our FPV and drones cannot fly inside the radius."
+  },
+  "units": {
+    "recruit": {
+      "name": "Recruit",
+      "type": "troops",
+      "category": "infantry",
+      "hp": 10,
+      "armour": "none",
+      "speed": 4.5,
+      "adaptation_lag": 4,
+      "weapon": {
+        "damage_type": "small_arms",
+        "dps": 2,
+        "range_m": 200,
+        "accuracy": 0.25
+      },
+      "ew": "never",
+      "nvg": false,
+      "targetable_by": [
+        "ground"
+      ],
+      "wave_points": 1,
+      "loss_value_usd": 15000,
+      "proposed": [
+        "accuracy",
+        "range_m",
+        "wave_points",
+        "loss_value_usd"
+      ]
+    },
+    "regular": {
+      "name": "Regular soldier",
+      "type": "troops",
+      "category": "infantry",
+      "hp": 15,
+      "armour": "low",
+      "speed": 6,
+      "adaptation_lag": 2,
+      "weapon": {
+        "damage_type": "small_arms",
+        "dps": 5,
+        "range_m": 250,
+        "accuracy": 0.45
+      },
+      "ew": "sometimes",
+      "ew_chance": 0.15,
+      "nvg": false,
+      "targetable_by": [
+        "ground"
+      ],
+      "wave_points": 2,
+      "loss_value_usd": 40000,
+      "proposed": [
+        "accuracy",
+        "range_m",
+        "ew_chance",
+        "wave_points",
+        "loss_value_usd"
+      ]
+    },
+    "special_forces": {
+      "name": "Special forces",
+      "type": "troops",
+      "category": "infantry",
+      "hp": 30,
+      "armour": "low",
+      "speed": 6,
+      "adaptation_lag": 1,
+      "weapon": {
+        "damage_type": "small_arms",
+        "dps": 12,
+        "range_m": 300,
+        "accuracy": 0.65
+      },
+      "ew": "always",
+      "nvg": true,
+      "targetable_by": [
+        "ground"
+      ],
+      "wave_points": 5,
+      "loss_value_usd": 150000,
+      "proposed": [
+        "accuracy",
+        "range_m",
+        "wave_points",
+        "loss_value_usd"
+      ]
+    },
+    "old_tank": {
+      "name": "Old Soviet-era tank",
+      "type": "vehicle",
+      "category": "armoured",
+      "hp": 300,
+      "armour": "low",
+      "speed": 4.5,
+      "adaptation_lag": 3,
+      "tree_move_cost": 5,
+      "weapon": {
+        "damage_type": "explosive",
+        "dps": 5,
+        "range_m": 600,
+        "accuracy": 0.4
+      },
+      "ew": "never",
+      "nvg": false,
+      "wreck": {
+        "radius_m": 4,
+        "blocks": "land"
+      },
+      "targetable_by": [
+        "ground"
+      ],
+      "wave_points": 10,
+      "loss_value_usd": 1000000,
+      "proposed": [
+        "adaptation_lag",
+        "accuracy",
+        "range_m",
+        "tree_move_cost",
+        "wave_points",
+        "loss_value_usd"
+      ],
+      "review": "Armour 'low' means rifles deal 50% damage to this tank. Consider 'medium' so only heavy weapons, explosives and ATGMs hurt it."
+    },
+    "modern_tank": {
+      "name": "Modern tank",
+      "type": "vehicle",
+      "category": "armoured",
+      "hp": 300,
+      "armour": "high",
+      "speed": 6,
+      "adaptation_lag": 2,
+      "tree_move_cost": 5,
+      "weapon": {
+        "damage_type": "explosive",
+        "dps": 12,
+        "range_m": 800,
+        "accuracy": 0.7
+      },
+      "ew": "sometimes",
+      "ew_chance": 0.5,
+      "nvg": true,
+      "wreck": {
+        "radius_m": 4,
+        "blocks": "land"
+      },
+      "targetable_by": [
+        "ground"
+      ],
+      "wave_points": 18,
+      "loss_value_usd": 4000000,
+      "proposed": [
+        "adaptation_lag",
+        "accuracy",
+        "range_m",
+        "ew_chance",
+        "tree_move_cost",
+        "wave_points",
+        "loss_value_usd"
+      ]
+    },
+    "ifv": {
+      "name": "Infantry fighting vehicle",
+      "type": "vehicle",
+      "category": "armoured",
+      "hp": 300,
+      "armour": "medium",
+      "speed": 6,
+      "adaptation_lag": 2,
+      "tree_move_cost": 5,
+      "weapon": {
+        "damage_type": "heavy",
+        "dps": 2,
+        "range_m": 500,
+        "accuracy": 0.5
+      },
+      "ew": "sometimes",
+      "ew_chance": 0.3,
+      "nvg": false,
+      "carries": {
+        "unit": "regular",
+        "count": 8,
+        "dismount_at_hp": 0.2,
+        "dismount_interval_s": 0.7
+      },
+      "blast": {
+        "radius_m": 8,
+        "on": [
+          "overkill_past_threshold",
+          "killed_while_dismounting"
+        ]
+      },
+      "wreck": {
+        "radius_m": 4,
+        "blocks": "land"
+      },
+      "targetable_by": [
+        "ground"
+      ],
+      "wave_points": 12,
+      "loss_value_usd": 800000,
+      "proposed": [
+        "adaptation_lag",
+        "accuracy",
+        "range_m",
+        "ew_chance",
+        "tree_move_cost",
+        "carries.unit",
+        "dismount_interval_s",
+        "blast.radius_m",
+        "wave_points",
+        "loss_value_usd"
+      ]
+    },
+    "mrap": {
+      "name": "Armoured patrol vehicle (Tigr type)",
+      "type": "vehicle",
+      "category": "armoured",
+      "hp": 60,
+      "armour": "high",
+      "speed": 11,
+      "adaptation_lag": 1,
+      "tree_move_cost": 5,
+      "weapon": {
+        "damage_type": "small_arms",
+        "dps": 2,
+        "range_m": 300,
+        "accuracy": 0.45
+      },
+      "ew": "sometimes",
+      "ew_chance": 0.3,
+      "nvg": false,
+      "carries": {
+        "unit": "special_forces",
+        "count": 4,
+        "dismount_at_hp": 0.2,
+        "dismount_interval_s": 0.7
+      },
+      "blast": {
+        "radius_m": 6,
+        "on": [
+          "overkill_past_threshold",
+          "killed_while_dismounting"
+        ]
+      },
+      "wreck": {
+        "radius_m": 3,
+        "blocks": "land"
+      },
+      "targetable_by": [
+        "ground"
+      ],
+      "wave_points": 8,
+      "loss_value_usd": 250000,
+      "proposed": [
+        "adaptation_lag",
+        "accuracy",
+        "range_m",
+        "ew_chance",
+        "tree_move_cost",
+        "carries.unit",
+        "dismount_at_hp",
+        "blast.radius_m",
+        "wave_points",
+        "loss_value_usd"
+      ]
+    },
+    "buggy": {
+      "name": "Buggy",
+      "type": "vehicle",
+      "category": "transport",
+      "hp": 25,
+      "armour": "none",
+      "speed": 11,
+      "adaptation_lag": 3,
+      "weapon": null,
+      "ew": "never",
+      "nvg": false,
+      "targetable_by": [
+        "ground"
+      ],
+      "wave_points": 2,
+      "loss_value_usd": 20000,
+      "proposed": [
+        "hp",
+        "adaptation_lag",
+        "wave_points",
+        "loss_value_usd"
+      ]
+    },
+    "motorbike": {
+      "name": "Motorbike",
+      "type": "vehicle",
+      "category": "transport",
+      "hp": 15,
+      "armour": "none",
+      "speed": 11,
+      "adaptation_lag": 3,
+      "tree_move_cost": 2,
+      "weapon": null,
+      "ew": "never",
+      "nvg": false,
+      "targetable_by": [
+        "ground"
+      ],
+      "wave_points": 1,
+      "loss_value_usd": 3000,
+      "proposed": [
+        "hp",
+        "adaptation_lag",
+        "tree_move_cost",
+        "wave_points",
+        "loss_value_usd"
+      ]
+    },
+    "van": {
+      "name": "Light utility van (bukhanka)",
+      "type": "vehicle",
+      "category": "transport",
+      "hp": 50,
+      "armour": "none",
+      "speed": 11,
+      "adaptation_lag": 4,
+      "weapon": null,
+      "ew": "never",
+      "nvg": false,
+      "carries": {
+        "unit": "recruit",
+        "count": 12,
+        "dismount_at_hp": 0.2,
+        "dismount_interval_s": 0.6
+      },
+      "blast": {
+        "radius_m": 6,
+        "on": [
+          "overkill_past_threshold",
+          "killed_while_dismounting"
+        ]
+      },
+      "targetable_by": [
+        "ground"
+      ],
+      "wave_points": 5,
+      "loss_value_usd": 15000,
+      "proposed": [
+        "hp",
+        "adaptation_lag",
+        "carries.unit",
+        "dismount_interval_s",
+        "blast.radius_m",
+        "wave_points",
+        "loss_value_usd"
+      ]
+    },
+    "recon_uav": {
+      "name": "Recon UAV",
+      "type": "aviation",
+      "category": "drone",
+      "hp": 8,
+      "armour": "none",
+      "speed": 6,
+      "adaptation_lag": null,
+      "weapon": null,
+      "crosses_line": false,
+      "behaviour": "spotter",
+      "spotting": {
+        "radius_m": 40,
+        "call_fpv_delay_s": 8,
+        "keeps_striking_last_spot": true
+      },
+      "requires_detection": "radar",
+      "targetable_by": [
+        "sniper",
+        "fpv"
+      ],
+      "wave_points": 6,
+      "loss_value_usd": 30000,
+      "proposed": [
+        "hp",
+        "call_fpv_delay_s",
+        "wave_points",
+        "loss_value_usd"
+      ]
+    },
+    "fpv": {
+      "name": "FPV drone",
+      "type": "aviation",
+      "category": "drone",
+      "hp": 4,
+      "armour": "none",
+      "speed": 30,
+      "adaptation_lag": null,
+      "weapon": {
+        "damage_type": "explosive",
+        "hit_damage": 60,
+        "single_use": true
+      },
+      "crosses_line": false,
+      "behaviour": "strike_spotted_position",
+      "requires": "recon_uav",
+      "launch_cooldown_s": 15,
+      "targetable_by": [
+        "small_arms",
+        "machine_gun",
+        "sniper",
+        "fpv"
+      ],
+      "wave_points": 0,
+      "loss_value_usd": 500,
+      "proposed": [
+        "hit_damage",
+        "launch_cooldown_s",
+        "loss_value_usd"
+      ]
+    },
+    "one_way_drone": {
+      "name": "One-way attack drone (Shahed type)",
+      "type": "aviation",
+      "category": "drone",
+      "hp": 150,
+      "armour": "none",
+      "speed": 18,
+      "adaptation_lag": null,
+      "weapon": null,
+      "crosses_line": true,
+      "behaviour": "fly_to_rear",
+      "breakthrough_weight": 3,
+      "targetable_by": [
+        "air_defence"
+      ],
+      "wave_points": 8,
+      "loss_value_usd": 50000,
+      "proposed": [
+        "breakthrough_weight",
+        "wave_points",
+        "loss_value_usd"
+      ],
+      "review": "It does not attack defenders. Proposal: reaching the rear edge counts as 3 breakthroughs (a strike on the rear)."
+    },
+    "helicopter": {
+      "name": "Transport helicopter",
+      "type": "aviation",
+      "category": "helicopter",
+      "hp": 150,
+      "armour": "low",
+      "speed": 35,
+      "adaptation_lag": null,
+      "weapon": null,
+      "crosses_line": false,
+      "behaviour": "air_assault",
+      "carries": {
+        "unit": "regular",
+        "count": 20,
+        "drop_at_distance": 0.55,
+        "dismount_interval_s": 0.4
+      },
+      "targetable_by": [
+        "air_defence",
+        "fpv",
+        "explosive"
+      ],
+      "wave_points": 30,
+      "loss_value_usd": 15000000,
+      "proposed": [
+        "carries.unit",
+        "dismount_interval_s",
+        "wave_points",
+        "loss_value_usd"
+      ]
+    }
+  }
+}
