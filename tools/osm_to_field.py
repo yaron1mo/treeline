@@ -2,8 +2,8 @@
 """Turn a real spot on the map into a Treeline field.
 
 Give it the centre of the field (latitude, longitude) and the direction the
-enemy comes from. It downloads OpenStreetMap data for a 100 x 200 m box around
-that point and writes a field file the game can load ("Load field file").
+enemy comes from. It downloads OpenStreetMap data for a box around
+that point (200 x 400 m by default) and writes a field file the game can load ("Load field file").
 
     python3 tools/osm_to_field.py 48.2915 37.1720 --enemy-from east --name "Belts near X"
 
@@ -19,16 +19,16 @@ import urllib.parse
 import urllib.request
 
 OVERPASS = "https://overpass-api.de/api/interpreter"
-FIELD_W, FIELD_H = 100.0, 200.0
-RADIUS_M = 170  # download radius around the centre; covers the rotated box with margin
+FIELD_W, FIELD_H = 200.0, 400.0  # changed by --size
 
 # Direction the attackers travel (east, north components) for each enemy side.
 DOWN = {"north": (0.0, -1.0), "south": (0.0, 1.0), "east": (-1.0, 0.0), "west": (1.0, 0.0)}
 
 
 def build_query(lat, lon):
-    dlat = RADIUS_M / 110574.0
-    dlon = RADIUS_M / (111320.0 * math.cos(math.radians(lat)))
+    radius = math.hypot(FIELD_W, FIELD_H) / 2 + 40  # covers the box in any orientation, with margin
+    dlat = radius / 110574.0
+    dlon = radius / (111320.0 * math.cos(math.radians(lat)))
     bbox = f"{lat - dlat},{lon - dlon},{lat + dlat},{lon + dlon}"
     parts = [
         'way["landuse"~"^(forest|farmland|meadow|reservoir|basin|landfill)$"]',
@@ -195,8 +195,14 @@ def main(argv=None):
     ap.add_argument("--enemy-from", choices=sorted(DOWN), default="north", help="side the attackers come from (default: north)")
     ap.add_argument("--name", default=None, help="field name shown in the game")
     ap.add_argument("--out", default=None, help="output file (default: fields/<name>.json)")
+    ap.add_argument("--size", default="200x400", help="field size in metres, width x depth (default: 200x400)")
     ap.add_argument("--from-file", default=None, help="use a saved Overpass JSON response instead of downloading")
     args = ap.parse_args(argv)
+    global FIELD_W, FIELD_H
+    try:
+        FIELD_W, FIELD_H = (float(v) for v in args.size.lower().split("x"))
+    except ValueError:
+        sys.exit("--size must look like 200x400")
 
     name = args.name or f"Field {args.lat:.3f} {args.lon:.3f}"
     if args.from_file:

@@ -8,11 +8,11 @@ Open `index.html` in any browser. Pick a field, drag on it to draw terrain, and 
 
 ## Fields
 
-`fields/` holds the field files. The three test fields are hand-built from typical eastern Ukrainian terrain:
+`fields/` holds the field files. The three test fields (200 × 400 m) are hand-built from typical eastern Ukrainian terrain:
 
 | Field | Terrain |
 | --- | --- |
-| Forest belts | Farmland split by windbreak belts, a dirt road through the gaps |
+| Forest belts | Farmland cut by four windbreak belts across the line of advance |
 | Balka and railway | A wooded ravine and a rail embankment with one level crossing |
 | River crossing | A meandering river, floodplain woods, one ford, a slag heap |
 
@@ -22,7 +22,7 @@ Open `index.html` in any browser. Pick a field, drag on it to draw terrain, and 
 python3 tools/osm_to_field.py 48.2915 37.1720 --enemy-from east --name "Belts near X"
 ```
 
-This downloads OpenStreetMap data for a 100 × 200 m box around the point and writes `fields/<name>.json`. Load it in the game with **Load field file**. Standard-library Python 3.8+, no installs. Map data © OpenStreetMap contributors (ODbL).
+This downloads OpenStreetMap data for a 200 × 400 m box around the point (change it with `--size`) and writes `fields/<name>.json`. Load it in the game with **Load field file**. Standard-library Python 3.8+, no installs. Map data © OpenStreetMap contributors (ODbL).
 
 ## Engine notes
 

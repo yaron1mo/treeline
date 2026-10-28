@@ -27,8 +27,15 @@ body {
   padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-block: 16px 24px;
 }
-.app { display: grid; grid-template-columns: auto minmax(0, 330px); gap: 24px; justify-content: center; align-items: start; }
-@media (max-width: 720px) { .app { grid-template-columns: minmax(0, 1fr); gap: 16px; } }
+.app { display: grid; grid-template-columns: auto minmax(0, 330px); grid-template-rows: auto 1fr; grid-template-areas: "stage bar" "stage panel"; gap: 20px 24px; justify-content: center; align-items: start; }
+.stage { grid-area: stage; } .bar { grid-area: bar; display: flex; flex-direction: column; gap: 14px; min-width: 0; } .panel { grid-area: panel; }
+@media (max-width: 720px) {
+  .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; grid-template-areas: "bar" "stage" "panel"; gap: 12px; }
+  h1 { font-size: 20px; }
+  .bar .sub, .bar .status { display: none; }
+  .btn.primary { padding: 12px; font-size: 14px; }
+  .stat { padding: 6px 8px; } .stat b { font-size: 18px; }
+}
 
 .stage { display: flex; justify-content: center; min-width: 0; }
 .feed { position: relative; border: 1px solid var(--rule); border-radius: 4px; overflow: hidden; line-height: 0; }
@@ -98,38 +105,40 @@ h1 { margin: 0; font: 600 28px/1.05 var(--font-display); letter-spacing: .04em; 
 </style>
 
 <div class="app">
-  <div class="stage">
-    <div class="feed" id="feed">
-      <canvas id="field" aria-label="Battlefield, 100 by 200 metres"></canvas>
-      <div class="hud tl"><span class="rec">● REC</span> &nbsp;<span id="hudName">Sector 07</span></div>
-      <div class="hud tr">100 × 200 m</div>
-      <div class="hud tc">Enemy approach</div>
-      <div class="hud bc">Our line</div>
-      <div class="hud bl"><div class="scalebar" id="scalebar"></div><span>50 m</span></div>
-    </div>
-  </div>
-
-  <aside class="panel">
+  <div class="bar">
     <div class="brand">
       <h1>Treeline</h1>
       <span class="sub">Test build · free terrain and pathfinding</span>
     </div>
+    <section>
+        <button class="btn primary" id="send">Send wave 1</button>
+        <p class="status" id="status">Attackers take the cheapest route across the terrain. Draw on the field, then send a wave.</p>
+        <div class="stats">
+          <div class="stat"><b id="sWave">0</b><span>Wave</span></div>
+          <div class="stat"><b id="sSent">0</b><span>Sent</span></div>
+          <div class="stat bad"><b id="sThrough">0</b><span>Broke through</span></div>
+          <div class="stat"><b id="sStuck">0</b><span>No path</span></div>
+        </div>
+    </section>
+  </div>
 
+  <div class="stage">
+    <div class="feed" id="feed">
+      <canvas id="field" aria-label="Battlefield seen from a drone"></canvas>
+      <div class="hud tl"><span class="rec">● REC</span> &nbsp;<span id="hudName">Sector 07</span></div>
+      <div class="hud tr" id="hudSize">200 × 400 m</div>
+      <div class="hud tc">Enemy approach</div>
+      <div class="hud bc">Our line</div>
+      <div class="hud bl"><div class="scalebar" id="scalebar"></div><span>100 m</span></div>
+    </div>
+  </div>
+
+  <aside class="panel">
     <section>
       <p class="label">Field</p>
       <div class="maps" id="maps"></div>
     </section>
 
-    <section>
-      <button class="btn primary" id="send">Send wave 1</button>
-      <p class="status" id="status">Attackers take the cheapest route across the terrain. Draw on the field, then send a wave.</p>
-      <div class="stats">
-        <div class="stat"><b id="sWave">0</b><span>Wave</span></div>
-        <div class="stat"><b id="sSent">0</b><span>Sent</span></div>
-        <div class="stat bad"><b id="sThrough">0</b><span>Broke through</span></div>
-        <div class="stat"><b id="sStuck">0</b><span>No path</span></div>
-      </div>
-    </section>
 
     <section>
       <p class="label">Route view</p>
@@ -161,8 +170,15 @@ h1 { margin: 0; font: 600 28px/1.05 var(--font-display); letter-spacing: .04em; 
 <script>
 (() => {
   // ---------- World ----------
-  const W = 100, H = 200;                 // metres
-  const CELL = 2, GC = W / CELL, GR = H / CELL, NG = GC * GR, EXIT = -2;
+  let W = 200, H = 400;                   // metres; set per field
+  const CELL = 2, EXIT = -2;              // hidden nav grid: 2 m cells
+  let GC, GR, NG, terr, costs;
+  function setWorld(w, h) {
+    W = w; H = h; GC = Math.round(W / CELL); GR = Math.round(H / CELL); NG = GC * GR;
+    terr = new Uint8Array(NG);
+    costs = { inf: new Float32Array(NG), veh: new Float32Array(NG) };
+  }
+  setWorld(W, H);
   const TYPES = {
     open:       { label: 'Open field',      inf: 1,        veh: 1 },
     hill:       { label: 'Hill',            inf: 1.6,      veh: 1.8 },
@@ -180,7 +196,7 @@ h1 { margin: 0; font: 600 28px/1.05 var(--font-display); letter-spacing: .04em; 
   const PRIORITY = ['hill', 'heap', 'grove', 'belt', 'pond', 'river', 'embankment', 'balka', 'pipe', 'road', 'ford'];
   const BRUSHES = ['belt', 'river', 'road', 'pipe', 'balka', 'embankment'];
   const TKEYS = ['open', ...PRIORITY];
-  const SPEED = { inf: 10, veh: 16 };      // m/s on open field (game speed)
+  const SPEED = { inf: 15, veh: 24 };      // m/s on open field (game speed)
   const RADIUS = { inf: 0.8, veh: 2.4 };
 
   // ---------- Seeded helpers ----------
@@ -201,62 +217,75 @@ h1 { margin: 0; font: 600 28px/1.05 var(--font-display); letter-spacing: .04em; 
   function buildMaps() {
     return [
       {
-        name: 'Forest belts', sector: 'Sector 07',
-        subtitle: 'Open farmland split by windbreak tree belts, a dirt road through the gaps. The typical Donbas field mosaic.',
+        name: 'Forest belts', sector: 'Sector 07', size: [200, 400],
+        subtitle: 'Farmland cut by four windbreak belts running across the line of advance, with gaps where field tracks pass.',
         features: [
-          { type: 'field', poly: [[0,0],[100,0],[100,52],[0,58]], tone: 'stubble', angle: 82 },
-          { type: 'field', poly: [[0,58],[100,52],[100,134],[0,118]], tone: 'plowed', angle: 8 },
-          { type: 'field', poly: [[0,118],[100,134],[100,200],[0,200]], tone: 'sunflower', angle: 86 },
-          { type: 'tracks', line: [[38,-2],[44,30],[58,50]] },
-          { type: 'tracks', line: [[90,140],[70,170],[64,202]] },
-          { type: 'craters', points: craters(11, 26, [0, 0, 100, 200]) },
-          { type: 'grove', poly: blob(30, 88, 9, 6, 3) },
-          { type: 'grove', poly: blob(12, 170, 7, 5, 4) },
-          { type: 'belt', line: [[-4,57],[30,55],[57,53]], width: 15 },
-          { type: 'belt', line: [[71,52],[104,51]], width: 15 },
-          { type: 'belt', line: [[86,60],[84,95],[85,127]], width: 12 },
-          { type: 'belt', line: [[-4,118],[14,121]], width: 14 },
-          { type: 'belt', line: [[28,123],[104,136]], width: 14 },
-          { type: 'pond', poly: blob(76, 170, 7, 4.5, 5) },
-          { type: 'road', line: [[66,-2],[64,30],[64,54],[58,90],[50,125],[42,160],[36,202]], width: 5 },
+          { type: 'field', poly: [[0,0],[200,0],[200,66],[0,74]], tone: 'stubble', angle: 84 },
+          { type: 'field', poly: [[0,74],[200,66],[200,158],[0,164]], tone: 'plowed', angle: 4 },
+          { type: 'field', poly: [[0,164],[200,158],[200,252],[0,246]], tone: 'sunflower', angle: 88 },
+          { type: 'field', poly: [[0,246],[200,252],[200,334],[0,330]], tone: 'stubble', angle: 2 },
+          { type: 'field', poly: [[0,330],[200,334],[200,400],[0,400]], tone: 'plowed', angle: 88 },
+          { type: 'tracks', line: [[69,-4],[70,40],[69,72]] },
+          { type: 'tracks', line: [[158,66],[150,120],[114,160]] },
+          { type: 'tracks', line: [[43,246],[60,300],[149,333]] },
+          { type: 'craters', points: craters(11, 70, [0, 0, 200, 400]) },
+          { type: 'grove', poly: blob(40, 120, 12, 8, 3) },
+          { type: 'grove', poly: blob(172, 210, 10, 7, 4) },
+          { type: 'grove', poly: blob(28, 292, 9, 6, 5) },
+          { type: 'pond', poly: blob(118, 292, 9, 6, 6) },
+          { type: 'belt', line: [[-6,74],[60,71]], width: 15 },
+          { type: 'belt', line: [[78,70],[150,67]], width: 15 },
+          { type: 'belt', line: [[166,67],[206,66]], width: 15 },
+          { type: 'belt', line: [[-6,164],[104,161]], width: 16 },
+          { type: 'belt', line: [[124,160],[206,158]], width: 16 },
+          { type: 'belt', line: [[-6,246],[34,247]], width: 14 },
+          { type: 'belt', line: [[52,248],[206,252]], width: 14 },
+          { type: 'belt', line: [[150,254],[148,290],[150,330]], width: 12 },
+          { type: 'belt', line: [[-6,330],[140,333]], width: 15 },
+          { type: 'belt', line: [[158,333],[206,334]], width: 15 },
+          { type: 'road', line: [[-4,177],[100,175],[204,172]], width: 5 },
         ],
       },
       {
-        name: 'Balka and railway', sector: 'Sector 12',
+        name: 'Balka and railway', sector: 'Sector 12', size: [200, 400],
         subtitle: 'A wooded ravine winding through the steppe and a rail embankment with one level crossing.',
         features: [
-          { type: 'field', poly: [[0,0],[100,0],[100,96],[0,96]], tone: 'plowed', angle: 20 },
-          { type: 'field', poly: [[0,104],[100,104],[100,200],[0,200]], tone: 'stubble', angle: 95 },
-          { type: 'tracks', line: [[60,-2],[50,40],[30,70],[18,96]] },
-          { type: 'craters', points: craters(21, 30, [0, 0, 100, 200]) },
-          { type: 'grove', poly: blob(28, 30, 10, 7, 6) },
-          { type: 'grove', poly: blob(80, 142, 8, 6, 7) },
-          { type: 'pond', poly: blob(20, 164, 5, 4, 8) },
-          { type: 'embankment', line: [[-2,100],[102,100]], width: 7 },
-          { type: 'balka', line: [[93,-2],[82,28],[64,58],[56,92],[44,122],[30,146],[22,158]], width: 15 },
-          { type: 'pipe', line: [[50,176],[102,176]], width: 3 },
-          { type: 'road', line: [[8,-2],[12,50],[16,100],[24,150],[34,202]], width: 5 },
+          { type: 'field', poly: [[0,0],[200,0],[200,196],[0,196]], tone: 'plowed', angle: 20 },
+          { type: 'field', poly: [[0,204],[200,204],[200,400],[0,400]], tone: 'stubble', angle: 95 },
+          { type: 'tracks', line: [[120,-4],[100,80],[60,140],[38,196]] },
+          { type: 'craters', points: craters(21, 80, [0, 0, 200, 400]) },
+          { type: 'grove', poly: blob(56, 46, 14, 9, 6) },
+          { type: 'grove', poly: blob(160, 282, 10, 7, 7) },
+          { type: 'pond', poly: blob(42, 328, 7, 5, 8) },
+          { type: 'belt', line: [[-6,92],[86,88]], width: 14 },
+          { type: 'belt', line: [[112,304],[206,298]], width: 14 },
+          { type: 'embankment', line: [[-4,200],[204,200]], width: 7 },
+          { type: 'balka', line: [[186,-4],[168,50],[130,110],[112,180],[92,240],[64,290],[46,320]], width: 16 },
+          { type: 'pipe', line: [[96,352],[204,352]], width: 3 },
+          { type: 'road', line: [[24,-4],[30,100],[36,200],[46,300],[66,404]], width: 5 },
         ],
       },
       {
-        name: 'River crossing', sector: 'Sector 19',
+        name: 'River crossing', sector: 'Sector 19', size: [200, 400],
         subtitle: 'A meandering river with floodplain woods, one ford, a broken bridge and a slag heap behind our line.',
         features: [
-          { type: 'field', poly: [[0,0],[100,0],[100,82],[0,78]], tone: 'stubble', angle: 75 },
-          { type: 'field', poly: [[0,126],[100,126],[100,200],[0,200]], tone: 'plowed', angle: 5 },
-          { type: 'tracks', line: [[20,-2],[28,40],[36,84]] },
-          { type: 'craters', points: craters(31, 18, [20, 70, 60, 130]) },
-          { type: 'craters', points: craters(32, 14, [0, 0, 100, 200]) },
-          { type: 'hill', poly: blob(84, 40, 13, 10, 9) },
-          { type: 'heap', poly: blob(16, 168, 11, 10, 10) },
-          { type: 'grove', poly: blob(18, 113, 12, 6, 11) },
-          { type: 'grove', poly: blob(52, 119, 9, 5, 12) },
-          { type: 'grove', poly: blob(91, 123, 8, 5, 13) },
-          { type: 'pond', poly: blob(22, 66, 9, 3.5, 14) },
-          { type: 'river', line: [[-4,86],[18,96],[38,90],[54,101],[68,114],[84,108],[104,96]], width: 12 },
-          { type: 'road', line: [[78,-2],[74,40],[72,103]], width: 5 },
-          { type: 'road', line: [[70,121],[76,160],[82,202]], width: 5 },
-          { type: 'ford', poly: blob(36, 91, 6, 7, 15) },
+          { type: 'field', poly: [[0,0],[200,0],[200,160],[0,150]], tone: 'stubble', angle: 75 },
+          { type: 'field', poly: [[0,250],[200,250],[200,400],[0,400]], tone: 'plowed', angle: 5 },
+          { type: 'tracks', line: [[40,-4],[56,80],[70,172]] },
+          { type: 'craters', points: craters(31, 30, [40, 150, 120, 260]) },
+          { type: 'craters', points: craters(32, 40, [0, 0, 200, 400]) },
+          { type: 'hill', poly: blob(165, 84, 22, 16, 9) },
+          { type: 'heap', poly: blob(40, 332, 20, 18, 10) },
+          { type: 'grove', poly: blob(36, 228, 22, 10, 11) },
+          { type: 'grove', poly: blob(100, 238, 16, 8, 12) },
+          { type: 'grove', poly: blob(180, 240, 14, 8, 13) },
+          { type: 'pond', poly: blob(45, 130, 14, 5, 14) },
+          { type: 'belt', line: [[-6,60],[120,56]], width: 14 },
+          { type: 'belt', line: [[90,362],[206,356]], width: 14 },
+          { type: 'river', line: [[-6,170],[30,190],[70,178],[105,200],[135,226],[165,214],[206,190]], width: 16 },
+          { type: 'road', line: [[150,-4],[146,90],[140,206]], width: 5 },
+          { type: 'road', line: [[136,244],[150,320],[160,404]], width: 5 },
+          { type: 'ford', poly: blob(72, 180, 9, 11, 15) },
         ],
       },
     ];
@@ -292,8 +321,6 @@ h1 { margin: 0; font: 600 28px/1.05 var(--font-display); letter-spacing: .04em; 
   const covers = (f, x, y) => f.poly ? inPoly(x, y, f.poly) : distLine(x, y, f.line) <= half(f);
 
   // ---------- Nav grid (hidden) ----------
-  const terr = new Uint8Array(NG);
-  const costs = { inf: new Float32Array(NG), veh: new Float32Array(NG) };
   function rasterize() {
     const list = features.filter(f => PRIORITY.includes(f.type) && (f.poly || f.line))
       .map(f => ({ f, p: PRIORITY.indexOf(f.type), b: bbox(f) }))
@@ -367,13 +394,13 @@ h1 { margin: 0; font: 600 28px/1.05 var(--font-display); letter-spacing: .04em; 
   function resize() {
     const stageW = feed.parentElement.clientWidth;
     const narrow = window.innerWidth <= 720;
-    const maxH = Math.max(360, window.innerHeight - (narrow ? 72 : 40));
-    S = Math.max(1.6, Math.min(stageW / W, maxH / H));
+    const maxH = Math.max(360, window.innerHeight - (narrow ? 190 : 40));
+    S = Math.max(1, Math.min(stageW / W, maxH / H));
     S = Math.floor(S * 10) / 10;
     dpr = Math.min(window.devicePixelRatio || 1, 2);
     for (const cv of [canvas, layer]) { cv.width = Math.round(W * S * dpr); cv.height = Math.round(H * S * dpr); }
     canvas.style.width = W * S + 'px'; canvas.style.height = H * S + 'px';
-    document.getElementById('scalebar').style.width = 50 * S + 'px';
+    document.getElementById('scalebar').style.width = 100 * S + 'px';
     terrainDirty = true;
   }
 
@@ -428,17 +455,17 @@ h1 { margin: 0; font: 600 28px/1.05 var(--font-display); letter-spacing: .04em; 
     for (const f of byType('field')) {
       const [base, line] = P[f.tone] || P.stubble;
       g.save(); polyPath(g, f.poly); g.fillStyle = base; g.fill(); g.clip();
-      const a = (f.angle || 0) * Math.PI / 180, ux = Math.cos(a), uy = Math.sin(a), L = 260;
+      const a = (f.angle || 0) * Math.PI / 180, ux = Math.cos(a), uy = Math.sin(a), L = W + H, cx0 = W / 2, cy0 = H / 2;
       if (f.tone === 'sunflower') {
         g.fillStyle = line;
         for (let s = -L; s < L; s += 1.8) for (let t = -L; t < L; t += 1.4) {
-          const x = 50 + ux * t - uy * s, y = 100 + uy * t + ux * s;
+          const x = cx0 + ux * t - uy * s, y = cy0 + uy * t + ux * s;
           if (x > -2 && x < W + 2 && y > -2 && y < H + 2) { g.beginPath(); g.arc(x, y, .38, 0, 7); g.fill(); }
         }
       } else {
         g.strokeStyle = line; g.lineWidth = .35;
         g.beginPath();
-        for (let s = -L; s < L; s += 1.6) { const x = 50 - uy * s, y = 100 + ux * s; g.moveTo(x - ux * L, y - uy * L); g.lineTo(x + ux * L, y + uy * L); }
+        for (let s = -L; s < L; s += 1.6) { const x = cx0 - uy * s, y = cy0 + ux * s; g.moveTo(x - ux * L, y - uy * L); g.lineTo(x + ux * L, y + uy * L); }
         g.stroke();
       }
       g.restore();
@@ -546,12 +573,14 @@ h1 { margin: 0; font: 600 28px/1.05 var(--font-display); letter-spacing: .04em; 
       if (u.state === 'through') continue;
       ctx.globalAlpha = u.state === 'stuck' ? .5 : 1;
       if (u.cls === 'inf') {
-        ctx.fillStyle = P.shadow; ctx.beginPath(); ctx.arc(u.x + .35, u.y + .45, RADIUS.inf, 0, 7); ctx.fill();
-        ctx.fillStyle = P.hostile; ctx.strokeStyle = P.hostileEdge; ctx.lineWidth = .3;
-        ctx.beginPath(); ctx.arc(u.x, u.y, RADIUS.inf, 0, 7); ctx.fill(); ctx.stroke();
-        ctx.fillStyle = P.hostileEdge; ctx.beginPath(); ctx.arc(u.x, u.y, RADIUS.inf * .4, 0, 7); ctx.fill();
+        const r = Math.max(RADIUS.inf, 2.6 / S);   // never smaller than ~2.6 px on screen
+        ctx.fillStyle = P.shadow; ctx.beginPath(); ctx.arc(u.x + r * .4, u.y + r * .5, r, 0, 7); ctx.fill();
+        ctx.fillStyle = P.hostile; ctx.strokeStyle = P.hostileEdge; ctx.lineWidth = r * .35;
+        ctx.beginPath(); ctx.arc(u.x, u.y, r, 0, 7); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = P.hostileEdge; ctx.beginPath(); ctx.arc(u.x, u.y, r * .4, 0, 7); ctx.fill();
       } else {
-        ctx.save(); ctx.translate(u.x, u.y); ctx.rotate(u.heading);
+        const k = Math.max(1, 13 / (6.2 * S));      // hull at least ~13 px long
+        ctx.save(); ctx.translate(u.x, u.y); ctx.rotate(u.heading); ctx.scale(k, k);
         ctx.fillStyle = P.shadow; ctx.fillRect(-3.1 + .5, -1.75 + .6, 6.2, 3.5);
         ctx.fillStyle = P.hostile; ctx.strokeStyle = P.hostileEdge; ctx.lineWidth = .3;
         ctx.fillRect(-3.1, -1.75, 6.2, 3.5); ctx.strokeRect(-3.1, -1.75, 6.2, 3.5);
@@ -648,7 +677,7 @@ h1 { margin: 0; font: 600 28px/1.05 var(--font-display); letter-spacing: .04em; 
     wave++; running = true; units = []; queue = [];
     stats.sent = stats.through = stats.stuck = 0;
     const snap = { inf: flows.inf, veh: flows.veh };
-    const inf = 8 + 3 * wave, veh = 1 + Math.floor(wave / 2), list = [];
+    const inf = 12 + 4 * wave, veh = 2 + Math.floor(wave / 2), list = [];
     for (let k = 0; k < inf; k++) list.push('inf');
     for (let k = 0; k < veh; k++) list.splice(Math.floor(Math.random() * (list.length + 1)), 0, 'veh');
     list.forEach((cls, k) => queue.push({ cls, flow: snap[cls], t: k * .35 }));
@@ -677,6 +706,9 @@ h1 { margin: 0; font: 600 28px/1.05 var(--font-display); letter-spacing: .04em; 
     if (running) return;
     const m = custom || MAPS[k];
     current = custom ? -1 : k;
+    const size = Array.isArray(m.size) ? m.size : [100, 200];
+    setWorld(size[0], size[1]); resize();
+    $('hudSize').textContent = `${size[0]} × ${size[1]} m`;
     features = m.features.map(f => ({ ...f })); strokes = []; units = []; wave = 0;
     stats.sent = stats.through = stats.stuck = 0; syncStats();
     $('send').textContent = 'Send wave 1';
@@ -700,7 +732,7 @@ h1 { margin: 0; font: 600 28px/1.05 var(--font-display); letter-spacing: .04em; 
       const m = JSON.parse(await file.text());
       if (!Array.isArray(m.features)) throw new Error('no features list');
       m.features = m.features.filter(f => f && f.type && (f.poly || f.line || f.points));
-      loadField(-1, { name: m.name || file.name, sector: m.name || 'Imported field', subtitle: `Loaded ${file.name}: ${m.features.length} terrain features.`, features: m.features });
+      loadField(-1, { name: m.name || file.name, sector: m.name || 'Imported field', subtitle: m.subtitle || `Loaded ${file.name}: ${m.features.length} terrain features.`, size: m.size, features: m.features });
     } catch (err) {
       $('status').textContent = `Could not read ${file.name}: ${err.message}. Use a file made by the import script.`;
     }
