@@ -48,7 +48,7 @@ canvas { display: block; touch-action: none; cursor: crosshair; }
 }
 .hud { position: absolute; font: 600 11px/1 var(--font-display); letter-spacing: .08em; text-transform: uppercase; color: var(--hud); text-shadow: 0 1px 2px rgba(0,0,0,.85); pointer-events: none; z-index: 1; }
 .hud.tl { top: 8px; left: 8px; }
-.hud.tr { top: 8px; right: 8px; }
+.hud.tr { top: 8px; right: 8px; text-align: right; line-height: 1.5; }
 .hud.tc { top: 24px; left: 0; right: 0; text-align: center; color: var(--hostile); opacity: .9; }
 .hud.bc { bottom: 10px; left: 0; right: 0; text-align: center; color: var(--friendly); }
 .hud.bl { bottom: 10px; left: 8px; display: flex; flex-direction: column; gap: 4px; }
@@ -119,6 +119,11 @@ h1 { margin: 0; font: 600 28px/1.05 var(--font-display); letter-spacing: .04em; 
           <div class="stat bad"><b id="sThrough">0</b><span>Broke through</span></div>
           <div class="stat"><b id="sStuck">0</b><span>No path</span></div>
         </div>
+        <div class="seg" id="speed" role="group" aria-label="Game speed" style="margin-top:8px">
+          <button type="button" id="x1" data-x="1" aria-pressed="true">Real time</button>
+          <button type="button" id="x4" data-x="4" aria-pressed="false">4×</button>
+          <button type="button" id="x16" data-x="16" aria-pressed="false">16×</button>
+        </div>
     </section>
   </div>
 
@@ -126,7 +131,7 @@ h1 { margin: 0; font: 600 28px/1.05 var(--font-display); letter-spacing: .04em; 
     <div class="feed" id="feed">
       <canvas id="field" aria-label="Battlefield seen from a drone"></canvas>
       <div class="hud tl"><span class="rec">● REC</span> &nbsp;<span id="hudName">Sector 07</span></div>
-      <div class="hud tr" id="hudSize">200 × 400 m</div>
+      <div class="hud tr"><span id="hudSize">200 × 400 m</span><br><span id="clock">T+00:00</span></div>
       <div class="hud tc">Enemy approach</div>
       <div class="hud bc">Our line</div>
       <div class="hud bl"><div class="scalebar" id="scalebar"></div><span>100 m</span></div>
@@ -196,7 +201,7 @@ h1 { margin: 0; font: 600 28px/1.05 var(--font-display); letter-spacing: .04em; 
   const PRIORITY = ['hill', 'heap', 'grove', 'belt', 'pond', 'river', 'embankment', 'balka', 'pipe', 'road', 'ford'];
   const BRUSHES = ['belt', 'river', 'road', 'pipe', 'balka', 'embankment'];
   const TKEYS = ['open', ...PRIORITY];
-  const SPEED = { inf: 15, veh: 24 };      // m/s on open field (game speed)
+  const SPEED = { inf: 1.4, veh: 6 };     // real m/s on open field: loaded infantry walking, IFV cross-country (~22 km/h)
   const RADIUS = { inf: 0.8, veh: 2.4 };
 
   // ---------- Seeded helpers ----------
@@ -674,13 +679,13 @@ h1 { margin: 0; font: 600 28px/1.05 var(--font-display); letter-spacing: .04em; 
 
   function startWave() {
     if (running) return;
-    wave++; running = true; units = []; queue = [];
+    wave++; running = true; units = []; queue = []; clock = 0;
     stats.sent = stats.through = stats.stuck = 0;
     const snap = { inf: flows.inf, veh: flows.veh };
     const inf = 12 + 4 * wave, veh = 2 + Math.floor(wave / 2), list = [];
     for (let k = 0; k < inf; k++) list.push('inf');
     for (let k = 0; k < veh; k++) list.splice(Math.floor(Math.random() * (list.length + 1)), 0, 'veh');
-    list.forEach((cls, k) => queue.push({ cls, flow: snap[cls], t: k * .35 }));
+    list.forEach((cls, k) => queue.push({ cls, flow: snap[cls], t: k * 1.6 }));
     $('send').disabled = true; $('send').textContent = `Wave ${wave} in progress`;
     $('status').textContent = `${inf} infantry and ${veh} vehicle${veh > 1 ? 's' : ''} advancing. Drawing is locked.`;
     syncStats();
@@ -688,15 +693,21 @@ h1 { margin: 0; font: 600 28px/1.05 var(--font-display); letter-spacing: .04em; 
   function endWave() {
     running = false;
     $('send').disabled = false; $('send').textContent = `Send wave ${wave + 1}`;
-    $('status').textContent = `Wave ${wave} over: ${stats.through} of ${stats.sent} broke through.` +
+    $('status').textContent = `Wave ${wave} over after ${fmtClock(clock).slice(2)}: ${stats.through} of ${stats.sent} broke through.` +
       (stats.stuck ? ` ${stats.stuck} found no path and stopped; later they will breach obstacles instead.` : ' Reshape the terrain and see how their route changes.');
     syncStats();
   }
   function syncStats() { $('sWave').textContent = wave; $('sSent').textContent = stats.sent; $('sThrough').textContent = stats.through; $('sStuck').textContent = stats.stuck; }
 
+  let mult = 1, clock = 0;
+  const fmtClock = t => `T+${String(Math.floor(t / 60)).padStart(2, '0')}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
   function loop(ts) {
-    const dt = Math.min(.05, (ts - (last || ts)) / 1000); last = ts;
-    if (running) { step(dt); syncStats(); }
+    const frame = Math.min(.1, (ts - (last || ts)) / 1000); last = ts;
+    if (running) {
+      let left = frame * mult;
+      while (left > 1e-6 && running) { const dt = Math.min(.05, left); step(dt); clock += dt; left -= dt; }
+      syncStats(); $('clock').textContent = fmtClock(clock);
+    }
     draw();
     requestAnimationFrame(loop);
   }
@@ -775,6 +786,11 @@ h1 { margin: 0; font: 600 28px/1.05 var(--font-display); letter-spacing: .04em; 
     $('view').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
   });
   $('send').addEventListener('click', startWave);
+  $('speed').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    mult = +b.dataset.x;
+    $('speed').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  });
 
   window.addEventListener('resize', resize);
   resize();
