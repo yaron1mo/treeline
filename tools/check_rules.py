@@ -58,13 +58,18 @@ def check(rules):
                 errors.append(f"{where}: 'proposed' names {f!r}, which the unit does not have")
         if u["type"] != "aviation" and u.get("adaptation_lag") not in (1, 2, 3, 4):
             errors.append(f"{where}: ground units need an adaptation_lag of 1-4 waves")
+    if "line" in rules and not isinstance(rules["line"].get("hp"), int):
+        errors.append("line.hp must be a whole number")
+    for uid, u in units.items():
+        if u.get("crosses_line", u["type"] != "aviation") and "line_damage" not in u:
+            errors.append(f"units.{uid}: crosses our line but has no line_damage")
     return errors
 
 
 def table(rules):
     star = lambda u, f: "*" if f in u.get("proposed", []) else ""
-    rows = ["| Unit | Type | HP | Armour | Damage /s | Accuracy | Range | Speed | Adapts | Special |",
-            "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
+    rows = ["| Unit | Type | HP | Armour | Damage /s | Accuracy | Range | Speed | Adapts | Line dmg | Special |",
+            "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
     for uid, u in rules["units"].items():
         w = u.get("weapon") or {}
         dmg = "—" if not w else (f"{w['hit_damage']} per hit" if "hit_damage" in w else f"{w['dps']} {w['damage_type'].replace('_', ' ')}")
@@ -72,6 +77,8 @@ def table(rules):
         rng = f"{w['range_m']} m{star(u, 'range_m')}" if "range_m" in w else "—"
         lag = u.get("adaptation_lag")
         lag = "—" if lag is None else f"{lag} wave{'s' if lag > 1 else ''}{star(u, 'adaptation_lag')}"
+        ld = u.get('line_damage')
+        ld = '—' if ld is None else f"{ld}{star(u, 'line_damage')}"
         special = []
         if u.get("ew") == "always":
             special.append("EW always")
@@ -98,11 +105,11 @@ def table(rules):
         if u.get("requires"):
             special.append(f"needs a {rules['units'][u['requires']]['name'].lower()}")
         if u.get("behaviour") == "fly_to_rear":
-            special.append("flies to the rear")
+            special.append("ignores defenders, flies to the rear")
         tb = u["targetable_by"]
         if tb != ["ground"]:
             special.append("hit by " + ", ".join(t.replace("_", " ") for t in tb))
-        rows.append(f"| {u['name']} | {u['type']} | {u['hp']} | {u['armour']} | {dmg} | {acc} | {rng} | {u['speed']} m/s | {lag} | {'; '.join(special)} |")
+        rows.append(f"| {u['name']} | {u['type']} | {u['hp']} | {u['armour']} | {dmg} | {acc} | {rng} | {u['speed']} m/s | {lag} | {ld} | {'; '.join(special)} |")
     return "\n".join(rows)
 
 

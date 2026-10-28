@@ -4,7 +4,8 @@
     "Single source of truth for attacker units. The game and the balance simulator both read this file.",
     "Numbers are starting values for balancing. Fields listed in a unit's 'proposed' array were not specified by Yaroslav and are Claude's suggestions.",
     "Speeds are game speeds in m/s on open field at 1x (infantry run at 4x real walking pace). Terrain move cost divides speed.",
-    "Damage is per second of fire while the target is visible and in range, before accuracy, armour and cover."
+    "Damage is per second of fire while the target is visible and in range, before accuracy, armour and cover.",
+    "Our FPV is tuned so about 3 hits destroy the armoured patrol vehicle (60 HP, high armour: 40% of each hit)."
   ],
   "unit_types": [
     "troops",
@@ -75,12 +76,21 @@
       }
     },
     "explosive": {
-      "desc": "mortar, grenades, FPV, tank HE",
+      "desc": "mortar, grenades, tank HE",
       "vs_armour": {
         "none": 1.0,
         "low": 0.9,
         "medium": 0.6,
         "high": 0.35
+      }
+    },
+    "fpv": {
+      "desc": "FPV drone warheads",
+      "vs_armour": {
+        "none": 1.0,
+        "low": 0.9,
+        "medium": 0.6,
+        "high": 0.4
       }
     },
     "anti_tank": {
@@ -155,6 +165,13 @@
     "radius_m": 40,
     "effect": "Our FPV and drones cannot fly inside the radius."
   },
+  "line": {
+    "hp": 20,
+    "notes": "Each attacker that reaches the rear edge deals its line_damage. Passengers still inside a vehicle add 1 each. At 0 HP the field is lost.",
+    "proposed": [
+      "hp"
+    ]
+  },
   "units": {
     "recruit": {
       "name": "Recruit",
@@ -182,7 +199,8 @@
         "range_m",
         "wave_points",
         "loss_value_usd"
-      ]
+      ],
+      "line_damage": 1
     },
     "regular": {
       "name": "Regular soldier",
@@ -212,7 +230,8 @@
         "ew_chance",
         "wave_points",
         "loss_value_usd"
-      ]
+      ],
+      "line_damage": 1
     },
     "special_forces": {
       "name": "Special forces",
@@ -240,14 +259,15 @@
         "range_m",
         "wave_points",
         "loss_value_usd"
-      ]
+      ],
+      "line_damage": 1
     },
     "old_tank": {
       "name": "Old Soviet-era tank",
       "type": "vehicle",
       "category": "armoured",
       "hp": 300,
-      "armour": "low",
+      "armour": "medium",
       "speed": 4.5,
       "adaptation_lag": 3,
       "tree_move_cost": 5,
@@ -274,9 +294,10 @@
         "range_m",
         "tree_move_cost",
         "wave_points",
-        "loss_value_usd"
+        "loss_value_usd",
+        "line_damage"
       ],
-      "review": "Armour 'low' means rifles deal 50% damage to this tank. Consider 'medium' so only heavy weapons, explosives and ATGMs hurt it."
+      "line_damage": 5
     },
     "modern_tank": {
       "name": "Modern tank",
@@ -312,8 +333,10 @@
         "ew_chance",
         "tree_move_cost",
         "wave_points",
-        "loss_value_usd"
-      ]
+        "loss_value_usd",
+        "line_damage"
+      ],
+      "line_damage": 8
     },
     "ifv": {
       "name": "Infantry fighting vehicle",
@@ -337,7 +360,8 @@
         "unit": "regular",
         "count": 8,
         "dismount_at_hp": 0.2,
-        "dismount_interval_s": 0.7
+        "dismount_interval_s": 0.7,
+        "notes": "Default passengers; each level can override."
       },
       "blast": {
         "radius_m": 8,
@@ -361,12 +385,13 @@
         "range_m",
         "ew_chance",
         "tree_move_cost",
-        "carries.unit",
         "dismount_interval_s",
         "blast.radius_m",
         "wave_points",
-        "loss_value_usd"
-      ]
+        "loss_value_usd",
+        "line_damage"
+      ],
+      "line_damage": 4
     },
     "mrap": {
       "name": "Armoured patrol vehicle (Tigr type)",
@@ -390,7 +415,8 @@
         "unit": "special_forces",
         "count": 4,
         "dismount_at_hp": 0.2,
-        "dismount_interval_s": 0.7
+        "dismount_interval_s": 0.7,
+        "notes": "Default passengers; each level can override."
       },
       "blast": {
         "radius_m": 6,
@@ -414,12 +440,13 @@
         "range_m",
         "ew_chance",
         "tree_move_cost",
-        "carries.unit",
         "dismount_at_hp",
         "blast.radius_m",
         "wave_points",
-        "loss_value_usd"
-      ]
+        "loss_value_usd",
+        "line_damage"
+      ],
+      "line_damage": 3
     },
     "buggy": {
       "name": "Buggy",
@@ -441,8 +468,10 @@
         "hp",
         "adaptation_lag",
         "wave_points",
-        "loss_value_usd"
-      ]
+        "loss_value_usd",
+        "line_damage"
+      ],
+      "line_damage": 1
     },
     "motorbike": {
       "name": "Motorbike",
@@ -466,8 +495,10 @@
         "adaptation_lag",
         "tree_move_cost",
         "wave_points",
-        "loss_value_usd"
-      ]
+        "loss_value_usd",
+        "line_damage"
+      ],
+      "line_damage": 1
     },
     "van": {
       "name": "Light utility van (bukhanka)",
@@ -484,7 +515,8 @@
         "unit": "recruit",
         "count": 12,
         "dismount_at_hp": 0.2,
-        "dismount_interval_s": 0.6
+        "dismount_interval_s": 0.6,
+        "notes": "Default passengers; each level can override."
       },
       "blast": {
         "radius_m": 6,
@@ -501,12 +533,13 @@
       "proposed": [
         "hp",
         "adaptation_lag",
-        "carries.unit",
         "dismount_interval_s",
         "blast.radius_m",
         "wave_points",
-        "loss_value_usd"
-      ]
+        "loss_value_usd",
+        "line_damage"
+      ],
+      "line_damage": 2
     },
     "recon_uav": {
       "name": "Recon UAV",
@@ -547,7 +580,7 @@
       "speed": 30,
       "adaptation_lag": null,
       "weapon": {
-        "damage_type": "explosive",
+        "damage_type": "fpv",
         "hit_damage": 60,
         "single_use": true
       },
@@ -580,18 +613,17 @@
       "weapon": null,
       "crosses_line": true,
       "behaviour": "fly_to_rear",
-      "breakthrough_weight": 3,
       "targetable_by": [
         "air_defence"
       ],
       "wave_points": 8,
       "loss_value_usd": 50000,
       "proposed": [
-        "breakthrough_weight",
         "wave_points",
         "loss_value_usd"
       ],
-      "review": "It does not attack defenders. Proposal: reaching the rear edge counts as 3 breakthroughs (a strike on the rear)."
+      "line_damage": 10,
+      "notes": "Ignores defenders; the threat is its line damage."
     },
     "helicopter": {
       "name": "Transport helicopter",
@@ -608,7 +640,8 @@
         "unit": "regular",
         "count": 20,
         "drop_at_distance": 0.55,
-        "dismount_interval_s": 0.4
+        "dismount_interval_s": 0.4,
+        "notes": "Default passengers; each level can override."
       },
       "targetable_by": [
         "air_defence",
@@ -618,7 +651,6 @@
       "wave_points": 30,
       "loss_value_usd": 15000000,
       "proposed": [
-        "carries.unit",
         "dismount_interval_s",
         "wave_points",
         "loss_value_usd"
