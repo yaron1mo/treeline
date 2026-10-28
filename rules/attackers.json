@@ -173,15 +173,27 @@
     ]
   },
   "pathfinding": {
-    "notes": "Route cost per cell = travel time + safety_weight x expected damage. Wave 1 is mostly about speed; from wave 2 safety comes first, speed second.",
-    "safety_weight": {
-      "wave_1": 0.1,
-      "later_waves": 30
+    "notes": "Attackers read the threat before choosing a route. Three modes, checked in order, per unit class and lag group.",
+    "threat_zone": "Every spot inside the range of a known defender whose weapon can damage this unit after armour.",
+    "modes": {
+      "no_threat": {
+        "when": "No known threat zones (wave 1, or nothing known yet)",
+        "cost": "travel time"
+      },
+      "evade": {
+        "when": "A route from the enemy edge to our line exists outside every threat zone",
+        "cost": "travel time + length_weight x metres, threat zones closed",
+        "length_weight_s_per_m": 0.1
+      },
+      "safest": {
+        "when": "Every route crosses a threat zone",
+        "cost": "danger_weight x expected damage + metres (speed ignored)",
+        "danger_weight_m_per_hp": 1000,
+        "round_damage_to_hp": true
+      }
     },
-    "safety_weight_meaning": "Seconds of extra travel an attacker accepts to avoid 1 HP of expected damage.",
     "memory_decay_per_wave": 0.3,
-    "danger_spread_m": 4,
-    "knowledge": "Defender positions that fired or were seen, plus damage taken per cell, as of adaptation_lag waves ago. Newer positions are unknown to that unit."
+    "knowledge": "Defender positions that fired or were seen, as of adaptation_lag waves ago. Newer positions are unknown to that unit."
   },
   "units": {
     "recruit": {
