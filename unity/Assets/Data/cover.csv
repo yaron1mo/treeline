@@ -1,0 +1,17 @@
+cover,applies_to,shooter,level,multiplier
+tree,accuracy,troops,high,0.5
+tree,accuracy,vehicle,none,1.0
+tree,accuracy,aviation,none,1.0
+tree,accuracy,indirect,none,1.0
+tree,damage,troops,modest,0.7
+tree,damage,vehicle,modest,0.7
+tree,damage,aviation,modest,0.7
+tree,damage,indirect,low,0.85
+trench,accuracy,troops,low,0.85
+trench,accuracy,vehicle,high,0.5
+trench,accuracy,aviation,modest,0.7
+trench,accuracy,indirect,none,1.0
+trench,damage,troops,low,0.85
+trench,damage,vehicle,high,0.5
+trench,damage,aviation,low,0.85
+trench,damage,indirect,modest,0.7
