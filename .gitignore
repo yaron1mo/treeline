@@ -1,2 +1,27 @@
 __pycache__/
 .DS_Store
+
+# --- Unity (project lives in unity/) ---
+unity/[Ll]ibrary/
+unity/[Tt]emp/
+unity/[Oo]bj/
+unity/[Bb]uild/
+unity/[Bb]uilds/
+unity/[Ll]ogs/
+unity/[Uu]ser[Ss]ettings/
+unity/[Mm]emoryCaptures/
+unity/[Rr]ecordings/
+unity/.vs/
+unity/.vscode/
+unity/.idea/
+unity/*.csproj
+unity/*.sln
+unity/*.suo
+unity/*.user
+unity/*.pidb
+unity/*.unityproj
+unity/*.apk
+unity/*.aab
+unity/*.unitypackage
+unity/crashlytics-build.session
+unity/sysinfo.txt
