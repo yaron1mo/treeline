@@ -4,7 +4,7 @@ A maze-building tower defence on the open steppe. Attackers take the cheapest ro
 
 ## Play the test build
 
-Open `index.html` in any browser. Pick a field, drag on it to draw terrain, and send a wave.
+Open `prototype-web/index.html` in any browser (the web prototype, kept as the reference for the Unity port). Pick a field, drag on it to draw terrain, and send a wave.
 
 ## Fields
 

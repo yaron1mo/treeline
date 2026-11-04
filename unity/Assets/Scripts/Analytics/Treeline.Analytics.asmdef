@@ -1,0 +1,17 @@
+{
+    "name": "Treeline.Analytics",
+    "rootNamespace": "Treeline.Analytics",
+    "references": [
+        "Treeline.Sim",
+        "Treeline.Game"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

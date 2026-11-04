@@ -1,0 +1,16 @@
+{
+    "name": "Treeline.Game",
+    "rootNamespace": "Treeline.Game",
+    "references": [
+        "Treeline.Sim"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
