@@ -105,9 +105,20 @@ namespace Treeline.Sim
             return o != null ? baseSight * o.OnSightMult : baseSight;
         }
 
+        struct SoftSegment
+        {
+            public Obstacle O;
+            public float From, To;   // distances along the ray where it enters and leaves
+            public bool Inside;      // the observer starts inside it
+        }
+
         /// <summary>
         /// Chance (0 to 1) that the observer recognises something at the target point.
         /// 0 = not seen (out of range or hidden), 1 = clearly seen.
+        /// Soft obstacles (grove, forest belt) blur the view along the ray: a target inside one, or behind one
+        /// the ray entered from outside, is harder to recognise the farther it is. An observer standing inside
+        /// a belt sees clearly past the edge of it, so its circle becomes an hourglass: short along the belt,
+        /// full towards the open ground.
         /// </summary>
         public float SeeChance(float ox, float oy, float tx, float ty, float baseSight)
         {
@@ -119,13 +130,15 @@ namespace Treeline.Sim
             int startCell = CellOf(ox, oy), targetCell = CellOf(tx, ty);
             var own = cells[startCell] >= 0 ? used[cells[startCell]] : null;
 
-            // Last distance at which the ray was inside each soft obstacle; NaN = not crossed.
-            float[] lastSoft = null;
-
             // Looking at the body of an obstacle is fine: its own cells do not hide it from you.
             var targetFull = cells[targetCell] >= 0 && used[cells[targetCell]].Sight == SightEffect.Full ? used[cells[targetCell]] : null;
             Obstacle firstFull = null;
             bool leftBody = false;
+
+            List<SoftSegment> segments = null;
+            int curId = -1;
+            float curFrom = 0f, curTo = 0f;
+            bool curInside = false;
 
             int n = (int)Math.Ceiling(dist / Step);
             for (int k = 0; k <= n; k++)
@@ -134,6 +147,21 @@ namespace Treeline.Sim
                 float t = d / dist;
                 int cell = CellOf(ox + dx * t, oy + dy * t);
                 short ci = cells[cell];
+
+                // Track the soft stretches of the ray.
+                int sid = ci >= 0 && used[ci].Sight == SightEffect.Soft ? ci : -1;
+                if (sid != curId)
+                {
+                    if (curId >= 0)
+                    {
+                        if (segments == null) segments = new List<SoftSegment>();
+                        segments.Add(new SoftSegment { O = used[curId], From = curFrom, To = curTo, Inside = curInside });
+                    }
+                    curId = sid;
+                    if (sid >= 0) { curFrom = d; curTo = d; curInside = k == 0; }
+                }
+                else if (sid >= 0) curTo = d;
+
                 if (ci < 0) { if (firstFull != null) leftBody = true; continue; }
                 var o = used[ci];
 
@@ -145,25 +173,23 @@ namespace Treeline.Sim
                     if (o == targetFull && !leftBody && (firstFull == null || firstFull == o)) { firstFull = o; continue; }
                     return 0f;
                 }
-                if (o.Sight == SightEffect.Soft)
-                {
-                    if (firstFull != null) leftBody = true;
-                    if (lastSoft == null)
-                    {
-                        lastSoft = new float[used.Count];
-                        for (int i = 0; i < lastSoft.Length; i++) lastSoft[i] = float.NaN;
-                    }
-                    lastSoft[ci] = d;
-                }
+                if (firstFull != null) leftBody = true;
+            }
+            if (curId >= 0)
+            {
+                if (segments == null) segments = new List<SoftSegment>();
+                segments.Add(new SoftSegment { O = used[curId], From = curFrom, To = curTo, Inside = curInside });
             }
 
             float chance = 1f;
-            if (lastSoft != null)
+            if (segments != null)
             {
-                for (int i = 0; i < lastSoft.Length; i++)
+                foreach (var seg in segments)
                 {
-                    if (float.IsNaN(lastSoft[i])) continue;
-                    float c = used[i].DetectChance - used[i].FalloffPerM * (dist - lastSoft[i]);
+                    float c;
+                    if (dist <= seg.To + 1e-3f) c = seg.O.DetectChance - seg.O.FalloffPerM * (dist - seg.From); // target inside it
+                    else if (seg.Inside) continue;                                                          // clear past the edge of our own belt
+                    else c = seg.O.DetectChance - seg.O.FalloffPerM * (dist - seg.To);                      // behind it
                     if (c < chance) chance = c;
                 }
             }

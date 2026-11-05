@@ -71,6 +71,20 @@ namespace Treeline.Tests
         }
 
         [Test]
+        public void ObserverInsideABelt_SeesAnHourglass_ShortAlongTheBeltAndClearTowardsTheOpenGround()
+        {
+            var v = Map(new Feature { Type = "belt", Line = new[] { new Pt(-10, 30), new Pt(110, 30) }, Width = 6f });
+            float along = v.SeeChance(50, 30, 62, 30, 30f);
+            float alongFar = v.SeeChance(50, 30, 78, 30, 30f);
+            Assert.Greater(along, 0f);
+            Assert.Less(along, 1f);
+            Assert.AreEqual(0f, alongFar, "trees all the way: nothing recognised that far along the belt");
+            Assert.AreEqual(1f, v.SeeChance(50, 30, 50, 48, 30f), "clear towards the field on one side");
+            Assert.AreEqual(1f, v.SeeChance(50, 30, 50, 12, 30f), "clear towards the field on the other side");
+            Assert.AreEqual(1f, v.SeeChance(50, 30, 60, 42, 30f), "clear at an angle too");
+        }
+
+        [Test]
         public void Hill_GivesLongerSightToWhoStandsOnItAndDoesNotBlockThem()
         {
             var v = Map(new Feature { Type = "hill", Poly = Box(5, 20, 20, 40) });
