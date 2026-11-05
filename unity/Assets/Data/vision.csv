@@ -1,0 +1,9 @@
+obstacle,kind,effect,detect_chance_at_obstacle,detect_falloff_per_m,applies_inside,notes
+rock,object,block,,,FALSE,"Nothing is seen behind it, inside the shadow sector"
+wreck,object,block,,,FALSE,"Broken vehicle, same as a rock"
+heap,terrain,block,,,FALSE,Spoil heap (Heap)
+embankment,terrain,block,,,FALSE,Embankment (Embankment); proposal
+hill,terrain,block,,,FALSE,Hides what is behind the crest; proposal
+bush,object,soft,0.6,0.05,TRUE,Proposal values. Recognition chance behind it starts at detect_chance_at_obstacle and drops by detect_falloff_per_m
+grove,terrain,soft,0.5,0.04,TRUE,Proposal values
+belt,terrain,soft,0.5,0.03,TRUE,"Forest belt. Seen blurred, inside and beyond; proposal values"
