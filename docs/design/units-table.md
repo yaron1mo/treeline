@@ -17,3 +17,7 @@ Workflow: edit in the sheet, export each tab as CSV into `unity/Assets/Data/` (`
 - Shared vision: all attackers share what any attacker sees (no delay yet).
 - Obstacle numbers are proposals, except those moved from the old `cover` rows and the code move costs.
 - Open: how firing flash affects being seen, night effects, defenders are not in the table yet.
+
+## Defenders (added 2026-11-05)
+
+Seven proposal rows with `side = defence`: rifle_squad, machine_gun, sniper, mortar, anti_tank, air_defence, observation_post. They use the same columns as attackers plus `weapon_class` (small_arms, machine_gun, sniper, explosive, anti_tank, air_defence) and `build_cost`. All numbers are proposals to balance. Mortars fire at what any defender sees; the observation post has no weapon and extends sight.
