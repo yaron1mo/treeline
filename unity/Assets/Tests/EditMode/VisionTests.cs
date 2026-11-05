@@ -66,7 +66,8 @@ namespace Treeline.Tests
             Assert.Greater(near, 0f);
             Assert.Less(near, 1f);
             Assert.Less(far, near, "farther behind the belt is harder to see");
-            Assert.Greater(inside, near, "inside the belt is blurred but closer");
+            Assert.Greater(inside, far, "inside the belt is blurred, and clearer than far behind it");
+            Assert.Less(inside, 1f, "inside the belt is blurred");
             Assert.AreEqual(1f, v.SeeChance(5, 30, 20, 30, 30f), "in front of the belt is clear");
         }
 

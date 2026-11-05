@@ -11,8 +11,6 @@ namespace Treeline.Sim
     /// </summary>
     public sealed class VisionMap
     {
-        const float Step = NavGrid.CellSize * 0.5f;
-
         public readonly int Cols, Rows;
         public readonly float Width, Height;
         readonly short[] cells;                 // index into 'used', -1 = nothing
@@ -140,12 +138,23 @@ namespace Treeline.Sim
             float curFrom = 0f, curTo = 0f;
             bool curInside = false;
 
-            int n = (int)Math.Ceiling(dist / Step);
-            for (int k = 0; k <= n; k++)
+            // Walk every cell the ray touches, in order (grid traversal), with the distance where it enters and leaves each.
+            const float C = NavGrid.CellSize;
+            float dirX = dx / dist, dirY = dy / dist;
+            int cx = (int)Math.Floor(ox / C), cy = (int)Math.Floor(oy / C);
+            int endX = (int)Math.Floor(tx / C), endY = (int)Math.Floor(ty / C);
+            int stepX = dirX > 0 ? 1 : (dirX < 0 ? -1 : 0), stepY = dirY > 0 ? 1 : (dirY < 0 ? -1 : 0);
+            float nextX = stepX == 0 ? float.PositiveInfinity : ((stepX > 0 ? (cx + 1) * C : cx * C) - ox) / dirX;
+            float nextY = stepY == 0 ? float.PositiveInfinity : ((stepY > 0 ? (cy + 1) * C : cy * C) - oy) / dirY;
+            float deltaX = stepX == 0 ? float.PositiveInfinity : C / Math.Abs(dirX);
+            float deltaY = stepY == 0 ? float.PositiveInfinity : C / Math.Abs(dirY);
+
+            float enter = 0f;
+            int guard = Cols + Rows + 4;
+            for (int k = 0; k < guard; k++)
             {
-                float d = k == n ? dist : k * Step;
-                float t = d / dist;
-                int cell = CellOf(ox + dx * t, oy + dy * t);
+                float leave = Math.Min(Math.Min(nextX, nextY), dist);
+                int cell = CellOf((cx + 0.5f) * C, (cy + 0.5f) * C);
                 short ci = cells[cell];
 
                 // Track the soft stretches of the ray.
@@ -158,22 +167,29 @@ namespace Treeline.Sim
                         segments.Add(new SoftSegment { O = used[curId], From = curFrom, To = curTo, Inside = curInside });
                     }
                     curId = sid;
-                    if (sid >= 0) { curFrom = d; curTo = d; curInside = k == 0; }
+                    if (sid >= 0) { curFrom = enter; curTo = leave; curInside = k == 0; }
                 }
-                else if (sid >= 0) curTo = d;
+                else if (sid >= 0) curTo = leave;
 
-                if (ci < 0) { if (firstFull != null) leftBody = true; continue; }
-                var o = used[ci];
-
-                if (o.Sight == SightEffect.Full)
+                if (ci < 0) { if (firstFull != null) leftBody = true; }
+                else
                 {
-                    // Standing on it (a hill) or looking at the obstacle itself does not block.
-                    if (o == own) continue;
-                    if (cell == targetCell) continue;
-                    if (o == targetFull && !leftBody && (firstFull == null || firstFull == o)) { firstFull = o; continue; }
-                    return 0f;
+                    var o = used[ci];
+                    if (o.Sight == SightEffect.Full)
+                    {
+                        // Standing on it (a hill) or looking at the obstacle itself does not block.
+                        bool free = o == own || cell == targetCell
+                            || (o == targetFull && !leftBody && (firstFull == null || firstFull == o));
+                        if (!free) return 0f;
+                        if (o != own && cell != targetCell) firstFull = o;
+                    }
+                    else if (firstFull != null) leftBody = true;
                 }
-                if (firstFull != null) leftBody = true;
+
+                if ((cx == endX && cy == endY) || leave >= dist) break;
+                enter = leave;
+                if (nextX < nextY) { cx += stepX; nextX += deltaX; }
+                else { cy += stepY; nextY += deltaY; }
             }
             if (curId >= 0)
             {
