@@ -1,0 +1,16 @@
+id,name,kind,sight,detect_chance,detect_falloff_per_m,cover_applies,cover_acc_troops,cover_acc_vehicle,cover_acc_aviation,cover_acc_indirect,cover_dmg_troops,cover_dmg_vehicle,cover_dmg_aviation,cover_dmg_indirect,on_range_mult,on_sight_mult,on_cover_mult,move_cost_infantry,move_cost_vehicle,notes
+rock,Rock,object,full,,,behind,0.5,0.5,0.85,1,0.7,0.7,0.85,1,,,,,,"Not destructible. Protects whoever stands behind it, for both sides (mortars behind rocks)."
+wreck,Broken vehicle,object,full,,,behind,0.5,0.5,0.85,1,0.7,0.7,0.85,1,,,,,,Same as a rock. Not destructible.
+bush,Bush,object,full,,,behind,1,1,1,1,1,1,1,1,,,,,,Hides what is behind it but gives no protection.
+heap,Spoil heap,terrain,full,,,behind,0.5,0.5,0.85,1,0.7,0.7,0.85,1,,,,3,blocked,Terrain Heap. Cover values are a proposal.
+embankment,Embankment,terrain,full,,,behind,0.5,0.5,0.85,1,0.7,0.7,0.85,1,,,,2,blocked,Terrain Embankment. Cover values are a proposal.
+hill,Hill,terrain,full,,,behind,0.5,0.5,0.85,1,0.7,0.7,0.85,1,1.15,1.3,0.7,1.6,1.8,"Behind it: like a rock. On top: more range and sight, enemy direct fire is less accurate (on_cover_mult). on_ values are a proposal."
+grove,Grove,terrain,soft,0.5,0.04,inside,0.5,1,1,1,0.7,0.7,0.7,0.85,,,,2,blocked,"Seen blurred, inside and beyond. Cover is from the old 'tree' rows. Detect values are a proposal."
+belt,Forest belt,terrain,soft,0.5,0.03,inside,0.5,1,1,1,0.7,0.7,0.7,0.85,,,,2,3,"Seen blurred, inside and beyond. Cover is from the old 'tree' rows. Detect values are a proposal."
+trench,Trench,object,none,,,inside,0.85,0.5,0.7,1,0.85,0.5,0.85,0.7,,,,,,Values are from the old 'trench' rows.
+balka,Gully,terrain,none,,,,,,,,,,,,,,,1.2,blocked,Terrain Balka. Move cost only for now.
+pond,Pond,terrain,none,,,,,,,,,,,,,,,blocked,blocked,Terrain Pond.
+river,River,terrain,none,,,,,,,,,,,,,,,4,blocked,Terrain River. Vehicles cross only at fords.
+ford,Ford,terrain,none,,,,,,,,,,,,,,,2,2,Terrain Ford.
+pipe,Pipe,terrain,none,,,,,,,,,,,,,,,2,blocked,Terrain Pipe.
+road,Road,terrain,none,,,,,,,,,,,,,,,0.8,0.5,Terrain Road.
