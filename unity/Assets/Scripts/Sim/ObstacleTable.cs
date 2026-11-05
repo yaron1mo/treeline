@@ -21,6 +21,9 @@ namespace Treeline.Sim
         public float OnRangeMult = 1f, OnSightMult = 1f, OnCoverMult = 1f;
         /// <summary>Move cost per class; null when the table leaves it empty, PositiveInfinity for "blocked".</summary>
         public float? MoveCostInfantry, MoveCostVehicle;
+        /// <summary>True if the player may place it; BuildCost is in budget points.</summary>
+        public bool Buildable;
+        public float BuildCost;
 
         public bool HasOnBonus => OnRangeMult != 1f || OnSightMult != 1f || OnCoverMult != 1f;
     }
@@ -95,6 +98,8 @@ namespace Treeline.Sim
                     OnCoverMult = rd.Num(r, "on_cover_mult", 1f),
                     MoveCostInfantry = rd.OptNum(r, "move_cost_infantry"),
                     MoveCostVehicle = rd.OptNum(r, "move_cost_vehicle"),
+                    Buildable = rd.Cell(r, "buildable").Equals("TRUE", StringComparison.OrdinalIgnoreCase),
+                    BuildCost = rd.Num(r, "build_cost", 0f),
                 };
 
                 string sight = rd.Cell(r, "sight").ToLowerInvariant();

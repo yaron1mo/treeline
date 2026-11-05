@@ -15,6 +15,7 @@ Read this file first. It applies to Claude, Codex and any other agent. The human
 | `unity/Assets/Scripts/Sim` | Pure C# simulation, **no UnityEngine** | Claude |
 | `unity/Assets/Scripts/Game` | Bridge: runs Sim, owns game loop, scenes | Claude |
 | `unity/Assets/Scripts/Analytics` | Event tracking | Claude |
+| `unity/Assets/Scripts/Meta` | Everything outside the battle: campaign, endless mode, weekly challenges, commanders, progression, menus flow (created when work starts) | Codex |
 | `unity/Assets/Scripts/Render` | Drawing terrain, units, effects | Codex |
 | `unity/Assets/Scripts/UI`, `unity/Assets/UI` | Menus, HUD (UI Toolkit) | Codex |
 | `unity/Assets/Art`, `unity/Assets/Audio` | Visuals, sound | Codex |
@@ -25,6 +26,8 @@ Read this file first. It applies to Claude, Codex and any other agent. The human
 | `docs/` | Design notes and change logs | both |
 | `docs/story/` | Story, setting, names, texts | Codex (Claude may edit, must log) |
 
+**Who owns what (decided 2026-11-05, Yaroslav).** Claude: units and every in-game process (the battle: simulation, rules, balance, data tables for units and obstacles, analytics). Codex / ChatGPT: everything that is not the battle: story, maps and their content, game modes (campaign, endless, weekly challenges), commander selection and progression, menus, easter eggs and similar. Shared: the economy of progression and monetisation, decided with Yaroslav.
+
 Ownership is a default, not a wall. Either agent may edit anything, but **say so in the log** when touching the other's area.
 
 ## The contract between layers
@@ -32,6 +35,7 @@ Ownership is a default, not a wall. Either agent may edit anything, but **say so
 - `Sim` knows nothing about Unity, rendering or UI. It takes data and time steps, and exposes state and events.
 - `Render` and `UI` read `Sim` state and listen to its events. They never change simulation values directly; they send commands (place defence, start wave).
 - `Game` is the only place that connects the three.
+- The meta layer (modes, commanders, progression) talks to `Sim` only through a run setup (field, wave list, mode, commander) and a run result. It never changes unit numbers; commanders and upgrades are data rows that point at unit and obstacle `id`s. Claude defines this interface; Codex fills it with content.
 - Every number that affects balance lives in `unity/Assets/Data`, never hard-coded in scripts.
 - Assembly definitions enforce this: `Treeline.Sim` has no Unity references; `Render`, `UI`, `Analytics` reference `Sim`/`Game` but not each other.
 

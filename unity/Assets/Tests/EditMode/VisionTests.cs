@@ -121,6 +121,24 @@ namespace Treeline.Tests
         }
 
         [Test]
+        public void PlayerBuiltObstacles_FollowTheAgreedRules()
+        {
+            string path = Path.Combine(Application.dataPath, "Data", "obstacles.csv");
+            var t = ObstacleTable.Parse(File.ReadAllText(path));
+            var wire = t.Get("wire");
+            var hedgehog = t.Get("hedgehog");
+            var trench = t.Get("trench");
+            Assert.IsTrue(wire.Buildable && hedgehog.Buildable && trench.Buildable);
+            Assert.IsFalse(t.Get("rock").Buildable);
+            Assert.Greater(wire.BuildCost, 0f);
+            Assert.Greater(wire.MoveCostInfantry.Value, 1f, "wire slows infantry");
+            Assert.IsFalse(float.IsPositiveInfinity(wire.MoveCostInfantry.Value), "infantry can always cut through wire");
+            Assert.IsTrue(float.IsPositiveInfinity(hedgehog.MoveCostVehicle.Value), "a hedgehog stops vehicles");
+            Assert.IsFalse(float.IsPositiveInfinity(hedgehog.MoveCostInfantry.Value), "infantry walk around a hedgehog");
+            Assert.AreEqual(1f, trench.MoveCostInfantry.Value, "a trench blocks nothing");
+        }
+
+        [Test]
         public void CsvReader_HandlesQuotesAndLineEndings()
         {
             var rows = Treeline.Sim.Csv.Parse("a,b\r\n\"x, y\",\"he said \"\"hi\"\"\"\r\n");
