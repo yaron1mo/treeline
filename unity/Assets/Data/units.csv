@@ -14,7 +14,7 @@ fpv,FPV drone,attack,aviation,drone,4,none,30,,fpv,,,,,,,,,FALSE,,,60,,,,,,,FALS
 one_way_drone,One-way attack drone (Shahed type),attack,aviation,drone,150,none,18,,,,,,,,,,,FALSE,,10,,,,,,,,TRUE,fly_to_rear,,air_defence,50000,Ignores defenders; the threat is its line damage.,,
 helicopter,Transport helicopter,attack,aviation,helicopter,150,low,35,,,,,,,,,,,FALSE,,,,regular,20,0.55,0.4,,,FALSE,air_assault,,air_defence fpv explosive,15000000,dismount_at_hp here means drop point as a fraction of the route (0.55),,
 rifle_squad,Rifle squad,defence,troops,infantry,30,low,0,,small_arms,8,250,0.5,FALSE,,30,,,FALSE,,,,,,,,,,,static,,,,Proposal. Cheap all-round defence.,small_arms,100
-machine_gun,Machine gun crew,defence,troops,support,25,low,0,,small_arms,20,400,0.4,FALSE,,30,,,FALSE,,,,,,,,,,,static,,,,Proposal. Strong against infantry and drones.,machine_gun,200
+machine_gun,Machine gunner,defence,troops,support,25,low,0,,small_arms,20,400,0.4,FALSE,,30,,,FALSE,,,,,,,,,,,static,,,,Proposal. Strong against infantry and drones.,machine_gun,200
 sniper,Sniper,defence,troops,sniper,12,none,0,,heavy,12,700,0.85,FALSE,,40,,,FALSE,,,,,,,,,,,static,,,,"Proposal. Long range, low damage rate; picks off officers and drone crews.",sniper,300
 mortar,Mortar crew,defence,indirect,mortar,15,none,0,,explosive,15,900,0.3,FALSE,,30,,,FALSE,,,,,,,,6,,,indirect_fire,,,,Proposal. Fires at targets seen by any defender (shared vision). Sits behind rocks and wrecks.,explosive,350
 anti_tank,Anti-tank missile team,defence,troops,anti_tank,20,low,0,,anti_tank,40,1000,0.7,FALSE,,30,,,FALSE,,,,,,,,,,,static,,,,Proposal. Vehicles only.,anti_tank,450
