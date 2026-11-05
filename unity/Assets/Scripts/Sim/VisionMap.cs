@@ -212,6 +212,29 @@ namespace Treeline.Sim
             return chance < 0f ? 0f : chance;
         }
 
+        /// <summary>
+        /// The obstacle protecting the target from this shooter, or null. Standing inside one (trench, forest)
+        /// counts; so does having a full obstacle (rock, wreck) within a few metres on the shooter's side.
+        /// </summary>
+        public Obstacle CoverFor(float sx, float sy, float tx, float ty)
+        {
+            var here = ObstacleAt(tx, ty);
+            if (here != null && here.CoverApplies == "inside") return here;
+
+            float dx = sx - tx, dy = sy - ty;
+            float dist = (float)Math.Sqrt(dx * dx + dy * dy);
+            if (dist < 1e-3f) return null;
+            int targetCell = CellOf(tx, ty);
+            for (float d = 0.5f; d <= Math.Min(6f, dist); d += 0.5f)
+            {
+                int cell = CellOf(tx + dx / dist * d, ty + dy / dist * d);
+                if (cell == targetCell) continue;
+                var o = ObstacleInCell(cell);
+                if (o != null && o != here && o.Sight == SightEffect.Full && o.CoverApplies == "behind") return o;
+            }
+            return null;
+        }
+
         /// <summary>The chance for every cell centre around the observer, indexed like the nav grid (row * Cols + col).</summary>
         public float[] Compute(float ox, float oy, float baseSight)
         {

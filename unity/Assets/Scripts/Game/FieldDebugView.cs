@@ -40,6 +40,8 @@ namespace Treeline.Game
         // Battle test: deploy defenders at the cursor (the same red dot), start the round, move them.
         UnitTable unitTable;
         Battle battle;
+        ArmourTable armourTable;
+        int simSpeed = 1;
         bool battleMode;
         int lastDefenderId;
         string battleMessage = "";
@@ -62,6 +64,10 @@ namespace Treeline.Game
             try { if (System.IO.File.Exists(unitPath)) unitTable = UnitTable.Parse(System.IO.File.ReadAllText(unitPath)); }
             catch (System.Exception e) { Debug.LogError($"units.csv: {e.Message}"); }
 
+            string armourPath = System.IO.Path.Combine(Application.dataPath, "Data", "armour.csv");
+            try { if (System.IO.File.Exists(armourPath)) armourTable = ArmourTable.Parse(System.IO.File.ReadAllText(armourPath)); }
+            catch (System.Exception e) { Debug.LogError($"armour.csv: {e.Message}"); }
+
             sr = new GameObject("Terrain").AddComponent<SpriteRenderer>();
             sr.transform.SetParent(transform, false);
             Load(0);
@@ -77,7 +83,7 @@ namespace Treeline.Game
             infantryFlow = new FlowField(grid, UnitClass.Infantry);
             vehicleFlow = new FlowField(grid, UnitClass.Vehicle);
             vision = obstacles != null ? new VisionMap(field, obstacles) : null;
-            battle = unitTable != null ? new Battle(grid, unitTable, 1000f) : null;
+            battle = unitTable != null ? new Battle(grid, unitTable, 1000f, vision, armourTable) : null;
             lastDefenderId = 0;
             battleMessage = "";
             obsX = field.Width / 2f;
@@ -145,6 +151,8 @@ namespace Treeline.Game
             if (battle != null && battleMode)
             {
                 if (!showVision) PaintBlock(pixels, obsX, obsY, new Color32(235, 70, 60, 255));
+                foreach (var a in battle.Attackers)
+                    PaintBlock(pixels, a.X, a.Y, a.Class == UnitClass.Vehicle ? new Color32(255, 150, 40, 255) : new Color32(235, 70, 60, 255));
                 foreach (var d in battle.Defenders)
                     PaintBlock(pixels, d.X, d.Y, d.State == DefenderState.Standing ? new Color32(60, 130, 235, 255) : new Color32(140, 235, 245, 255));
             }
@@ -168,6 +176,8 @@ namespace Treeline.Game
             status = $"{fields[current].Name}  |  {klass}  |  routes: {shown} found, {blocked} blocked  |  fastest ~ {best * NavGrid.CellSize / GameSpeedMps:0} s";
             if (battle != null && battleMode)
                 status += $"\nBattle: {battle.Phase}, budget {battle.Budget:0}, defenders {battle.Defenders.Count}, run speed {battle.RunSpeedMps:0} m/s. {battleMessage}";
+            if (battle != null && battleMode && battle.Phase == BattlePhase.Round)
+                status += $"\nRound {battle.RoundTime:0} s, attackers {battle.Attackers.Count} (+{battle.Pending} to come), line {battle.LineDamage:0.#}/{battle.LineHealth:0}, {battle.Outcome}";
             if (showVision && vision != null)
                 status += $"\nVision: observer at ({obsX:0}, {obsY:0}), sight radius {vision.SightRadius(obsX, obsY, BaseSight):0} m (dark = hidden, bright = seen)";
         }
@@ -226,10 +236,16 @@ namespace Treeline.Game
         void Update()
         {
             if (battle == null || battle.Phase != BattlePhase.Round) return;
-            bool running = false;
-            foreach (var d in battle.Defenders) if (d.State == DefenderState.Running) running = true;
-            if (!running) return;
-            battle.Step(Time.deltaTime);
+            if (battle.Outcome != BattleOutcome.Ongoing) return;
+            // Fixed small steps so a fast-forward gives the same result as real time.
+            for (int i = 0; i < simSpeed * 3; i++) battle.Step(Time.deltaTime / 3f);
+            Redraw();
+        }
+
+        void StartWave(params (string id, int count, float delay, float interval)[] waves)
+        {
+            foreach (var w in waves) battle.QueueWave(w.id, w.count, w.delay, w.interval);
+            battle.StartRound();
             Redraw();
         }
 
@@ -266,7 +282,7 @@ namespace Treeline.Game
         {
             float s = Mathf.Max(1f, Screen.height / 540f);
             GUI.matrix = Matrix4x4.Scale(new Vector3(s, s, 1f));
-            GUILayout.BeginArea(new Rect(8, 8, Screen.width / s - 16, 240));
+            GUILayout.BeginArea(new Rect(8, 8, Screen.width / s - 16, 290));
             GUILayout.Label(status);
             if (fields.Count > 0)
             {
@@ -310,9 +326,16 @@ namespace Treeline.Game
                         else battleMessage = "";
                         Redraw();
                     }
+                    GUILayout.EndHorizontal();
+
+                    GUILayout.BeginHorizontal();
                     GUI.enabled = battle.Phase == BattlePhase.Preparation;
-                    if (GUILayout.Button("Start round", GUILayout.Height(34))) { battle.StartRound(); Redraw(); }
+                    if (GUILayout.Button("Start: 10 recruits", GUILayout.Height(34))) StartWave(("recruit", 10, 0f, 1.5f));
+                    if (GUILayout.Button("Start: 8 regulars", GUILayout.Height(34))) StartWave(("regular", 8, 0f, 1.5f));
+                    if (GUILayout.Button("Start: mixed", GUILayout.Height(34)))
+                        StartWave(("regular", 6, 0f, 1.5f), ("old_tank", 2, 6f, 6f), ("mrap", 2, 3f, 5f));
                     GUI.enabled = true;
+                    if (GUILayout.Button($"Speed x{simSpeed}", GUILayout.Height(34))) simSpeed = simSpeed == 1 ? 4 : 1;
                     GUILayout.EndHorizontal();
                 }
             }

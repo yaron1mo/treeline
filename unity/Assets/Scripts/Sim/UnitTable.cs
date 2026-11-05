@@ -8,7 +8,10 @@ namespace Treeline.Sim
     public sealed class UnitDef
     {
         public string Id = "", Name = "", Side = "", Type = "", Subtype = "", Behaviour = "", WeaponClass = "";
+        public string DamageType = "", Armour = "", TargetableBy = "";
         public float Hp, SpeedMps, SightRangeM, RangeM, BuildCost;
+        public float Dps, Accuracy, MoveAccuracyMult = 1f, LineDamage = 1f;
+        public bool FireOnMove;
 
         public bool IsDefence => Side == "defence";
     }
@@ -51,6 +54,14 @@ namespace Treeline.Sim
                     Subtype = Cell(col, r, "subtype"),
                     Behaviour = Cell(col, r, "behaviour"),
                     WeaponClass = Cell(col, r, "weapon_class"),
+                    DamageType = Cell(col, r, "damage_type"),
+                    Armour = Cell(col, r, "armour"),
+                    TargetableBy = Cell(col, r, "targetable_by"),
+                    FireOnMove = Cell(col, r, "fire_on_move").Equals("TRUE", StringComparison.OrdinalIgnoreCase),
+                    Dps = Num(col, r, "dps"),
+                    Accuracy = Num(col, r, "accuracy"),
+                    MoveAccuracyMult = NumOr(col, r, "move_accuracy_mult", 1f),
+                    LineDamage = NumOr(col, r, "line_damage", 1f),
                     Hp = Num(col, r, "hp"),
                     SpeedMps = Num(col, r, "speed_mps"),
                     SightRangeM = Num(col, r, "sight_range_m"),
@@ -67,10 +78,12 @@ namespace Treeline.Sim
         static string Cell(Dictionary<string, int> col, string[] r, string name) =>
             col.TryGetValue(name, out int i) && i < r.Length ? r[i].Trim() : "";
 
-        static float Num(Dictionary<string, int> col, string[] r, string name)
+        static float Num(Dictionary<string, int> col, string[] r, string name) => NumOr(col, r, name, 0f);
+
+        static float NumOr(Dictionary<string, int> col, string[] r, string name, float fallback)
         {
             string s = Cell(col, r, name);
-            return s.Length == 0 ? 0f : float.Parse(s, CultureInfo.InvariantCulture);
+            return s.Length == 0 ? fallback : float.Parse(s, CultureInfo.InvariantCulture);
         }
     }
 }
