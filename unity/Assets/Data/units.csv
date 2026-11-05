@@ -19,4 +19,3 @@ sniper,Sniper,defence,troops,sniper,12,none,0,,heavy,12,700,0.85,FALSE,,40,,,FAL
 mortar,Mortar crew,defence,indirect,mortar,15,none,0,,explosive,15,900,0.3,FALSE,,30,,,FALSE,,,,,,,,6,,,indirect_fire,,,,Proposal. Fires at targets seen by any defender (shared vision). Sits behind rocks and wrecks.,explosive,350
 anti_tank,Anti-tank missile team,defence,troops,anti_tank,20,low,0,,anti_tank,40,1000,0.7,FALSE,,30,,,FALSE,,,,,,,,,,,static,,,,Proposal. Vehicles only.,anti_tank,450
 air_defence,Air defence gun,defence,emplacement,air_defence,40,medium,0,,heavy,25,700,0.5,FALSE,,30,,,FALSE,,,,,,,,,,,static,,,,Proposal. Aircraft and drones only.,air_defence,500
-observation_post,Observation post,defence,troops,observer,10,none,0,,,,,,,,50,,,FALSE,,,,,,,,,,,spotter,,,,Proposal. No weapon; extends what the defence sees.,,120

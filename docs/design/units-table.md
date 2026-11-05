@@ -20,4 +20,4 @@ Workflow: edit in the sheet, export each tab as CSV into `unity/Assets/Data/` (`
 
 ## Defenders (added 2026-11-05)
 
-Seven proposal rows with `side = defence`: rifle_squad, machine_gun, sniper, mortar, anti_tank, air_defence, observation_post. They use the same columns as attackers plus `weapon_class` (small_arms, machine_gun, sniper, explosive, anti_tank, air_defence) and `build_cost`. All numbers are proposals to balance. Mortars fire at what any defender sees; the observation post has no weapon and extends sight.
+Six proposal rows with `side = defence`: rifle_squad, machine_gun, sniper, mortar, anti_tank, air_defence. They use the same columns as attackers plus `weapon_class` (small_arms, machine_gun, sniper, explosive, anti_tank, air_defence) and `build_cost`. All numbers are proposals to balance. Mortars fire at what any defender sees.
