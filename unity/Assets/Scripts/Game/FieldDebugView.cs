@@ -30,6 +30,14 @@ namespace Treeline.Game
         SpriteRenderer sr;
         string status = "";
 
+        // Vision test: an observer you move with the buttons; shows what it sees (needs Data/obstacles.csv, editor only).
+        const float BaseSight = 30f;
+        const float ObserverStep = 4f;
+        ObstacleTable obstacles;
+        VisionMap vision;
+        bool showVision;
+        float obsX, obsY;
+
         void Start()
         {
             foreach (var asset in Resources.LoadAll<TextAsset>("Fields"))
@@ -38,6 +46,10 @@ namespace Treeline.Game
                 catch (System.Exception e) { Debug.LogError($"Field '{asset.name}': {e.Message}"); }
             }
             if (fields.Count == 0) { status = "No field files found in Resources/Fields"; return; }
+
+            string obstaclePath = System.IO.Path.Combine(Application.dataPath, "Data", "obstacles.csv");
+            try { if (System.IO.File.Exists(obstaclePath)) obstacles = ObstacleTable.Parse(System.IO.File.ReadAllText(obstaclePath)); }
+            catch (System.Exception e) { Debug.LogError($"obstacles.csv: {e.Message}"); }
 
             sr = new GameObject("Terrain").AddComponent<SpriteRenderer>();
             sr.transform.SetParent(transform, false);
@@ -53,6 +65,9 @@ namespace Treeline.Game
             grid = new NavGrid(field);
             infantryFlow = new FlowField(grid, UnitClass.Infantry);
             vehicleFlow = new FlowField(grid, UnitClass.Vehicle);
+            vision = obstacles != null ? new VisionMap(field, obstacles) : null;
+            obsX = field.Width / 2f;
+            obsY = field.Height / 2f;
             sw.Stop();
             Debug.Log($"Field '{field.Name}': {grid.Cols}x{grid.Rows} cells, nav built in {sw.ElapsedMilliseconds} ms");
 
@@ -80,6 +95,38 @@ namespace Treeline.Game
                 pixels[Index(i)] = c;
             }
 
+            // Obstacles that are not nav terrain (rocks, bushes, wrecks) and the observer's view.
+            if (vision != null)
+            {
+                for (int i = 0; i < grid.Count; i++)
+                {
+                    var ob = vision.ObstacleInCell(i);
+                    if (ob != null && !TerrainTable.TryParse(ob.Id, out _)) pixels[Index(i)] = ObjectColor(ob.Id);
+                }
+
+                if (showVision)
+                {
+                    var seen = vision.Compute(obsX, obsY, BaseSight);
+                    float radius = vision.SightRadius(obsX, obsY, BaseSight);
+                    var shade = new Color(0.04f, 0.05f, 0.03f);
+                    var lit = new Color(0.75f, 1f, 0.55f);
+                    for (int i = 0; i < grid.Count; i++)
+                    {
+                        float dx = grid.CenterX(i) - obsX, dy = grid.CenterY(i) - obsY;
+                        if (dx * dx + dy * dy > radius * radius) continue;
+                        Color baseColor = pixels[Index(i)];
+                        pixels[Index(i)] = Color.Lerp(Color.Lerp(baseColor, shade, 0.6f), Color.Lerp(baseColor, lit, 0.3f), seen[i]);
+                    }
+                    int oc = grid.CellAt(obsX, obsY);
+                    for (int dr = -1; dr <= 1; dr++)
+                        for (int dc = -1; dc <= 1; dc++)
+                        {
+                            int cell = oc + dr * grid.Cols + dc;
+                            if (cell >= 0 && cell < grid.Count) pixels[Index(cell)] = new Color32(235, 70, 60, 255);
+                        }
+                }
+            }
+
             // Routes from the enemy edge, one every ~24 m.
             int shown = 0, blocked = 0;
             double best = double.PositiveInfinity;
@@ -97,6 +144,8 @@ namespace Treeline.Game
 
             string klass = cls == UnitClass.Infantry ? "Infantry" : "Vehicles";
             status = $"{fields[current].Name}  |  {klass}  |  routes: {shown} found, {blocked} blocked  |  fastest ~ {best * NavGrid.CellSize / GameSpeedMps:0} s";
+            if (showVision && vision != null)
+                status += $"\nVision: observer at ({obsX:0}, {obsY:0}), sight radius {vision.SightRadius(obsX, obsY, BaseSight):0} m (dark = hidden, bright = seen)";
         }
 
         // Field y runs down from the enemy edge; texture y runs up. Flip so the enemy is at the top.
@@ -139,13 +188,33 @@ namespace Treeline.Game
             }
         }
 
+        static Color ObjectColor(string id)
+        {
+            switch (id)
+            {
+                case "rock": return Hex(0xa8a8a0);
+                case "wreck": return Hex(0x6b4a3a);
+                case "bush": return Hex(0x4f8a3a);
+                case "trench": return Hex(0x2a2418);
+                default: return Hex(0xc080c0);
+            }
+        }
+
         static Color Hex(int rgb) => new Color(((rgb >> 16) & 255) / 255f, ((rgb >> 8) & 255) / 255f, (rgb & 255) / 255f);
+
+        void MoveObserver(float dx, float dy)
+        {
+            var field = fields[current];
+            obsX = Mathf.Clamp(obsX + dx, 1f, field.Width - 1f);
+            obsY = Mathf.Clamp(obsY + dy, 1f, field.Height - 1f);
+            Redraw();
+        }
 
         void OnGUI()
         {
             float s = Mathf.Max(1f, Screen.height / 540f);
             GUI.matrix = Matrix4x4.Scale(new Vector3(s, s, 1f));
-            GUILayout.BeginArea(new Rect(8, 8, Screen.width / s - 16, 120));
+            GUILayout.BeginArea(new Rect(8, 8, Screen.width / s - 16, 190));
             GUILayout.Label(status);
             if (fields.Count > 0)
             {
@@ -158,6 +227,20 @@ namespace Treeline.Game
                     Redraw();
                 }
                 GUILayout.EndHorizontal();
+
+                if (vision != null)
+                {
+                    GUILayout.BeginHorizontal();
+                    if (GUILayout.Button(showVision ? "Vision off" : "Vision on", GUILayout.Height(34))) { showVision = !showVision; Redraw(); }
+                    if (showVision)
+                    {
+                        if (GUILayout.Button("Left", GUILayout.Height(34))) MoveObserver(-ObserverStep, 0);
+                        if (GUILayout.Button("Right", GUILayout.Height(34))) MoveObserver(ObserverStep, 0);
+                        if (GUILayout.Button("Up", GUILayout.Height(34))) MoveObserver(0, -ObserverStep);
+                        if (GUILayout.Button("Down", GUILayout.Height(34))) MoveObserver(0, ObserverStep);
+                    }
+                    GUILayout.EndHorizontal();
+                }
             }
             GUILayout.EndArea();
         }
