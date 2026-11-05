@@ -36,6 +36,13 @@ namespace Treeline.Game
         ObstacleTable obstacles;
         VisionMap vision;
         bool showVision;
+
+        // Battle test: deploy defenders at the cursor (the same red dot), start the round, move them.
+        UnitTable unitTable;
+        Battle battle;
+        bool battleMode;
+        int lastDefenderId;
+        string battleMessage = "";
         float obsX, obsY;
 
         void Start()
@@ -50,6 +57,10 @@ namespace Treeline.Game
             string obstaclePath = System.IO.Path.Combine(Application.dataPath, "Data", "obstacles.csv");
             try { if (System.IO.File.Exists(obstaclePath)) obstacles = ObstacleTable.Parse(System.IO.File.ReadAllText(obstaclePath)); }
             catch (System.Exception e) { Debug.LogError($"obstacles.csv: {e.Message}"); }
+
+            string unitPath = System.IO.Path.Combine(Application.dataPath, "Data", "units.csv");
+            try { if (System.IO.File.Exists(unitPath)) unitTable = UnitTable.Parse(System.IO.File.ReadAllText(unitPath)); }
+            catch (System.Exception e) { Debug.LogError($"units.csv: {e.Message}"); }
 
             sr = new GameObject("Terrain").AddComponent<SpriteRenderer>();
             sr.transform.SetParent(transform, false);
@@ -66,6 +77,9 @@ namespace Treeline.Game
             infantryFlow = new FlowField(grid, UnitClass.Infantry);
             vehicleFlow = new FlowField(grid, UnitClass.Vehicle);
             vision = obstacles != null ? new VisionMap(field, obstacles) : null;
+            battle = unitTable != null ? new Battle(grid, unitTable, 1000f) : null;
+            lastDefenderId = 0;
+            battleMessage = "";
             obsX = field.Width / 2f;
             obsY = field.Height / 2f;
             sw.Stop();
@@ -127,6 +141,14 @@ namespace Treeline.Game
                 }
             }
 
+            // Defenders (blue = standing, light blue = running in) and the cursor.
+            if (battle != null && battleMode)
+            {
+                if (!showVision) PaintBlock(pixels, obsX, obsY, new Color32(235, 70, 60, 255));
+                foreach (var d in battle.Defenders)
+                    PaintBlock(pixels, d.X, d.Y, d.State == DefenderState.Standing ? new Color32(60, 130, 235, 255) : new Color32(140, 235, 245, 255));
+            }
+
             // Routes from the enemy edge, one every ~24 m.
             int shown = 0, blocked = 0;
             double best = double.PositiveInfinity;
@@ -144,6 +166,8 @@ namespace Treeline.Game
 
             string klass = cls == UnitClass.Infantry ? "Infantry" : "Vehicles";
             status = $"{fields[current].Name}  |  {klass}  |  routes: {shown} found, {blocked} blocked  |  fastest ~ {best * NavGrid.CellSize / GameSpeedMps:0} s";
+            if (battle != null && battleMode)
+                status += $"\nBattle: {battle.Phase}, budget {battle.Budget:0}, defenders {battle.Defenders.Count}, run speed {battle.RunSpeedMps:0} m/s. {battleMessage}";
             if (showVision && vision != null)
                 status += $"\nVision: observer at ({obsX:0}, {obsY:0}), sight radius {vision.SightRadius(obsX, obsY, BaseSight):0} m (dark = hidden, bright = seen)";
         }
@@ -188,6 +212,34 @@ namespace Treeline.Game
             }
         }
 
+        void PaintBlock(Color32[] pixels, float x, float y, Color32 color)
+        {
+            int center = grid.CellAt(x, y);
+            for (int dr = -1; dr <= 1; dr++)
+                for (int dc = -1; dc <= 1; dc++)
+                {
+                    int cell = center + dr * grid.Cols + dc;
+                    if (cell >= 0 && cell < grid.Count) pixels[Index(cell)] = color;
+                }
+        }
+
+        void Update()
+        {
+            if (battle == null || battle.Phase != BattlePhase.Round) return;
+            bool running = false;
+            foreach (var d in battle.Defenders) if (d.State == DefenderState.Running) running = true;
+            if (!running) return;
+            battle.Step(Time.deltaTime);
+            Redraw();
+        }
+
+        void Deploy(string unitId)
+        {
+            if (battle.TryPlace(unitId, obsX, obsY, out var d, out string why)) { lastDefenderId = d.Id; battleMessage = ""; }
+            else battleMessage = why + ".";
+            Redraw();
+        }
+
         static Color ObjectColor(string id)
         {
             switch (id)
@@ -214,7 +266,7 @@ namespace Treeline.Game
         {
             float s = Mathf.Max(1f, Screen.height / 540f);
             GUI.matrix = Matrix4x4.Scale(new Vector3(s, s, 1f));
-            GUILayout.BeginArea(new Rect(8, 8, Screen.width / s - 16, 190));
+            GUILayout.BeginArea(new Rect(8, 8, Screen.width / s - 16, 240));
             GUILayout.Label(status);
             if (fields.Count > 0)
             {
@@ -232,13 +284,35 @@ namespace Treeline.Game
                 {
                     GUILayout.BeginHorizontal();
                     if (GUILayout.Button(showVision ? "Vision off" : "Vision on", GUILayout.Height(34))) { showVision = !showVision; Redraw(); }
-                    if (showVision)
+                    GUILayout.EndHorizontal();
+                }
+
+                GUILayout.BeginHorizontal();
+                if (battle != null && GUILayout.Button(battleMode ? "Battle off" : "Battle on", GUILayout.Height(34))) { battleMode = !battleMode; Redraw(); }
+                if (showVision || battleMode)
+                {
+                    if (GUILayout.Button("Left", GUILayout.Height(34))) MoveObserver(-ObserverStep, 0);
+                    if (GUILayout.Button("Right", GUILayout.Height(34))) MoveObserver(ObserverStep, 0);
+                    if (GUILayout.Button("Up", GUILayout.Height(34))) MoveObserver(0, -ObserverStep);
+                    if (GUILayout.Button("Down", GUILayout.Height(34))) MoveObserver(0, ObserverStep);
+                }
+                GUILayout.EndHorizontal();
+
+                if (battle != null && battleMode)
+                {
+                    GUILayout.BeginHorizontal();
+                    if (GUILayout.Button("Deploy gunner", GUILayout.Height(34))) Deploy("machine_gun");
+                    if (GUILayout.Button("Deploy rifles", GUILayout.Height(34))) Deploy("rifle_squad");
+                    if (GUILayout.Button("Move last here", GUILayout.Height(34)))
                     {
-                        if (GUILayout.Button("Left", GUILayout.Height(34))) MoveObserver(-ObserverStep, 0);
-                        if (GUILayout.Button("Right", GUILayout.Height(34))) MoveObserver(ObserverStep, 0);
-                        if (GUILayout.Button("Up", GUILayout.Height(34))) MoveObserver(0, -ObserverStep);
-                        if (GUILayout.Button("Down", GUILayout.Height(34))) MoveObserver(0, ObserverStep);
+                        if (lastDefenderId == 0) battleMessage = "Deploy someone first.";
+                        else if (!battle.TryMove(lastDefenderId, obsX, obsY, out string why)) battleMessage = why + ".";
+                        else battleMessage = "";
+                        Redraw();
                     }
+                    GUI.enabled = battle.Phase == BattlePhase.Preparation;
+                    if (GUILayout.Button("Start round", GUILayout.Height(34))) { battle.StartRound(); Redraw(); }
+                    GUI.enabled = true;
                     GUILayout.EndHorizontal();
                 }
             }
