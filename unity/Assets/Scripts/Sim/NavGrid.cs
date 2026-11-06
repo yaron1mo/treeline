@@ -82,24 +82,47 @@ namespace Treeline.Sim
         public readonly int Cols, Rows;
         public readonly float Width, Height;
         public readonly TerrainKind[] Cells;
-        readonly float[][] cost = new float[2][];
-
-        public int Count => Cols * Rows;
         /// <summary>Attacker entry points along the top edge (x in metres); empty = anywhere.</summary>
         public readonly float[] SpawnXs;
+        /// <summary>Goes up every time the ground changes during a battle (a wreck); routes must then be rebuilt.</summary>
+        public int Version { get; private set; }
+
+        readonly ObstacleTable table;
+        readonly float[][] raw = new float[2][];    // move cost before the vehicle clearance rule
+        readonly float[][] cost = new float[2][];   // what routes use
+        readonly bool[] hasObject;                   // a rock, wreck, wire... painted over the terrain
+        readonly Dictionary<float, float[]> treeProfiles = new Dictionary<float, float[]>();
+        int treeProfilesVersion;
+
+        public int Count => Cols * Rows;
         public float[] Cost(UnitClass c) => cost[(int)c];
 
-        public NavGrid(Field field)
+        /// <param name="table">Obstacle table: move costs for terrain and objects. Without it the built-in
+        /// prototype numbers are used and objects (rocks, wrecks) do not affect movement.</param>
+        public NavGrid(Field field, ObstacleTable table = null)
         {
+            this.table = table;
             Width = field.Width;
             Height = field.Height;
             Cols = (int)Math.Round(Width / CellSize);
             Rows = (int)Math.Round(Height / CellSize);
             SpawnXs = field.Spawns.ToArray();
             Cells = new TerrainKind[Cols * Rows];
-            cost[0] = new float[Cells.Length];
-            cost[1] = new float[Cells.Length];
+            hasObject = new bool[Cells.Length];
+            for (int k = 0; k < 2; k++) { raw[k] = new float[Cells.Length]; cost[k] = new float[Cells.Length]; }
             Rasterize(field);
+            if (table != null) PaintObjects(field);
+            Rebuild();
+        }
+
+        float TerrainCost(TerrainKind t, UnitClass c)
+        {
+            if (table != null && t != TerrainKind.Open && table.TryGet(t.ToString().ToLowerInvariant(), out var o))
+            {
+                var v = o.MoveCost(c);
+                if (v.HasValue) return v.Value;
+            }
+            return TerrainTable.Cost(t, c);
         }
 
         struct Shape
@@ -149,26 +172,105 @@ namespace Treeline.Sim
                     }
                     int i = r * Cols + c;
                     Cells[i] = t;
-                    cost[0][i] = TerrainTable.Cost(t, UnitClass.Infantry);
-                    cost[1][i] = TerrainTable.Cost(t, UnitClass.Vehicle);
+                    raw[0][i] = TerrainCost(t, UnitClass.Infantry);
+                    raw[1][i] = TerrainCost(t, UnitClass.Vehicle);
                 }
             }
+        }
 
-            // Vehicles keep one cell clear of anything impassable, except on roads and fords.
-            var veh = cost[1];
-            var blocked = new bool[veh.Length];
-            for (int i = 0; i < veh.Length; i++) blocked[i] = float.IsPositiveInfinity(veh[i]);
+        // Objects from the obstacle table (rock, wreck, bush, wire, hedgehog, trench) paint their move cost over the terrain.
+        void PaintObjects(Field field)
+        {
+            foreach (var f in field.Features)
+            {
+                if (TerrainTable.TryParse(f.Type, out _)) continue;
+                if (!table.TryGet(f.Type, out var o)) continue;
+                if (!o.MoveCostInfantry.HasValue && !o.MoveCostVehicle.HasValue) continue;
+                var pts = f.Poly ?? f.Line;
+                if (pts == null || pts.Length == 0) continue;
+                float x0 = float.MaxValue, y0 = float.MaxValue, x1 = float.MinValue, y1 = float.MinValue;
+                foreach (var p in pts)
+                {
+                    if (p.X < x0) x0 = p.X; if (p.Y < y0) y0 = p.Y;
+                    if (p.X > x1) x1 = p.X; if (p.Y > y1) y1 = p.Y;
+                }
+                float pad = f.Poly == null ? Half(f) : 0f;
+                int painted = 0;
+                for (int r = Math.Max(0, (int)((y0 - pad) / CellSize)); r <= Math.Min(Rows - 1, (int)((y1 + pad) / CellSize)); r++)
+                    for (int c = Math.Max(0, (int)((x0 - pad) / CellSize)); c <= Math.Min(Cols - 1, (int)((x1 + pad) / CellSize)); c++)
+                        if (Covers(f, (c + 0.5f) * CellSize, (r + 0.5f) * CellSize)) { SetObject(r * Cols + c, o); painted++; }
+                // A small object may miss every cell centre: put it in the cell of its middle.
+                if (painted == 0) SetObject(CellAt((x0 + x1) / 2f, (y0 + y1) / 2f), o);
+            }
+        }
+
+        void SetObject(int i, Obstacle o)
+        {
+            hasObject[i] = true;
+            if (o.MoveCostInfantry.HasValue) raw[0][i] = o.MoveCostInfantry.Value;
+            if (o.MoveCostVehicle.HasValue) raw[1][i] = o.MoveCostVehicle.Value;
+        }
+
+        /// <summary>
+        /// Put an object on the ground during a battle (a destroyed vehicle leaves a wreck): every cell whose
+        /// centre is within <paramref name="radius"/> takes the object's move cost. Routes must be rebuilt after.
+        /// </summary>
+        public void PlaceObject(Obstacle o, float x, float y, float radius)
+        {
+            int centre = CellAt(x, y);
+            SetObject(centre, o);
+            int reach = (int)Math.Ceiling(radius / CellSize);
+            int c0 = centre % Cols, r0 = centre / Cols;
+            for (int r = Math.Max(0, r0 - reach); r <= Math.Min(Rows - 1, r0 + reach); r++)
+                for (int c = Math.Max(0, c0 - reach); c <= Math.Min(Cols - 1, c0 + reach); c++)
+                {
+                    float dx = (c + 0.5f) * CellSize - x, dy = (r + 0.5f) * CellSize - y;
+                    if (dx * dx + dy * dy <= radius * radius) SetObject(r * Cols + c, o);
+                }
+            Rebuild();
+            Version++;
+        }
+
+        void Rebuild()
+        {
+            Array.Copy(raw[0], cost[0], raw[0].Length);
+            Clearance(raw[1], cost[1]);
+        }
+
+        // Vehicles keep one cell clear of anything impassable, except on roads and fords.
+        void Clearance(float[] from, float[] to)
+        {
             for (int r = 0; r < Rows; r++)
             {
                 for (int c = 0; c < Cols; c++)
                 {
                     int i = r * Cols + c;
-                    if (blocked[i] || Cells[i] == TerrainKind.Road || Cells[i] == TerrainKind.Ford) continue;
-                    if ((c > 0 && blocked[i - 1]) || (c < Cols - 1 && blocked[i + 1]) ||
-                        (r > 0 && blocked[i - Cols]) || (r < Rows - 1 && blocked[i + Cols]))
-                        veh[i] = float.PositiveInfinity;
+                    float v = from[i];
+                    if (!float.IsPositiveInfinity(v) && Cells[i] != TerrainKind.Road && Cells[i] != TerrainKind.Ford &&
+                        ((c > 0 && float.IsPositiveInfinity(from[i - 1])) || (c < Cols - 1 && float.IsPositiveInfinity(from[i + 1])) ||
+                         (r > 0 && float.IsPositiveInfinity(from[i - Cols])) || (r < Rows - 1 && float.IsPositiveInfinity(from[i + Cols]))))
+                        v = float.PositiveInfinity;
+                    to[i] = v;
                 }
             }
+        }
+
+        /// <summary>
+        /// Move costs for one unit. A vehicle with its own <c>tree_move_cost</c> (tanks push through groves and
+        /// forest belts) uses that number in tree cells instead of the table's vehicle cost.
+        /// </summary>
+        public float[] CostFor(UnitClass c, float treeMoveCost)
+        {
+            if (c == UnitClass.Infantry || treeMoveCost <= 0f) return Cost(c);
+            if (treeProfilesVersion != Version) { treeProfiles.Clear(); treeProfilesVersion = Version; }
+            if (treeProfiles.TryGetValue(treeMoveCost, out var have)) return have;
+            var src = (float[])raw[1].Clone();
+            for (int i = 0; i < src.Length; i++)
+                if (!hasObject[i] && (Cells[i] == TerrainKind.Grove || Cells[i] == TerrainKind.Belt)) src[i] = treeMoveCost;
+            var result = new float[src.Length];
+            Clearance(src, result);
+            treeProfiles[treeMoveCost] = result;
+            return result;
         }
 
         public int CellAt(float x, float y)

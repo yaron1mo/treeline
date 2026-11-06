@@ -1,0 +1,10 @@
+key,value,notes
+line_health,20,How much line damage the defence can take before the field is lost. Placeholder (rules/attackers.json line.hp).
+run_speed_multiplier,3,"Defenders placed or moved during a round run in at this many times the speed of a regular soldier (Yaroslav, 2026-11-05)."
+evade_length_weight_s_per_m,0.1,Evade mode: route cost is travel time plus this many seconds per metre (rules/attackers.json).
+danger_weight_m_per_hp,1000,Safest mode: one point of expected damage on the route counts as this many metres (rules/attackers.json).
+memory_decay_per_wave,0.3,"Attackers' memory of a defender position fades by this share every wave it is not seen again (rules/attackers.json)."
+memory_forget_below,0.25,Proposal. A remembered position weaker than this is forgotten (about four waves without a new sighting).
+route_choice_slack,0.1,Proposal. With threats known attackers pick a random entry among those at most 10% worse than the best one.
+dismount_blast_kills,TRUE,Proposal. A carrier destroyed while troops are still inside or getting out kills attacking troops within its blast_radius_m.
+direct_fire_needs_own_sight,FALSE,"Open question for Yaroslav. FALSE (agreed 2026-11-05): anyone may fire at what any friendly unit sees, out to range_m. TRUE: direct fire only at what the shooter itself sees; shared vision only for mortars."

@@ -20,14 +20,16 @@ namespace Treeline.Sim
         static readonly int[] Dy = { 0, 0, 1, -1, 1, -1, 1, -1 };
 
         /// <summary>Routes to the rear edge (the bottom row, nearest our line): where attackers are heading.</summary>
-        public FlowField(NavGrid grid, UnitClass cls) : this(grid, cls, RearEdge(grid, cls)) { }
+        public FlowField(NavGrid grid, UnitClass cls) : this(grid, grid.Cost(cls)) { }
+
+        /// <summary>Routes to the rear edge over any per-cell cost (a unit's own costs, or costs with threat added).</summary>
+        public FlowField(NavGrid grid, float[] cost) : this(grid, cost, RearEdge(grid, cost)) { }
 
         /// <summary>Routes to one cell: where a defender is sent.</summary>
-        public static FlowField To(NavGrid grid, UnitClass cls, int targetCell) => new FlowField(grid, cls, new[] { targetCell });
+        public static FlowField To(NavGrid grid, UnitClass cls, int targetCell) => new FlowField(grid, grid.Cost(cls), new[] { targetCell });
 
-        static int[] RearEdge(NavGrid grid, UnitClass cls)
+        static int[] RearEdge(NavGrid grid, float[] k)
         {
-            float[] k = grid.Cost(cls);
             var list = new List<int>();
             for (int c = 0; c < grid.Cols; c++)
             {
@@ -37,7 +39,7 @@ namespace Treeline.Sim
             return list.ToArray();
         }
 
-        FlowField(NavGrid grid, UnitClass cls, int[] sources)
+        FlowField(NavGrid grid, float[] k, int[] sources)
         {
             cols = grid.Cols;
             rows = grid.Rows;
@@ -46,7 +48,6 @@ namespace Treeline.Sim
             Next = new int[n];
             for (int i = 0; i < n; i++) { Dist[i] = double.PositiveInfinity; Next[i] = None; }
 
-            float[] k = grid.Cost(cls);
             var heap = new MinHeap(n);
 
             foreach (int i in sources)

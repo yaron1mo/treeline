@@ -16,8 +16,12 @@ namespace Treeline.Sim
         readonly short[] cells;                 // index into 'used', -1 = nothing
         readonly List<Obstacle> used = new List<Obstacle>();
 
+        /// <summary>The obstacle table this map was built from.</summary>
+        public readonly ObstacleTable Table;
+
         public VisionMap(Field field, ObstacleTable table)
         {
+            Table = table;
             Width = field.Width;
             Height = field.Height;
             Cols = (int)Math.Round(Width / NavGrid.CellSize);
@@ -74,6 +78,23 @@ namespace Treeline.Sim
                 int r = (int)Math.Floor((y0 + y1) / 2f / NavGrid.CellSize);
                 if (c >= 0 && c < Cols && r >= 0 && r < Rows) Set(r * Cols + c, o, idx);
             }
+        }
+
+        /// <summary>Put an obstacle on the map during a battle (a wreck): every cell within the radius, at least one.</summary>
+        public void PlaceObject(Obstacle o, float x, float y, float radius)
+        {
+            int idx = used.IndexOf(o);
+            if (idx < 0) { used.Add(o); idx = used.Count - 1; }
+            int centre = CellOf(x, y);
+            Set(centre, o, idx);
+            int reach = (int)Math.Ceiling(radius / NavGrid.CellSize);
+            int c0 = centre % Cols, r0 = centre / Cols;
+            for (int r = Math.Max(0, r0 - reach); r <= Math.Min(Rows - 1, r0 + reach); r++)
+                for (int c = Math.Max(0, c0 - reach); c <= Math.Min(Cols - 1, c0 + reach); c++)
+                {
+                    float dx = (c + 0.5f) * NavGrid.CellSize - x, dy = (r + 0.5f) * NavGrid.CellSize - y;
+                    if (dx * dx + dy * dy <= radius * radius) Set(r * Cols + c, o, idx);
+                }
         }
 
         bool Set(int cell, Obstacle o, int idx)

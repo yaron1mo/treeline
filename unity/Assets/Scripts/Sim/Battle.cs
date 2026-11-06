@@ -20,6 +20,12 @@ namespace Treeline.Sim
         /// <summary>0..1: how well the other side currently sees this unit (shared vision).</summary>
         public float SeenChance;
 
+        /// <summary>The cells of the route it is walking (read-only, for debug drawing).</summary>
+        public IReadOnlyList<int> PathCells => Path;
+        /// <summary>How far along <see cref="PathCells"/> it is.</summary>
+        public int PathPosition => PathIndex;
+
+        internal Unit Target;         // keeps firing at it while it stays valid
         internal List<int> Path;      // cells to walk
         internal int PathIndex;       // the cell the unit has reached
         internal float SegmentDone;   // 0..1 along the current step
@@ -32,10 +38,46 @@ namespace Treeline.Sim
         public DefenderState State;
     }
 
+    /// <summary>How an attacker chose its route (rules/attackers.json, pathfinding).</summary>
+    public enum RouteMode
+    {
+        /// <summary>No known threat: the quickest way.</summary>
+        Fastest,
+        /// <summary>A way around every known threat zone exists: take it, preferring short ones.</summary>
+        Evade,
+        /// <summary>Every way crosses a threat zone: least expected damage, then the shortest.</summary>
+        Safest
+    }
+
     /// <summary>An attacker walking or driving to the rear edge.</summary>
     public sealed class Attacker : Unit
     {
         public UnitClass Class;
+        /// <summary>The wave it came with (1 = first).</summary>
+        public int Wave;
+        public RouteMode Mode;
+        /// <summary>Troops still inside (carriers only).</summary>
+        public int Passengers;
+        /// <summary>A carrier that has stopped to let its troops out.</summary>
+        public bool Dismounting;
+        /// <summary>No way to the rear edge from where it stands.</summary>
+        public bool Stuck;
+
+        internal bool Crossed, Handled;
+        internal float DismountTimer;
+        internal float[] MoveCost;
+    }
+
+    /// <summary>Counts per unit id, for balance runs.</summary>
+    public sealed class UnitStats
+    {
+        /// <summary>Attackers: entered the field (dismounted troops and troops dying inside included). Defenders: placed.</summary>
+        public int Spawned;
+        /// <summary>Attackers: destroyed (troops dying inside a carrier included). Defenders: lost.</summary>
+        public int Killed;
+        /// <summary>Attackers that reached the rear edge.</summary>
+        public int Crossed;
+        public float LineDamage, DamageDealt, DamageTaken;
     }
 
     /// <summary>
@@ -45,29 +87,47 @@ namespace Treeline.Sim
     /// </summary>
     public sealed class Battle
     {
-        /// <summary>Running speed = this many times the speed of the unit with id <see cref="RunBaseUnitId"/>.</summary>
-        public const float RunSpeedMultiplier = 3f;
+        /// <summary>Defenders run in at <see cref="BattleRules.RunSpeedMultiplier"/> times the speed of this unit.</summary>
         public const string RunBaseUnitId = "regular";
 
         const float VisionInterval = 0.25f;
 
-        struct Spawn { public float Time; public string UnitId; }
+        struct Spawn { public float Time; public string UnitId; public int Wave; }
 
         sealed class SpawnOrder : IComparer<Spawn>
         {
             public int Compare(Spawn a, Spawn b) => a.Time.CompareTo(b.Time);
         }
 
+        // Where a defender was seen or fired from, and in which wave.
+        struct Sighting { public int DefenderId; public UnitDef Def; public float X, Y; public int Wave; }
+
+        // A known defender as one attacker group remembers it.
+        struct Threat { public UnitDef Def; public float X, Y, Weight; }
+
+        // Routes for one unit type with one state of knowledge.
+        sealed class Route
+        {
+            public RouteMode Mode;
+            public FlowField Flow;       // the chosen mode
+            public FlowField Fallback;   // used from a cell the chosen mode cannot reach
+            public int[] Starts;         // entry cells worth taking
+            public float[] MoveCost;     // real terrain cost for walking speed
+        }
+
         readonly NavGrid grid;
         readonly UnitTable units;
         readonly VisionMap vision;
         readonly ArmourTable armour;
+        readonly BattleRules rules;
         readonly Random rng;
         readonly List<Defender> defenders = new List<Defender>();
         readonly List<Attacker> attackers = new List<Attacker>();
         readonly List<Spawn> spawns = new List<Spawn>();
-        readonly FlowField[] flows = new FlowField[2];
-        readonly int[][] startCells = new int[2][];
+        readonly List<Sighting> sightings = new List<Sighting>();
+        readonly Dictionary<string, Route> routes = new Dictionary<string, Route>();
+        readonly Dictionary<string, UnitStats> stats = new Dictionary<string, UnitStats>();
+        int routesVersion;
         int nextId = 1;
         int nextSpawn;
         bool waveQueued;
@@ -85,23 +145,36 @@ namespace Treeline.Sim
         public float LineHealth { get; }
         /// <summary>Attackers still waiting to enter the field.</summary>
         public int Pending => spawns.Count - nextSpawn;
+        /// <summary>The current wave (0 before the first).</summary>
+        public int WaveNumber { get; private set; }
+        public IReadOnlyDictionary<string, UnitStats> Stats => stats;
 
         /// <param name="vision">Obstacles for sight and cover. Without it everything within sight radius is seen and nothing gives cover.</param>
         /// <param name="armour">Armour table. Without it armour does not reduce damage.</param>
-        /// <param name="lineHealth">How much line damage the defence can take (placeholder number until balanced).</param>
+        /// <param name="lineHealth">Overrides the rules' line health when given.</param>
+        /// <param name="rules">Battle rules (battle_rules.csv). Without them the defaults are used.</param>
         public Battle(NavGrid grid, UnitTable units, float budget, VisionMap vision = null, ArmourTable armour = null,
-            float lineHealth = 20f, int seed = 1)
+            float lineHealth = -1f, int seed = 1, BattleRules rules = null)
         {
             this.grid = grid;
             this.units = units;
             this.vision = vision;
             this.armour = armour;
-            LineHealth = lineHealth;
+            this.rules = rules ?? new BattleRules();
+            LineHealth = lineHealth > 0f ? lineHealth : this.rules.LineHealth;
             rng = new Random(seed);
             Budget = budget;
+            routesVersion = grid.Version;
             RunSpeedMps = units.TryGet(RunBaseUnitId, out var baseUnit) && baseUnit.SpeedMps > 0f
-                ? baseUnit.SpeedMps * RunSpeedMultiplier
+                ? baseUnit.SpeedMps * this.rules.RunSpeedMultiplier
                 : 18f;
+        }
+
+        UnitStats StatsFor(UnitDef d)
+        {
+            UnitStats s;
+            if (!stats.TryGetValue(d.Id, out s)) { s = new UnitStats(); stats[d.Id] = s; }
+            return s;
         }
 
         public void StartRound()
@@ -120,6 +193,7 @@ namespace Treeline.Sim
             Budget -= def.BuildCost;
             var d = new Defender { Id = nextId++, Def = def, Hp = def.Hp };
             defenders.Add(d);
+            StatsFor(def).Spawned++;
             Send(d, flow, x, y);
             placed = d;
             return true;
@@ -183,15 +257,27 @@ namespace Treeline.Sim
         }
 
         /// <summary>
-        /// Queue attackers: <paramref name="count"/> units of <paramref name="unitId"/>, the first after
-        /// <paramref name="delay"/> seconds from now, then one every <paramref name="interval"/> seconds.
-        /// Aircraft are not simulated yet and are refused. Returns false if the unit cannot be queued.
+        /// Start a new wave: attackers queued from now on belong to it. Attackers plan their routes from what was
+        /// learnt about the defence in earlier waves (each unit type with its own lag, <c>adaptation_lag_waves</c>).
+        /// </summary>
+        public int BeginWave()
+        {
+            WaveNumber++;
+            return WaveNumber;
+        }
+
+        /// <summary>
+        /// Queue attackers into the current wave: <paramref name="count"/> units of <paramref name="unitId"/>, the first
+        /// after <paramref name="delay"/> seconds from now, then one every <paramref name="interval"/> seconds.
+        /// Starts wave 1 if no wave was begun. Aircraft are not simulated yet and are refused.
         /// </summary>
         public bool QueueWave(string unitId, int count, float delay, float interval)
         {
             if (!units.TryGet(unitId, out var def) || def.IsDefence || def.Type == "aviation") return false;
+            if (WaveNumber == 0) BeginWave();
             // Times count from now, so a second wave can be sent while the round runs (or after a won wave).
-            for (int i = 0; i < count; i++) spawns.Add(new Spawn { Time = RoundTime + delay + i * interval, UnitId = unitId });
+            for (int i = 0; i < count; i++)
+                spawns.Add(new Spawn { Time = RoundTime + delay + i * interval, UnitId = unitId, Wave = WaveNumber });
             // Sort only what has not spawned yet.
             spawns.Sort(nextSpawn, spawns.Count - nextSpawn, new SpawnOrder());
             waveQueued = true;
@@ -215,6 +301,7 @@ namespace Treeline.Sim
             FireDefenders(dt);
             FireAttackers(dt);
             Cleanup();
+            if (grid.Version != routesVersion) Reroute();
 
             if (LineDamage >= LineHealth) Outcome = BattleOutcome.Lost;
             else if (waveQueued && Pending == 0 && attackers.Count == 0) Outcome = BattleOutcome.Won;
@@ -232,7 +319,8 @@ namespace Treeline.Sim
                 int a = u.Path[u.PathIndex], b = u.Path[u.PathIndex + 1];
                 float ax = grid.CenterX(a), ay = grid.CenterY(a), bx = grid.CenterX(b), by = grid.CenterY(b);
                 float len = (float)Math.Sqrt((bx - ax) * (bx - ax) + (by - ay) * (by - ay));
-                float effective = len * (cost[a] + cost[b]) / 2f;
+                float ca = float.IsPositiveInfinity(cost[a]) ? 1f : cost[a], cb = float.IsPositiveInfinity(cost[b]) ? 1f : cost[b];
+                float effective = len * (ca + cb) / 2f;
                 float rest = effective * (1f - u.SegmentDone);
                 if (left >= rest)
                 {
@@ -269,49 +357,302 @@ namespace Treeline.Sim
 
         void MoveAttackers(float dt)
         {
-            foreach (var a in attackers)
+            // By index: troops getting out of a carrier are added to the list while it is walked.
+            for (int n = 0; n < attackers.Count; n++)
             {
-                if (!a.Alive || a.Def.SpeedMps <= 0f) continue;
-                if (Walk(a, grid.Cost(a.Class), a.Def.SpeedMps, dt))
+                var a = attackers[n];
+                if (!a.Alive) continue;
+
+                if (a.Passengers > 0 && !a.Dismounting && a.Def.DismountAtHp > 0f && a.Hp <= a.Def.DismountAtHp * a.Def.Hp)
                 {
-                    LineDamage += a.Def.LineDamage;
+                    a.Dismounting = true;
+                    a.DismountTimer = 0f;   // the first one jumps out at once
+                }
+                if (a.Dismounting)
+                {
+                    a.DismountTimer -= dt;
+                    while (a.DismountTimer <= 0f && a.Passengers > 0)
+                    {
+                        Dismount(a);
+                        a.DismountTimer += Math.Max(0.05f, a.Def.DismountIntervalS);
+                    }
+                    if (a.Passengers == 0) a.Dismounting = false;   // empty: drives on
+                    continue;
+                }
+
+                if (a.Stuck || a.Def.SpeedMps <= 0f) continue;
+                if (Walk(a, a.MoveCost, a.Def.SpeedMps, dt))
+                {
+                    float dmg = a.Def.LineDamage;
+                    if (a.Passengers > 0 && units.TryGet(a.Def.CarriesUnit, out var p)) dmg += a.Passengers * p.LineDamage;
+                    LineDamage += dmg;
+                    var st = StatsFor(a.Def);
+                    st.Crossed++;
+                    st.LineDamage += dmg;
+                    a.Crossed = true;
                     a.Alive = false;   // it has crossed the line and is gone
                 }
             }
         }
 
+        void Dismount(Attacker carrier)
+        {
+            carrier.Passengers--;
+            if (!units.TryGet(carrier.Def.CarriesUnit, out var def)) return;
+            var t = new Attacker
+            {
+                Id = nextId++, Def = def, Hp = def.Hp, Class = ClassOfUnit(def), Wave = carrier.Wave,
+                X = carrier.X, Y = carrier.Y,
+            };
+            attackers.Add(t);
+            StatsFor(def).Spawned++;
+            PathFromHere(t);
+        }
+
+        static UnitClass ClassOfUnit(UnitDef d) => d.Type == "vehicle" ? UnitClass.Vehicle : UnitClass.Infantry;
+
         void SpawnDue()
         {
             while (nextSpawn < spawns.Count && spawns[nextSpawn].Time <= RoundTime)
             {
-                var def = units.Get(spawns[nextSpawn++].UnitId);
-                var cls = def.Type == "vehicle" ? UnitClass.Vehicle : UnitClass.Infantry;
-                int k = (int)cls;
-                if (flows[k] == null)
+                var sp = spawns[nextSpawn++];
+                var def = units.Get(sp.UnitId);
+                var route = RouteFor(def, sp.Wave);
+                if (route.Starts.Length == 0) continue;   // no way across this field for this unit
+                int start = route.Starts[rng.Next(route.Starts.Length)];
+                var a = new Attacker
                 {
-                    flows[k] = new FlowField(grid, cls);
-                    var list = new List<int>();
-                    float[] cost = grid.Cost(cls);
-                    // Entry points from the field file, or the whole top edge when it names none.
-                    if (grid.SpawnXs.Length > 0)
-                        foreach (float x in grid.SpawnXs) TryAddStart(list, cost, flows[k], grid.CellAt(x, 0f));
-                    else
-                        for (int c = 0; c < grid.Cols; c++) TryAddStart(list, cost, flows[k], c);
-                    startCells[k] = list.ToArray();
-                }
-                if (startCells[k].Length == 0) continue;   // no way across this field for this class
-                int start = startCells[k][rng.Next(startCells[k].Length)];
-                var a = new Attacker { Id = nextId++, Def = def, Hp = def.Hp, Class = cls };
-                a.Path = flows[k].Trace(start);
+                    Id = nextId++, Def = def, Hp = def.Hp, Class = ClassOfUnit(def), Wave = sp.Wave,
+                    Mode = route.Mode, MoveCost = route.MoveCost,
+                    Passengers = def.CarriesCount > 0 && units.TryGet(def.CarriesUnit, out _) ? def.CarriesCount : 0,
+                };
+                a.Path = route.Flow.Trace(start);
                 a.X = grid.CenterX(start);
                 a.Y = grid.CenterY(start);
                 attackers.Add(a);
+                StatsFor(def).Spawned++;
             }
         }
 
-        static void TryAddStart(List<int> list, float[] cost, FlowField flow, int cell)
+        // A new path from where the unit stands (after dismounting, or when a wreck changed the ground).
+        void PathFromHere(Attacker a)
         {
-            if (!float.IsPositiveInfinity(cost[cell]) && flow.Reachable(cell)) list.Add(cell);
+            var route = RouteFor(a.Def, a.Wave);
+            a.MoveCost = route.MoveCost;
+            a.Mode = route.Mode;
+            int cell = grid.CellAt(a.X, a.Y);
+            FlowField flow = route.Flow;
+            if (!flow.Reachable(cell)) { flow = route.Fallback; a.Mode = RouteMode.Safest; }
+            if (!flow.Reachable(cell)) cell = NearestReachable(flow, cell);
+            a.Stuck = cell < 0;
+            a.Path = a.Stuck ? null : flow.Trace(cell);
+            a.PathIndex = 0;
+            a.SegmentDone = 0f;
+        }
+
+        int NearestReachable(FlowField flow, int cell)
+        {
+            int c0 = cell % grid.Cols, r0 = cell / grid.Cols;
+            for (int ring = 1; ring <= 4; ring++)
+                for (int r = r0 - ring; r <= r0 + ring; r++)
+                    for (int c = c0 - ring; c <= c0 + ring; c++)
+                    {
+                        if (r < 0 || c < 0 || r >= grid.Rows || c >= grid.Cols) continue;
+                        if (Math.Abs(r - r0) != ring && Math.Abs(c - c0) != ring) continue;
+                        int i = r * grid.Cols + c;
+                        if (flow.Reachable(i)) return i;
+                    }
+            return -1;
+        }
+
+        void Reroute()
+        {
+            routes.Clear();
+            routesVersion = grid.Version;
+            foreach (var a in attackers)
+                if (a.Alive && !a.Dismounting) PathFromHere(a);
+        }
+
+        // ---- routes and threat memory ---------------------------------------------------------------------------
+
+        void Record(Defender d)
+        {
+            for (int i = sightings.Count - 1; i >= 0; i--)
+            {
+                var s = sightings[i];
+                if (s.Wave != WaveNumber) break;   // records are in wave order
+                if (s.DefenderId != d.Id) continue;
+                s.X = d.X; s.Y = d.Y;
+                sightings[i] = s;
+                return;
+            }
+            sightings.Add(new Sighting { DefenderId = d.Id, Def = d.Def, X = d.X, Y = d.Y, Wave = WaveNumber });
+        }
+
+        // What attackers of a wave with this lag remember: the latest sighting of each defender up to wave
+        // (wave - lag), fading with every wave it was not seen again.
+        List<Threat> Known(int wave, int lag)
+        {
+            var list = new List<Threat>();
+            int asOf = wave - Math.Max(1, lag);
+            if (asOf < 1) return list;
+            var latest = new Dictionary<int, Sighting>();
+            foreach (var s in sightings)
+                if (s.Wave <= asOf) latest[s.DefenderId] = s;
+            foreach (var s in latest.Values)
+            {
+                float w = (float)Math.Pow(1f - rules.MemoryDecayPerWave, asOf - s.Wave);
+                if (w >= rules.MemoryForgetBelow) list.Add(new Threat { Def = s.Def, X = s.X, Y = s.Y, Weight = w });
+            }
+            return list;
+        }
+
+        float ArmourFactor(string damageType, string armourLevel) => armour != null ? armour.Factor(damageType, armourLevel) : 1f;
+
+        Route RouteFor(UnitDef def, int wave)
+        {
+            int lag = Math.Max(1, def.AdaptationLagWaves);
+            int asOf = Math.Max(0, wave - lag);
+            string key = def.Id + "|" + asOf;
+            if (routes.TryGetValue(key, out var have)) return have;
+
+            var cls = ClassOfUnit(def);
+            float[] move = grid.CostFor(cls, def.TreeMoveCost);
+            var route = new Route { MoveCost = move };
+            var baseFlow = new FlowField(grid, move);
+
+            // Known defenders that can hurt this unit, and how hard (per second, before cover and sight).
+            var threats = Known(wave, lag);
+            var hurt = new List<Threat>();
+            var rate = new List<float>();
+            foreach (var t in threats)
+            {
+                if (t.Def.Dps <= 0f || !CanTarget(t.Def, def)) continue;
+                float f = ArmourFactor(t.Def.DamageType, def.Armour);
+                if (f <= 0f) continue;
+                hurt.Add(t);
+                rate.Add(t.Def.Dps * t.Def.Accuracy * f * t.Weight);
+            }
+
+            if (hurt.Count == 0)
+            {
+                route.Mode = RouteMode.Fastest;
+                route.Flow = route.Fallback = baseFlow;
+                route.Starts = AllStarts(baseFlow, move);
+                routes[key] = route;
+                return route;
+            }
+
+            // Expected damage per second in every cell. A defender hurts only where it can hit: inside its range
+            // and where it sees (sight radius, obstacles, belts). Indirect fire hits wherever any known defender sees.
+            int n = grid.Count;
+            var danger = new float[n];
+            var seenByAny = new float[n];
+            var see = new float[hurt.Count][];
+            foreach (var t in threats) SeeFrom(t, seenByAny, null);
+            for (int k = 0; k < hurt.Count; k++) { see[k] = new float[n]; SeeFrom(hurt[k], null, see[k]); }
+            for (int i = 0; i < n; i++)
+            {
+                float x = grid.CenterX(i), y = grid.CenterY(i);
+                for (int k = 0; k < hurt.Count; k++)
+                {
+                    float range = RangeAt(hurt[k].Def, hurt[k].X, hurt[k].Y);
+                    float dx = x - hurt[k].X, dy = y - hurt[k].Y;
+                    if (dx * dx + dy * dy > range * range) continue;
+                    float seen = hurt[k].Def.Behaviour == "indirect_fire" ? seenByAny[i] : see[k][i];
+                    danger[i] += rate[k] * seen;
+                }
+            }
+            float speed = Math.Max(0.1f, def.SpeedMps);
+
+            // Safest: one point of expected damage weighs as much as DangerWeight metres; speed does not matter.
+            var safeCost = new float[n];
+            for (int i = 0; i < n; i++)
+                safeCost[i] = float.IsPositiveInfinity(move[i]) ? float.PositiveInfinity
+                    : 1f + rules.DangerWeight * danger[i] * move[i] / speed;
+            var safest = new FlowField(grid, safeCost);
+
+            // Evade: travel time plus a little per metre, threat zones closed.
+            var evadeCost = new float[n];
+            for (int i = 0; i < n; i++)
+                evadeCost[i] = float.IsPositiveInfinity(move[i]) || danger[i] > 0f ? float.PositiveInfinity
+                    : move[i] / speed + rules.EvadeLengthWeight;
+            var evade = new FlowField(grid, evadeCost);
+
+            var evadeStarts = BestStarts(evade, move);
+            if (evadeStarts.Length > 0)
+            {
+                route.Mode = RouteMode.Evade;
+                route.Flow = evade;
+                route.Starts = evadeStarts;
+            }
+            else
+            {
+                route.Mode = RouteMode.Safest;
+                route.Flow = safest;
+                route.Starts = BestStarts(safest, move);
+            }
+            route.Fallback = safest;
+            routes[key] = route;
+            return route;
+        }
+
+        // How well a known defender sees each cell: max into 'max', or written into 'into'.
+        void SeeFrom(Threat t, float[] max, float[] into)
+        {
+            float sight = SightOf(t.Def);
+            float radius = vision != null ? vision.SightRadius(t.X, t.Y, sight) : sight;
+            int c0 = Math.Max(0, (int)((t.X - radius) / NavGrid.CellSize)), c1 = Math.Min(grid.Cols - 1, (int)((t.X + radius) / NavGrid.CellSize));
+            int r0 = Math.Max(0, (int)((t.Y - radius) / NavGrid.CellSize)), r1 = Math.Min(grid.Rows - 1, (int)((t.Y + radius) / NavGrid.CellSize));
+            for (int r = r0; r <= r1; r++)
+                for (int c = c0; c <= c1; c++)
+                {
+                    int i = r * grid.Cols + c;
+                    float v = Seen(t.X, t.Y, sight, grid.CenterX(i), grid.CenterY(i));
+                    if (into != null) into[i] = v;
+                    if (max != null && v > max[i]) max[i] = v;
+                }
+        }
+
+        float RangeAt(UnitDef d, float x, float y)
+        {
+            float r = d.RangeM;
+            if (vision != null) { var o = vision.ObstacleAt(x, y); if (o != null) r *= o.OnRangeMult; }
+            return r;
+        }
+
+        // Entry cells: the field's entry points, or the whole top edge.
+        List<int> EntryCandidates(FlowField flow, float[] move)
+        {
+            var list = new List<int>();
+            if (grid.SpawnXs.Length > 0)
+            {
+                foreach (float x in grid.SpawnXs)
+                {
+                    int c = grid.CellAt(x, 0f);
+                    if (!float.IsPositiveInfinity(move[c]) && flow.Reachable(c)) list.Add(c);
+                }
+            }
+            else
+            {
+                for (int c = 0; c < grid.Cols; c++)
+                    if (!float.IsPositiveInfinity(move[c]) && flow.Reachable(c)) list.Add(c);
+            }
+            return list;
+        }
+
+        int[] AllStarts(FlowField flow, float[] move) => EntryCandidates(flow, move).ToArray();
+
+        // With threats known, attackers enter where the route is best, give or take RouteChoiceSlack.
+        int[] BestStarts(FlowField flow, float[] move)
+        {
+            var all = EntryCandidates(flow, move);
+            if (all.Count == 0) return all.ToArray();
+            double best = double.PositiveInfinity;
+            foreach (int c in all) if (flow.Dist[c] < best) best = flow.Dist[c];
+            var good = new List<int>();
+            foreach (int c in all) if (flow.Dist[c] <= best * (1.0 + rules.RouteChoiceSlack) + 1e-9) good.Add(c);
+            return good.ToArray();
         }
 
         // ---- sight ----------------------------------------------------------------------------------------------
@@ -349,6 +690,7 @@ namespace Treeline.Sim
                     float c = Seen(a.X, a.Y, SightOf(a.Def), d.X, d.Y);
                     if (c > d.SeenChance) d.SeenChance = c;
                 }
+                if (d.SeenChance > 0f) Record(d);   // the attackers will remember it
             }
         }
 
@@ -391,12 +733,13 @@ namespace Treeline.Sim
         }
 
         // Expected damage this step: no dice, so a run is repeatable and balance numbers are easy to read.
-        float Damage(Unit shooter, Unit target, bool moving, float dt)
+        // aimSeen is how well the shooter's side sees the point it aims at.
+        float Damage(Unit shooter, Unit target, float aimSeen, bool moving, float dt)
         {
             var s = shooter.Def;
-            float dmg = s.Dps * s.Accuracy * target.SeenChance * dt;
+            float dmg = s.Dps * s.Accuracy * aimSeen * dt;
             if (moving) dmg *= s.MoveAccuracyMult;
-            if (armour != null) dmg *= armour.Factor(s.DamageType, target.Def.Armour);
+            dmg *= ArmourFactor(s.DamageType, target.Def.Armour);
             if (vision != null)
             {
                 var cls = ClassOf(s);
@@ -408,15 +751,26 @@ namespace Treeline.Sim
             return dmg;
         }
 
-        float RangeOf(Unit u)
+        float RangeOf(Unit u) => RangeAt(u.Def, u.X, u.Y);
+
+        // Direct fire with the own-sight rule needs the shooter's own view; indirect fire always uses shared vision.
+        bool OwnSightOnly(UnitDef d) => rules.DirectFireNeedsOwnSight && d.Behaviour != "indirect_fire";
+
+        float AimAt(Unit shooter, Unit target, bool ownSight) =>
+            ownSight ? Seen(shooter.X, shooter.Y, SightOf(shooter.Def), target.X, target.Y) : target.SeenChance;
+
+        static bool InRange(Unit a, Unit b, float range)
         {
-            float r = u.Def.RangeM;
-            if (vision != null) { var o = vision.ObstacleAt(u.X, u.Y); if (o != null) r *= o.OnRangeMult; }
-            return r;
+            float dx = a.X - b.X, dy = a.Y - b.Y;
+            return dx * dx + dy * dy <= range * range;
         }
 
-        void Hit(Unit target, float dmg)
+        void Hit(Unit shooter, Unit target, float dmg)
         {
+            if (dmg <= 0f || !target.Alive) return;
+            float done = Math.Min(dmg, target.Hp);
+            StatsFor(shooter.Def).DamageDealt += done;
+            StatsFor(target.Def).DamageTaken += done;
             target.Hp -= dmg;
             if (target.Hp <= 0f) target.Alive = false;
         }
@@ -426,15 +780,39 @@ namespace Treeline.Sim
             foreach (var d in defenders)
             {
                 if (!d.Alive || d.State != DefenderState.Standing || d.Def.Dps <= 0f) continue;
-                float range = RangeOf(d), best = float.MaxValue;
-                Attacker target = null;
+                float range = RangeOf(d);
+                // Stay on the current target while it is alive, seen and in range; otherwise take the nearest.
+                bool own = OwnSightOnly(d.Def);
+                var target = d.Target as Attacker;
+                if (target == null || !target.Alive || AimAt(d, target, own) <= 0f || !InRange(d, target, range))
+                {
+                    target = null;
+                    float best = float.MaxValue;
+                    foreach (var a in attackers)
+                    {
+                        if (!a.Alive || a.SeenChance <= 0f || !CanTarget(d.Def, a.Def)) continue;
+                        float dx = a.X - d.X, dy = a.Y - d.Y, dist = dx * dx + dy * dy;
+                        if (dist > range * range || dist >= best) continue;
+                        if (own && AimAt(d, a, true) <= 0f) continue;
+                        best = dist; target = a;
+                    }
+                    d.Target = target;
+                }
+                if (target == null) continue;
+                Record(d);   // firing gives the position away
+
+                float aim = AimAt(d, target, own);
+                float blast = d.Def.Behaviour == "indirect_fire" ? d.Def.BlastRadiusM : 0f;
+                if (blast <= 0f) { Hit(d, target, Damage(d, target, aim, false, dt)); continue; }
+
+                // Mortar: everything within the blast radius of the aiming point takes the hit.
+                float tx = target.X, ty = target.Y;
                 foreach (var a in attackers)
                 {
-                    if (!a.Alive || a.SeenChance <= 0f || !CanTarget(d.Def, a.Def)) continue;
-                    float dx = a.X - d.X, dy = a.Y - d.Y, dist = dx * dx + dy * dy;
-                    if (dist <= range * range && dist < best) { best = dist; target = a; }
+                    if (!a.Alive || !CanTarget(d.Def, a.Def)) continue;
+                    float dx = a.X - tx, dy = a.Y - ty;
+                    if (dx * dx + dy * dy <= blast * blast) Hit(d, a, Damage(d, a, aim, false, dt));
                 }
-                if (target != null) Hit(target, Damage(d, target, false, dt));
             }
         }
 
@@ -442,23 +820,86 @@ namespace Treeline.Sim
         {
             foreach (var a in attackers)
             {
-                if (!a.Alive || a.Def.Dps <= 0f || !a.Def.FireOnMove && a.Def.SpeedMps > 0f) continue;
-                float range = RangeOf(a), best = float.MaxValue;
-                Defender target = null;
-                foreach (var d in defenders)
+                if (!a.Alive || a.Def.Dps <= 0f) continue;
+                bool moving = !a.Dismounting && !a.Stuck && a.Def.SpeedMps > 0f;
+                if (moving && !a.Def.FireOnMove) continue;
+                float range = RangeOf(a);
+                bool own = OwnSightOnly(a.Def);
+                var target = a.Target as Defender;
+                if (target == null || !target.Alive || AimAt(a, target, own) <= 0f || !InRange(a, target, range))
                 {
-                    if (!d.Alive || d.SeenChance <= 0f) continue;
-                    float dx = a.X - d.X, dy = a.Y - d.Y, dist = dx * dx + dy * dy;
-                    if (dist <= range * range && dist < best) { best = dist; target = d; }
+                    target = null;
+                    float best = float.MaxValue;
+                    foreach (var d in defenders)
+                    {
+                        if (!d.Alive || d.SeenChance <= 0f) continue;
+                        float dx = a.X - d.X, dy = a.Y - d.Y, dist = dx * dx + dy * dy;
+                        if (dist > range * range || dist >= best) continue;
+                        if (own && AimAt(a, d, true) <= 0f) continue;
+                        best = dist; target = d;
+                    }
+                    a.Target = target;
                 }
-                if (target != null) Hit(target, Damage(a, target, a.Def.SpeedMps > 0f, dt));
+                if (target != null) Hit(a, target, Damage(a, target, AimAt(a, target, own), moving, dt));
             }
         }
 
+        // ---- deaths ---------------------------------------------------------------------------------------------
+
         void Cleanup()
         {
+            // Repeat: a carrier's blast can kill troops that were already checked.
+            bool again = true;
+            while (again)
+            {
+                again = false;
+                foreach (var a in attackers)
+                {
+                    if (a.Alive || a.Crossed || a.Handled) continue;
+                    a.Handled = true;
+                    Destroyed(a);
+                    again = true;
+                }
+            }
+            foreach (var d in defenders) if (!d.Alive) StatsFor(d.Def).Killed++;
             defenders.RemoveAll(e => !e.Alive);
             attackers.RemoveAll(e => !e.Alive);
+        }
+
+        void Destroyed(Attacker a)
+        {
+            StatsFor(a.Def).Killed++;
+            bool loaded = a.Passengers > 0;
+            bool dismounting = a.Dismounting;
+
+            // Troops still inside die with the vehicle.
+            if (loaded && units.TryGet(a.Def.CarriesUnit, out var p))
+            {
+                var ps = StatsFor(p);
+                ps.Spawned += a.Passengers;
+                ps.Killed += a.Passengers;
+            }
+            a.Passengers = 0;
+
+            // A carrier blowing up with troops inside or getting out kills attacking troops next to it.
+            if (rules.DismountBlastKills && a.Def.BlastRadiusM > 0f && (loaded || dismounting))
+            {
+                float r2 = a.Def.BlastRadiusM * a.Def.BlastRadiusM;
+                foreach (var o in attackers)
+                {
+                    if (!o.Alive || o.Class != UnitClass.Infantry) continue;
+                    float dx = o.X - a.X, dy = o.Y - a.Y;
+                    if (dx * dx + dy * dy <= r2) { o.Hp = 0f; o.Alive = false; }
+                }
+            }
+
+            // A destroyed vehicle stays as a wreck: it hides, gives cover and blocks vehicles.
+            if (a.Class == UnitClass.Vehicle && a.Def.WreckRadiusM > 0f && vision != null &&
+                vision.Table.TryGet("wreck", out var wreck))
+            {
+                vision.PlaceObject(wreck, a.X, a.Y, a.Def.WreckRadiusM);
+                grid.PlaceObject(wreck, a.X, a.Y, a.Def.WreckRadiusM);
+            }
         }
     }
 }

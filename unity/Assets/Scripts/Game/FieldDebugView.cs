@@ -41,6 +41,8 @@ namespace Treeline.Game
         UnitTable unitTable;
         Battle battle;
         ArmourTable armourTable;
+        BattleRules battleRules;
+        int flowVersion;
         int simSpeed = 1;
         bool battleMode;
         int lastDefenderId;
@@ -68,6 +70,10 @@ namespace Treeline.Game
             try { if (System.IO.File.Exists(armourPath)) armourTable = ArmourTable.Parse(System.IO.File.ReadAllText(armourPath)); }
             catch (System.Exception e) { Debug.LogError($"armour.csv: {e.Message}"); }
 
+            string rulesPath = System.IO.Path.Combine(Application.dataPath, "Data", "battle_rules.csv");
+            try { if (System.IO.File.Exists(rulesPath)) battleRules = BattleRules.Parse(System.IO.File.ReadAllText(rulesPath)); }
+            catch (System.Exception e) { Debug.LogError($"battle_rules.csv: {e.Message}"); }
+
             sr = new GameObject("Terrain").AddComponent<SpriteRenderer>();
             sr.transform.SetParent(transform, false);
             Load(0);
@@ -79,11 +85,12 @@ namespace Treeline.Game
             var field = fields[current];
 
             var sw = System.Diagnostics.Stopwatch.StartNew();
-            grid = new NavGrid(field);
+            grid = new NavGrid(field, obstacles);
             infantryFlow = new FlowField(grid, UnitClass.Infantry);
             vehicleFlow = new FlowField(grid, UnitClass.Vehicle);
+            flowVersion = grid.Version;
             vision = obstacles != null ? new VisionMap(field, obstacles) : null;
-            battle = unitTable != null ? new Battle(grid, unitTable, 1000f, vision, armourTable) : null;
+            battle = unitTable != null ? new Battle(grid, unitTable, 3000f, vision, armourTable, -1f, 1, battleRules) : null;
             lastDefenderId = 0;
             battleMessage = "";
             obsX = field.Width / 2f;
@@ -97,6 +104,13 @@ namespace Treeline.Game
 
         void Redraw()
         {
+            if (grid.Version != flowVersion)
+            {
+                // A wreck changed the ground: rebuild the routes shown.
+                infantryFlow = new FlowField(grid, UnitClass.Infantry);
+                vehicleFlow = new FlowField(grid, UnitClass.Vehicle);
+                flowVersion = grid.Version;
+            }
             var flow = cls == UnitClass.Infantry ? infantryFlow : vehicleFlow;
             var cost = grid.Cost(cls);
 
@@ -151,8 +165,19 @@ namespace Treeline.Game
             if (battle != null && battleMode)
             {
                 if (!showVision) PaintBlock(pixels, obsX, obsY, new Color32(235, 70, 60, 255));
+                // Each attacker's planned way: yellow = fastest, green = evading known defenders, violet = safest.
                 foreach (var a in battle.Attackers)
-                    PaintBlock(pixels, a.X, a.Y, a.Class == UnitClass.Vehicle ? new Color32(255, 150, 40, 255) : new Color32(235, 70, 60, 255));
+                {
+                    var path = a.PathCells;
+                    if (path == null) continue;
+                    var col = a.Mode == RouteMode.Evade ? new Color32(120, 220, 120, 255)
+                        : a.Mode == RouteMode.Safest ? new Color32(190, 120, 235, 255) : new Color32(240, 214, 90, 255);
+                    for (int k = a.PathPosition; k < path.Count; k++) pixels[Index(path[k])] = col;
+                }
+                foreach (var a in battle.Attackers)
+                    PaintBlock(pixels, a.X, a.Y, a.Class == UnitClass.Vehicle
+                        ? (a.Dismounting ? new Color32(255, 230, 60, 255) : new Color32(255, 150, 40, 255))
+                        : new Color32(235, 70, 60, 255));
                 foreach (var d in battle.Defenders)
                     PaintBlock(pixels, d.X, d.Y, d.State == DefenderState.Standing ? new Color32(60, 130, 235, 255) : new Color32(140, 235, 245, 255));
             }
@@ -164,6 +189,8 @@ namespace Treeline.Game
             var starts = new System.Collections.Generic.List<int>();
             if (grid.SpawnXs.Length > 0) foreach (float sx in grid.SpawnXs) starts.Add(grid.CellAt(sx, 0f));
             else for (int c = 3; c < grid.Cols; c += 12) starts.Add(c);
+            bool roundRunning = battle != null && battleMode && battle.Phase == BattlePhase.Round;
+            if (roundRunning) starts.Clear();   // during a round the attackers' own routes are drawn instead
             foreach (int c in starts)
             {
                 var path = flow.Trace(c);
@@ -181,7 +208,16 @@ namespace Treeline.Game
             if (battle != null && battleMode)
                 status += $"\nBattle: {battle.Phase}, budget {battle.Budget:0}, defenders {battle.Defenders.Count}, run speed {battle.RunSpeedMps:0} m/s. {battleMessage}";
             if (battle != null && battleMode && battle.Phase == BattlePhase.Round)
-                status += $"\nRound {battle.RoundTime:0} s, attackers {battle.Attackers.Count} (+{battle.Pending} to come), line {battle.LineDamage:0.#}/{battle.LineHealth:0}, {battle.Outcome}";
+            {
+                int fast = 0, evade = 0, safe = 0;
+                foreach (var a in battle.Attackers)
+                {
+                    if (a.Mode == RouteMode.Evade) evade++;
+                    else if (a.Mode == RouteMode.Safest) safe++;
+                    else fast++;
+                }
+                status += $"\nWave {battle.WaveNumber}, {battle.RoundTime:0} s, attackers {battle.Attackers.Count} (+{battle.Pending} to come), line {battle.LineDamage:0.#}/{battle.LineHealth:0}, {battle.Outcome}. Routes: fastest {fast}, evade {evade}, safest {safe}";
+            }
             if (showVision && vision != null)
                 status += $"\nVision: observer at ({obsX:0}, {obsY:0}), sight radius {vision.SightRadius(obsX, obsY, BaseSight):0} m (dark = hidden, bright = seen)";
         }
@@ -248,6 +284,7 @@ namespace Treeline.Game
 
         void StartWave(params (string id, int count, float delay, float interval)[] waves)
         {
+            battle.BeginWave();
             foreach (var w in waves) battle.QueueWave(w.id, w.count, w.delay, w.interval);
             battle.StartRound();
             Redraw();
@@ -286,7 +323,7 @@ namespace Treeline.Game
         {
             float s = Mathf.Max(1f, Screen.height / 540f);
             GUI.matrix = Matrix4x4.Scale(new Vector3(s, s, 1f));
-            GUILayout.BeginArea(new Rect(8, 8, Screen.width / s - 16, 290));
+            GUILayout.BeginArea(new Rect(8, 8, Screen.width / s - 16, 310));
             GUILayout.Label(status);
             if (fields.Count > 0)
             {
@@ -321,8 +358,11 @@ namespace Treeline.Game
                 if (battle != null && battleMode)
                 {
                     GUILayout.BeginHorizontal();
-                    if (GUILayout.Button("Deploy gunner", GUILayout.Height(34))) Deploy("machine_gun");
-                    if (GUILayout.Button("Deploy rifles", GUILayout.Height(34))) Deploy("rifle_squad");
+                    if (GUILayout.Button("Rifles 100", GUILayout.Height(34))) Deploy("rifle_squad");
+                    if (GUILayout.Button("Gunner 200", GUILayout.Height(34))) Deploy("machine_gun");
+                    if (GUILayout.Button("Sniper 300", GUILayout.Height(34))) Deploy("sniper");
+                    if (GUILayout.Button("Mortar 350", GUILayout.Height(34))) Deploy("mortar");
+                    if (GUILayout.Button("Anti-tank 450", GUILayout.Height(34))) Deploy("anti_tank");
                     if (GUILayout.Button("Move last here", GUILayout.Height(34)))
                     {
                         if (lastDefenderId == 0) battleMessage = "Deploy someone first.";
@@ -334,10 +374,14 @@ namespace Treeline.Game
 
                     GUILayout.BeginHorizontal();
                     GUI.enabled = battle.Outcome != BattleOutcome.Lost;
-                    if (GUILayout.Button("Start: 10 recruits", GUILayout.Height(34))) StartWave(("recruit", 10, 0f, 1.5f));
-                    if (GUILayout.Button("Start: 8 regulars", GUILayout.Height(34))) StartWave(("regular", 8, 0f, 1.5f));
-                    if (GUILayout.Button("Start: mixed", GUILayout.Height(34)))
-                        StartWave(("regular", 6, 0f, 1.5f), ("old_tank", 2, 6f, 6f), ("mrap", 2, 3f, 5f));
+                    if (GUILayout.Button("Wave: infantry", GUILayout.Height(34)))
+                        StartWave(("recruit", 10, 0f, 1.5f), ("regular", 4, 4f, 2f));
+                    if (GUILayout.Button("Wave: armour", GUILayout.Height(34)))
+                        StartWave(("old_tank", 2, 0f, 6f), ("ifv", 2, 3f, 6f), ("modern_tank", 1, 10f, 1f));
+                    if (GUILayout.Button("Wave: transport", GUILayout.Height(34)))
+                        StartWave(("motorbike", 4, 0f, 1f), ("buggy", 3, 2f, 1.5f), ("van", 2, 4f, 4f), ("mrap", 2, 6f, 4f));
+                    if (GUILayout.Button("Wave: mixed", GUILayout.Height(34)))
+                        StartWave(("regular", 6, 0f, 1.5f), ("old_tank", 1, 6f, 1f), ("ifv", 1, 9f, 1f), ("mrap", 2, 3f, 5f), ("van", 1, 12f, 1f));
                     GUI.enabled = true;
                     if (GUILayout.Button("Reset", GUILayout.Height(34))) Load(current);
                     if (GUILayout.Button($"Speed x{simSpeed}", GUILayout.Height(34))) simSpeed = simSpeed == 1 ? 4 : 1;

@@ -174,7 +174,7 @@
   },
   "pathfinding": {
     "notes": "Attackers read the threat before choosing a route. Three modes, checked in order, per unit class and lag group.",
-    "threat_zone": "Every spot inside the range of a known defender whose weapon can damage this unit after armour.",
+    "threat_zone": "Every spot a known defender can hit: inside its range and inside its own sight (obstacles and belts count); for indirect fire, inside its range and seen by any known defender. Changed 2026-11-06: range alone covered the whole map once sight became separate. Code: Battle.RouteFor in unity/Assets/Scripts/Sim.",
     "modes": {
       "no_threat": {
         "when": "No known threat zones (wave 1, or nothing known yet)",

@@ -12,6 +12,10 @@ namespace Treeline.Sim
         public float Hp, SpeedMps, SightRangeM, RangeM, BuildCost;
         public float Dps, Accuracy, MoveAccuracyMult = 1f, LineDamage = 1f;
         public bool FireOnMove;
+        public string CarriesUnit = "";
+        public int CarriesCount;
+        public float DismountAtHp, DismountIntervalS, BlastRadiusM, WreckRadiusM, TreeMoveCost;
+        public int AdaptationLagWaves;
 
         public bool IsDefence => Side == "defence";
     }
@@ -62,6 +66,14 @@ namespace Treeline.Sim
                     Accuracy = Num(col, r, "accuracy"),
                     MoveAccuracyMult = NumOr(col, r, "move_accuracy_mult", 1f),
                     LineDamage = NumOr(col, r, "line_damage", 1f),
+                    CarriesUnit = Cell(col, r, "carries_unit"),
+                    CarriesCount = (int)Num(col, r, "carries_count"),
+                    DismountAtHp = Num(col, r, "dismount_at_hp"),
+                    DismountIntervalS = Num(col, r, "dismount_interval_s"),
+                    BlastRadiusM = Num(col, r, "blast_radius_m"),
+                    WreckRadiusM = Num(col, r, "wreck_radius_m"),
+                    TreeMoveCost = Num(col, r, "tree_move_cost"),
+                    AdaptationLagWaves = (int)Num(col, r, "adaptation_lag_waves"),
                     Hp = Num(col, r, "hp"),
                     SpeedMps = Num(col, r, "speed_mps"),
                     SightRangeM = Num(col, r, "sight_range_m"),

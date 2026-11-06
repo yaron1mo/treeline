@@ -1,0 +1,13 @@
+unit,spawned_or_placed,killed_or_lost,crossed,line_damage,damage_dealt
+machine_gun,60,40,0,0,2742.23
+anti_tank,60,38,0,0,32752.61
+sniper,60,60,0,0,224.4
+rifle_squad,120,68,0,0,4549.15
+mortar,60,28,0,0,8484.87
+recruit,2226,1704,243,243,916.21
+motorbike,298,231,66,66,0
+regular,596,275,171,171,2205.61
+mrap,149,60,74,518,120.76
+old_tank,149,84,22,110,1343.37
+van,149,111,16,224,0
+special_forces,240,222,18,18,660.79

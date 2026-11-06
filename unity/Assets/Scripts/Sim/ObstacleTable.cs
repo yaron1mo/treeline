@@ -25,6 +25,8 @@ namespace Treeline.Sim
         public bool Buildable;
         public float BuildCost;
 
+        public float? MoveCost(UnitClass c) => c == UnitClass.Infantry ? MoveCostInfantry : MoveCostVehicle;
+
         public bool HasOnBonus => OnRangeMult != 1f || OnSightMult != 1f || OnCoverMult != 1f;
     }
 

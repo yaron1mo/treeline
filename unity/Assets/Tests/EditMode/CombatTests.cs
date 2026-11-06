@@ -16,8 +16,9 @@ namespace Treeline.Tests
 
         static Battle Make(Field field, float lineHealth = 20f, int seed = 1)
         {
-            var grid = new NavGrid(field);
-            var vision = new VisionMap(field, ObstacleTable.Parse(Data("obstacles.csv")));
+            var table = ObstacleTable.Parse(Data("obstacles.csv"));
+            var grid = new NavGrid(field, table);
+            var vision = new VisionMap(field, table);
             return new Battle(grid, UnitTable.Parse(Data("units.csv")), 5000f, vision,
                 ArmourTable.Parse(Data("armour.csv")), lineHealth, seed);
         }
