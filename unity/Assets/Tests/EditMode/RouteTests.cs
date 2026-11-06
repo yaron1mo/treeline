@@ -45,7 +45,7 @@ namespace Treeline.Tests
 
             var second = FirstOf(b, "special_forces");   // lag 1: knows wave 1
             Assert.AreEqual(RouteMode.Evade, second.Mode);
-            foreach (int cell in second.Path)
+            foreach (int cell in second.PathCells)
             {
                 float dx = (cell % 60 + 0.5f) * 2f - 60f, dy = (cell / 60 + 0.5f) * 2f - 90f;
                 Assert.Greater(dx * dx + dy * dy, 30f * 30f, "keeps out of the gunner's sight");
