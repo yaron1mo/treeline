@@ -292,8 +292,11 @@ namespace Treeline.Sim
                     flows[k] = new FlowField(grid, cls);
                     var list = new List<int>();
                     float[] cost = grid.Cost(cls);
-                    for (int c = 0; c < grid.Cols; c++)
-                        if (!float.IsPositiveInfinity(cost[c]) && flows[k].Reachable(c)) list.Add(c);
+                    // Entry points from the field file, or the whole top edge when it names none.
+                    if (grid.SpawnXs.Length > 0)
+                        foreach (float x in grid.SpawnXs) TryAddStart(list, cost, flows[k], grid.CellAt(x, 0f));
+                    else
+                        for (int c = 0; c < grid.Cols; c++) TryAddStart(list, cost, flows[k], c);
                     startCells[k] = list.ToArray();
                 }
                 if (startCells[k].Length == 0) continue;   // no way across this field for this class
@@ -304,6 +307,11 @@ namespace Treeline.Sim
                 a.Y = grid.CenterY(start);
                 attackers.Add(a);
             }
+        }
+
+        static void TryAddStart(List<int> list, float[] cost, FlowField flow, int cell)
+        {
+            if (!float.IsPositiveInfinity(cost[cell]) && flow.Reachable(cell)) list.Add(cell);
         }
 
         // ---- sight ----------------------------------------------------------------------------------------------

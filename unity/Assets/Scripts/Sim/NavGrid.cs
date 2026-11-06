@@ -85,6 +85,8 @@ namespace Treeline.Sim
         readonly float[][] cost = new float[2][];
 
         public int Count => Cols * Rows;
+        /// <summary>Attacker entry points along the top edge (x in metres); empty = anywhere.</summary>
+        public readonly float[] SpawnXs;
         public float[] Cost(UnitClass c) => cost[(int)c];
 
         public NavGrid(Field field)
@@ -93,6 +95,7 @@ namespace Treeline.Sim
             Height = field.Height;
             Cols = (int)Math.Round(Width / CellSize);
             Rows = (int)Math.Round(Height / CellSize);
+            SpawnXs = field.Spawns.ToArray();
             Cells = new TerrainKind[Cols * Rows];
             cost[0] = new float[Cells.Length];
             cost[1] = new float[Cells.Length];

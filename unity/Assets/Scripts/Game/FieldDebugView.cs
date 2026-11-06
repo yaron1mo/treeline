@@ -160,7 +160,11 @@ namespace Treeline.Game
             // Routes from the enemy edge, one every ~24 m.
             int shown = 0, blocked = 0;
             double best = double.PositiveInfinity;
-            for (int c = 3; c < grid.Cols; c += 12)
+            // Where the field names entry points, show exactly those routes; otherwise a sample along the edge.
+            var starts = new System.Collections.Generic.List<int>();
+            if (grid.SpawnXs.Length > 0) foreach (float sx in grid.SpawnXs) starts.Add(grid.CellAt(sx, 0f));
+            else for (int c = 3; c < grid.Cols; c += 12) starts.Add(c);
+            foreach (int c in starts)
             {
                 var path = flow.Trace(c);
                 if (path.Count == 0) { blocked++; continue; }

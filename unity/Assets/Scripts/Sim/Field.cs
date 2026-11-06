@@ -24,6 +24,8 @@ namespace Treeline.Sim
         public string Name = "";
         public float Width = 200f, Height = 400f;
         public List<Feature> Features = new List<Feature>();
+        /// <summary>Where attackers enter along the top edge (x in metres). Empty = anywhere along the edge.</summary>
+        public List<float> Spawns = new List<float>();
     }
 
     /// <summary>Reads a field file (the JSON the web prototype and tools/osm_to_field.py write).</summary>
@@ -41,6 +43,9 @@ namespace Treeline.Sim
                 field.Width = (float)(double)sz[0];
                 field.Height = (float)(double)sz[1];
             }
+
+            if (root.TryGetValue("spawns", out var sp) && sp is List<object> spl)
+                foreach (var x in spl) if (x is double xd) field.Spawns.Add((float)xd);
 
             if (root.TryGetValue("features", out var feats) && feats is List<object> list)
             {

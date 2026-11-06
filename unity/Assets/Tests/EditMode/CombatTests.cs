@@ -57,6 +57,30 @@ namespace Treeline.Tests
         }
 
         [Test]
+        public void FieldEntryPoints_DecideWhereAttackersAppear()
+        {
+            var field = Open();
+            field.Spawns.Add(8f);
+            field.Spawns.Add(32f);
+            var b = Make(field);
+            b.QueueWave("recruit", 12, 0f, 0.1f);
+            b.StartRound();
+            for (int i = 0; i < 40; i++) b.Step(0.05f);
+            Assert.Greater(b.Attackers.Count, 5);
+            foreach (var a in b.Attackers)
+                Assert.IsTrue(System.Math.Abs(a.X - 9f) < 3f || System.Math.Abs(a.X - 33f) < 3f, "x = " + a.X);
+        }
+
+        [Test]
+        public void FieldParser_ReadsSpawns_AndForestBeltsHasTwo()
+        {
+            var f = FieldParser.Parse("{\"size\":[100,100],\"spawns\":[10,90],\"features\":[]}");
+            Assert.AreEqual(2, f.Spawns.Count);
+            var shipped = FieldParser.Parse(File.ReadAllText(Path.Combine(Application.dataPath, "Resources", "Fields", "forest-belts.json")));
+            Assert.AreEqual(2, shipped.Spawns.Count);
+        }
+
+        [Test]
         public void TooMuchLineDamage_LosesTheBattle()
         {
             var b = Make(Open(), lineHealth: 2f);
