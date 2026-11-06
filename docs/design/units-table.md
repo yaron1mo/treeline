@@ -37,6 +37,24 @@ From `rules/attackers.json`, numbers in `battle_rules`:
 - Threat zone (changed): where a known defender can hit this unit: inside its range **and** its own sight (belts and bushes count); for the mortar, inside its range and seen by any known defender. Weapons that do no damage after armour (rifles against tanks) are not a threat.
 - Fastest when nothing is known; Evade when a way exists around every threat zone (travel time + 0.1 s per metre); Safest otherwise (1 point of expected damage = 1000 m). With threats known attackers enter where the route is best (within 10%).
 
-## Firing rule (open question, 2026-11-06)
+## Firing rule (decided 2026-11-06, Yaroslav)
 
 `battle_rules.direct_fire_needs_own_sight`. FALSE (current): anyone may fire at what any friendly unit sees, out to `range_m`. Because `range_m` (200 to 1000 m) is larger than the maps (200 x 400 m), one spotter lets the whole enemy column fire. TRUE: direct fire only at what the shooter itself sees; shared vision only for the mortar. See `docs/balance/2026-11-06/`.
+
+**Decision:** shared vision for both sides, every unit fires out to its own `range_m` at what any friendly unit sees. `direct_fire_needs_own_sight` stays FALSE (the TRUE switch is kept for tests).
+
+## Drone operators (2026-11-06)
+
+Three separate rows for now; how they become upgrade branches of one operator is decided later with the progression design.
+
+| id | What it does | Proposed numbers |
+| --- | --- | --- |
+| `fpv_operator` | One single-use FPV at a time. Ready -> sees a target -> waits `launch_delay_s` (3 s, so better targets can show up) -> sends the drone at the best target -> `reload_s` (15 s) until the next. | 400; 12 HP; range 600 m; drone 30 m/s; 60 damage x 0.8 accuracy x armour (`fpv` column) |
+| `bomber_operator` | One reusable Mavic-type drone with 6 grenades: flies to the target, hovers, drops one every 4 s (3 m splash); reload 20 s. | 450; 12 HP; range 400 m; drone 15 m/s; 25 x 0.5 x armour (`explosive`) |
+| `recon_drone` | Spotter only: sees 120 m for the whole side. | 250; 8 HP; no weapon |
+
+**Choosing a target** (columns `target_order` on the operator, `target_class` on the attacker): among attackers that any friendly unit sees, inside the operator's range and of a class it goes for, take the highest-priority class; among equals the one furthest along (closest to the rear edge). FPV order: aviation, fast, heavy, infantry (Yaroslav). Bomber order: infantry, fast, heavy (proposal). Classes: aviation (all four aircraft), fast (buggy, motorbike, van), heavy (tanks, IFV, MRAP; MRAP is a proposal), infantry. A single-use drone is never sent at a target another one is already flying at.
+
+**Rules of the drone:** it flies straight (ignores terrain) and follows its target; if the target dies on the way it picks the next one, or is lost when there is none. Armour counts, cover does not (it comes from above). Drones in the air are lost when the operator dies (`battle_rules.drone_lost_with_operator`).
+
+**Not built yet:** enemy aviation and our air defence use; shooting down our drones (nothing of theirs can: only EW would, postponed); recon view from above (it still sees through obstacles the same way ground units do); operators giving their position away (attackers do not yet route around them).

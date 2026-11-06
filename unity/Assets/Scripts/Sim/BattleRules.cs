@@ -17,6 +17,8 @@ namespace Treeline.Sim
         public bool DismountBlastKills = true;
         /// <summary>Direct fire hits only what the shooter itself sees; shared vision then serves indirect fire (mortars) only.</summary>
         public bool DirectFireNeedsOwnSight;
+        /// <summary>Drones in the air are lost when their operator dies.</summary>
+        public bool DroneLostWithOperator = true;
 
         public static BattleRules Parse(string csv)
         {
@@ -35,6 +37,7 @@ namespace Treeline.Sim
             r.RouteChoiceSlack = Num(values, "route_choice_slack", r.RouteChoiceSlack);
             r.DismountBlastKills = Flag(values, "dismount_blast_kills", r.DismountBlastKills);
             r.DirectFireNeedsOwnSight = Flag(values, "direct_fire_needs_own_sight", r.DirectFireNeedsOwnSight);
+            r.DroneLostWithOperator = Flag(values, "drone_lost_with_operator", r.DroneLostWithOperator);
             return r;
         }
 

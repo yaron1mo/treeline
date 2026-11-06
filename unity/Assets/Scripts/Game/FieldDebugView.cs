@@ -180,6 +180,8 @@ namespace Treeline.Game
                         : new Color32(235, 70, 60, 255));
                 foreach (var d in battle.Defenders)
                     PaintBlock(pixels, d.X, d.Y, d.State == DefenderState.Standing ? new Color32(60, 130, 235, 255) : new Color32(140, 235, 245, 255));
+                // Our drones in the air (white).
+                foreach (var dr in battle.Drones) PaintBlock(pixels, dr.X, dr.Y, new Color32(255, 255, 255, 255));
             }
 
             // Routes from the enemy edge, one every ~24 m.
@@ -206,7 +208,7 @@ namespace Treeline.Game
             string klass = cls == UnitClass.Infantry ? "Infantry" : "Vehicles";
             status = $"{fields[current].Name}  |  {klass}  |  routes: {shown} found, {blocked} blocked  |  fastest ~ {best * NavGrid.CellSize / GameSpeedMps:0} s";
             if (battle != null && battleMode)
-                status += $"\nBattle: {battle.Phase}, budget {battle.Budget:0}, defenders {battle.Defenders.Count}, run speed {battle.RunSpeedMps:0} m/s. {battleMessage}";
+                status += $"\nBattle: {battle.Phase}, budget {battle.Budget:0}, defenders {battle.Defenders.Count}, drones {battle.Drones.Count}, run speed {battle.RunSpeedMps:0} m/s. {battleMessage}";
             if (battle != null && battleMode && battle.Phase == BattlePhase.Round)
             {
                 int fast = 0, evade = 0, safe = 0;
@@ -363,6 +365,9 @@ namespace Treeline.Game
                     if (GUILayout.Button("Sniper 300", GUILayout.Height(34))) Deploy("sniper");
                     if (GUILayout.Button("Mortar 350", GUILayout.Height(34))) Deploy("mortar");
                     if (GUILayout.Button("Anti-tank 450", GUILayout.Height(34))) Deploy("anti_tank");
+                    if (GUILayout.Button("FPV op. 400", GUILayout.Height(34))) Deploy("fpv_operator");
+                    if (GUILayout.Button("Bomber op. 450", GUILayout.Height(34))) Deploy("bomber_operator");
+                    if (GUILayout.Button("Recon 250", GUILayout.Height(34))) Deploy("recon_drone");
                     if (GUILayout.Button("Move last here", GUILayout.Height(34)))
                     {
                         if (lastDefenderId == 0) battleMessage = "Deploy someone first.";
