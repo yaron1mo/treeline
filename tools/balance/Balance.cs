@@ -21,7 +21,7 @@ static class Balance
     static string F(float v) => v.ToString("0.##", CultureInfo.InvariantCulture);
 
     static readonly string[] Ground = { "recruit", "regular", "special_forces", "old_tank", "modern_tank", "ifv", "mrap", "buggy", "motorbike", "van" };
-    static readonly string[] DefenderIds = { "rifle_squad", "machine_gun", "sniper", "mortar", "anti_tank" };
+    static readonly string[] DefenderIds = { "rifle_squad", "machine_gun", "sniper", "mortar", "anti_tank", "fpv_operator", "bomber_operator" };
 
     static int Main(string[] args)
     {
@@ -77,6 +77,7 @@ static class Balance
                 var r = Make(field, 10000f, 1);
                 r.Battle.TryPlace(d, 30f, 200f, out var placed, out _);
                 if (d == "mortar") r.Battle.TryPlace("rifle_squad", 30f, 200f, out _, out _);   // mortars need a spotter; counted apart
+                if (d == "fpv_operator" || d == "bomber_operator") r.Battle.TryPlace("recon_drone", 30f, 100f, out _, out _);   // drones need something that sees far
                 r.Battle.BeginWave();
                 r.Battle.QueueWave(a, count, 0f, att.Type == "vehicle" ? 4f : 1.5f);
                 r.Battle.StartRound();
@@ -140,8 +141,23 @@ static class Balance
 
     // ---- 3. A standard defence on each map against five mixed waves, many seeds. ----
     // The defence is placed the way a sensible player would: next to where the attackers' routes run.
-    static readonly string[] Defence = { "machine_gun", "anti_tank", "sniper", "rifle_squad", "rifle_squad", "mortar" };
-    static readonly float[] Depth = { 0.62f, 0.70f, 0.55f, 0.66f, 0.74f, 0.92f };
+    static string[] Defence;
+    static float[] Depth;
+
+    // Same six defenders as the first run, then the same plus drone operators. Budgets are exactly what the units cost.
+    sealed class Loadout { public string Name; public float Budget; public string[] Units; public float[] Depth; }
+    static readonly Loadout[] Loadouts =
+    {
+        new Loadout { Name = "base", Budget = 1500f,
+            Units = new[] { "machine_gun", "anti_tank", "sniper", "rifle_squad", "rifle_squad", "mortar" },
+            Depth = new[] { 0.62f, 0.70f, 0.55f, 0.66f, 0.74f, 0.92f } },
+        new Loadout { Name = "base+fpv", Budget = 1900f,
+            Units = new[] { "machine_gun", "anti_tank", "sniper", "rifle_squad", "rifle_squad", "mortar", "fpv_operator", "recon_drone" },
+            Depth = new[] { 0.62f, 0.70f, 0.55f, 0.66f, 0.74f, 0.92f, 0.90f, 0.45f } },
+        new Loadout { Name = "base+fpv+bomber", Budget = 2350f,
+            Units = new[] { "machine_gun", "anti_tank", "sniper", "rifle_squad", "rifle_squad", "mortar", "fpv_operator", "bomber_operator", "recon_drone" },
+            Depth = new[] { 0.62f, 0.70f, 0.55f, 0.66f, 0.74f, 0.92f, 0.90f, 0.86f, 0.45f } },
+    };
 
     static void MixedWave(Battle b)
     {
@@ -156,14 +172,16 @@ static class Balance
 
     static void Maps(string mapsPath, string wavesPath)
     {
-        var maps = new StringBuilder("map,seed,waves_survived,line_damage,defenders_lost,attackers_killed,attackers_crossed\n");
-        var waves = new StringBuilder("map,seed,wave,line_damage_this_wave,crossed_this_wave,killed_this_wave,mode_fastest,mode_evade,mode_safest,defenders_left\n");
+        var maps = new StringBuilder("loadout,budget,map,seed,waves_survived,line_damage,defenders_lost,attackers_killed,attackers_crossed\n");
+        var waves = new StringBuilder("loadout,map,seed,wave,line_damage_this_wave,crossed_this_wave,killed_this_wave,mode_fastest,mode_evade,mode_safest,defenders_left\n");
         var perUnit = new Dictionary<string, float[]>();   // spawned, killed, crossed, line damage, damage dealt
+        foreach (var lo in Loadouts)
         foreach (var kv in Fields())
         {
+            Defence = lo.Units; Depth = lo.Depth;
             for (int seed = 1; seed <= 20; seed++)
             {
-                var r = Make(kv.Value, 1500f, seed, rules.LineHealth);
+                var r = Make(kv.Value, lo.Budget, seed, rules.LineHealth);
                 PlaceDefence(r);
                 r.Battle.StartRound();
                 int survived = 0;
@@ -189,21 +207,21 @@ static class Balance
                             }
                         }
                     }
-                    waves.Append($"{kv.Key},{seed},{w},{F(r.Battle.LineDamage - line0)},{TotalCrossed(r.Battle) - crossed0},{TotalKilledAttackers(r.Battle) - killed0},{f},{e},{s},{r.Battle.Defenders.Count}\n");
+                    waves.Append($"{lo.Name},{kv.Key},{seed},{w},{F(r.Battle.LineDamage - line0)},{TotalCrossed(r.Battle) - crossed0},{TotalKilledAttackers(r.Battle) - killed0},{f},{e},{s},{r.Battle.Defenders.Count}\n");
                     if (r.Battle.Outcome == BattleOutcome.Lost) break;
                     survived = w;
                 }
-                maps.Append($"{kv.Key},{seed},{survived},{F(r.Battle.LineDamage)},{Defence.Length - r.Battle.Defenders.Count},{TotalKilledAttackers(r.Battle)},{TotalCrossed(r.Battle)}\n");
+                maps.Append($"{lo.Name},{F(lo.Budget)},{kv.Key},{seed},{survived},{F(r.Battle.LineDamage)},{Defence.Length - r.Battle.Defenders.Count},{TotalKilledAttackers(r.Battle)},{TotalCrossed(r.Battle)}\n");
                 foreach (var st in r.Battle.Stats)
                 {
-                    if (!perUnit.TryGetValue(st.Key, out var acc)) { acc = new float[5]; perUnit[st.Key] = acc; }
+                    if (!perUnit.TryGetValue(lo.Name + "," + st.Key, out var acc)) { acc = new float[5]; perUnit[lo.Name + "," + st.Key] = acc; }
                     acc[0] += st.Value.Spawned; acc[1] += st.Value.Killed; acc[2] += st.Value.Crossed; acc[3] += st.Value.LineDamage; acc[4] += st.Value.DamageDealt;
                 }
             }
         }
         File.WriteAllText(mapsPath, maps.ToString());
         File.WriteAllText(wavesPath, waves.ToString());
-        var u = new StringBuilder("unit,spawned_or_placed,killed_or_lost,crossed,line_damage,damage_dealt\n");
+        var u = new StringBuilder("loadout,unit,spawned_or_placed,killed_or_lost,crossed,line_damage,damage_dealt\n");
         foreach (var kv in perUnit) u.Append($"{kv.Key},{kv.Value[0]},{kv.Value[1]},{kv.Value[2]},{F(kv.Value[3])},{F(kv.Value[4])}\n");
         File.WriteAllText(Path.Combine(Path.GetDirectoryName(mapsPath), "units_totals.csv"), u.ToString());
     }
