@@ -40,6 +40,23 @@ namespace Treeline.Tests
         }
 
         [Test]
+        public void ASecondWave_CanBeSentAfterTheFirstIsWon()
+        {
+            var b = Make(Open());
+            b.QueueWave("recruit", 2, 0f, 1f);
+            b.StartRound();
+            Run(b, 120f);
+            Assert.AreEqual(BattleOutcome.Won, b.Outcome);
+            float t = b.RoundTime;
+            Assert.IsTrue(b.QueueWave("recruit", 2, 1f, 1f));
+            Assert.AreEqual(BattleOutcome.Ongoing, b.Outcome);
+            Run(b, 120f);
+            Assert.AreEqual(BattleOutcome.Won, b.Outcome);
+            Assert.AreEqual(4f, b.LineDamage, 1e-4f, "both waves reached the edge");
+            Assert.Greater(b.RoundTime, t + 1f, "the second wave started from now, not from round start");
+        }
+
+        [Test]
         public void TooMuchLineDamage_LosesTheBattle()
         {
             var b = Make(Open(), lineHealth: 2f);

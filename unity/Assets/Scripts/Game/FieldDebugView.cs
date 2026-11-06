@@ -329,12 +329,13 @@ namespace Treeline.Game
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
-                    GUI.enabled = battle.Phase == BattlePhase.Preparation;
+                    GUI.enabled = battle.Outcome != BattleOutcome.Lost;
                     if (GUILayout.Button("Start: 10 recruits", GUILayout.Height(34))) StartWave(("recruit", 10, 0f, 1.5f));
                     if (GUILayout.Button("Start: 8 regulars", GUILayout.Height(34))) StartWave(("regular", 8, 0f, 1.5f));
                     if (GUILayout.Button("Start: mixed", GUILayout.Height(34)))
                         StartWave(("regular", 6, 0f, 1.5f), ("old_tank", 2, 6f, 6f), ("mrap", 2, 3f, 5f));
                     GUI.enabled = true;
+                    if (GUILayout.Button("Reset", GUILayout.Height(34))) Load(current);
                     if (GUILayout.Button($"Speed x{simSpeed}", GUILayout.Height(34))) simSpeed = simSpeed == 1 ? 4 : 1;
                     GUILayout.EndHorizontal();
                 }

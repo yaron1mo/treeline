@@ -53,6 +53,11 @@ namespace Treeline.Sim
 
         struct Spawn { public float Time; public string UnitId; }
 
+        sealed class SpawnOrder : IComparer<Spawn>
+        {
+            public int Compare(Spawn a, Spawn b) => a.Time.CompareTo(b.Time);
+        }
+
         readonly NavGrid grid;
         readonly UnitTable units;
         readonly VisionMap vision;
@@ -179,15 +184,18 @@ namespace Treeline.Sim
 
         /// <summary>
         /// Queue attackers: <paramref name="count"/> units of <paramref name="unitId"/>, the first after
-        /// <paramref name="delay"/> seconds of the round, then one every <paramref name="interval"/> seconds.
+        /// <paramref name="delay"/> seconds from now, then one every <paramref name="interval"/> seconds.
         /// Aircraft are not simulated yet and are refused. Returns false if the unit cannot be queued.
         /// </summary>
         public bool QueueWave(string unitId, int count, float delay, float interval)
         {
             if (!units.TryGet(unitId, out var def) || def.IsDefence || def.Type == "aviation") return false;
-            for (int i = 0; i < count; i++) spawns.Add(new Spawn { Time = delay + i * interval, UnitId = unitId });
-            spawns.Sort((p, q) => p.Time.CompareTo(q.Time));
+            // Times count from now, so a second wave can be sent while the round runs (or after a won wave).
+            for (int i = 0; i < count; i++) spawns.Add(new Spawn { Time = RoundTime + delay + i * interval, UnitId = unitId });
+            // Sort only what has not spawned yet.
+            spawns.Sort(nextSpawn, spawns.Count - nextSpawn, new SpawnOrder());
             waveQueued = true;
+            if (Outcome == BattleOutcome.Won) Outcome = BattleOutcome.Ongoing;
             return true;
         }
 
