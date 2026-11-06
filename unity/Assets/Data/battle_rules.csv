@@ -7,4 +7,5 @@ memory_decay_per_wave,0.3,"Attackers' memory of a defender position fades by thi
 memory_forget_below,0.25,Proposal. A remembered position weaker than this is forgotten (about four waves without a new sighting).
 route_choice_slack,0.1,Proposal. With threats known attackers pick a random entry among those at most 10% worse than the best one.
 dismount_blast_kills,TRUE,Proposal. A carrier destroyed while troops are still inside or getting out kills attacking troops within its blast_radius_m.
-direct_fire_needs_own_sight,FALSE,"Open question for Yaroslav. FALSE (agreed 2026-11-05): anyone may fire at what any friendly unit sees, out to range_m. TRUE: direct fire only at what the shooter itself sees; shared vision only for mortars."
+direct_fire_needs_own_sight,FALSE,"Decided by Yaroslav 2026-11-06: shared vision for both sides; every unit fires at what any friendly unit sees, out to its own range_m. TRUE would limit direct fire to what the shooter itself sees (kept as a switch for tests)."
+drone_lost_with_operator,TRUE,Proposal. Drones in the air are lost when their operator dies.
