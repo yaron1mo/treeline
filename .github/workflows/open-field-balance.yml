@@ -14,7 +14,7 @@ jobs:
       - name: Install Mono C# compiler and runtime
         run: sudo apt-get update && sudo apt-get install -y mono-mcs mono-runtime
       - name: Compile open-field sweep
-        run: mcs -out:open-field.exe unity/Assets/Scripts/Sim/*.cs tools/balance/OpenField.cs
+        run: mcs -langversion:latest -out:open-field.exe unity/Assets/Scripts/Sim/*.cs tools/balance/OpenField.cs
       - name: Run open-field sweep (20 seeds per scenario)
         run: mono open-field.exe balance-output/open-field.csv .
       - name: Summarize results
