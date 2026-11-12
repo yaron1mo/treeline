@@ -1,5 +1,5 @@
 damage_type,description,none,low,medium,high
-small_arms,rifles and machine guns,1.0,0.5,0.0,0.0
+small_arms,rifles and machine guns,1.0,0.8,0.0,0.0
 heavy,"sniper rifles, heavy MG, autocannon",1.0,0.8,0.3,0.0
 explosive,"mortar, grenades, tank HE",1.0,0.9,0.6,0.35
 fpv,FPV drone warheads,1.0,0.9,0.6,0.4
