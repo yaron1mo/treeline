@@ -1,5 +1,6 @@
 # Change log
 
+- 2026-11-12 — [chatgpt] balance — Disabled moving accuracy penalty for all seven armed attacking ground units (move_accuracy_mult=1), renamed the defence rifle_squad display name to Rifleman (one soldier), and added a repeatable open-field infantry wave sweep (1/2/4/8/12, 20 seeds, defenders shoot back) plus GitHub Actions PR runner. The linked Google Sheet still needs the same data-row sync; no numerical result claimed until the engine run completes.
 Newest on top. Format: `YYYY-MM-DD — [agent] area — what changed and why`. Do not edit old entries.
 
 - 2026-11-12 — [claude] data — Google Sheet fix: the 2026-11-06 drone update overwrote the `air_defence` row on 'units' and left a stray 500 in an empty row, and left the old `direct_fire_needs_own_sight` row duplicated on 'battle_rules'. Restored from `units.csv` / removed the duplicate; the CSV files were right and are unchanged.
