@@ -1,5 +1,6 @@
 # Change log
 
+- 2026-11-12 — [chatgpt] balance — Partial v2 data sync from Yaroslav's instructions: regular speed 6 → 4.5 m/s and low-armour small-arms damage multiplier 0.5 → 0.8 (20% reduction); moving-accuracy multiplier was already 1. User also changed DPS and base accuracy in Google Sheets, but the exact new numbers are not accessible here and are NOT synced to repository CSV yet. Any v2 GitHub Actions run is provisional until those values are exported.
 - 2026-11-12 — [chatgpt] balance — Disabled moving accuracy penalty for all seven armed attacking ground units (move_accuracy_mult=1), renamed the defence rifle_squad display name to Rifleman (one soldier), and added a repeatable open-field infantry wave sweep (1/2/4/8/12, 20 seeds, defenders shoot back) plus GitHub Actions PR runner. The linked Google Sheet still needs the same data-row sync; no numerical result claimed until the engine run completes.
 Newest on top. Format: `YYYY-MM-DD — [agent] area — what changed and why`. Do not edit old entries.
 
