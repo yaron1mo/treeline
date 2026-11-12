@@ -36,6 +36,23 @@ namespace Treeline.Sim
     {
         public float TargetX, TargetY;
         public DefenderState State;
+        /// <summary>Drone operators: seconds until the next drone may be launched.</summary>
+        public float ReloadLeft;
+        /// <summary>Drone operators: seconds left of the wait before launching, or -1 when not waiting.</summary>
+        public float LaunchWaitLeft = -1f;
+    }
+
+    /// <summary>A drone in the air: flies from its operator to an attacker, then strikes (FPV) or drops grenades (bomber).</summary>
+    public sealed class Drone
+    {
+        public int Id;
+        public Defender Owner;
+        public UnitDef Def;      // the operator's row: damage, speed, ammo
+        public float X, Y;
+        public Attacker Target;
+        public int AmmoLeft;
+        public bool Alive = true;
+        internal float DropTimer;
     }
 
     /// <summary>How an attacker chose its route (rules/attackers.json, pathfinding).</summary>
@@ -123,6 +140,7 @@ namespace Treeline.Sim
         readonly Random rng;
         readonly List<Defender> defenders = new List<Defender>();
         readonly List<Attacker> attackers = new List<Attacker>();
+        readonly List<Drone> drones = new List<Drone>();
         readonly List<Spawn> spawns = new List<Spawn>();
         readonly List<Sighting> sightings = new List<Sighting>();
         readonly Dictionary<string, Route> routes = new Dictionary<string, Route>();
@@ -137,6 +155,8 @@ namespace Treeline.Sim
         public float Budget { get; private set; }
         public IReadOnlyList<Defender> Defenders => defenders;
         public IReadOnlyList<Attacker> Attackers => attackers;
+        /// <summary>Drones in the air now.</summary>
+        public IReadOnlyList<Drone> Drones => drones;
         public float RunSpeedMps { get; }
         public BattleOutcome Outcome { get; private set; } = BattleOutcome.Ongoing;
         public float RoundTime { get; private set; }
@@ -299,6 +319,8 @@ namespace Treeline.Sim
             if (visionTimer >= VisionInterval) { RefreshVision(); visionTimer = 0f; }
 
             FireDefenders(dt);
+            LaunchDrones(dt);
+            FlyDrones(dt);
             FireAttackers(dt);
             Cleanup();
             if (grid.Version != routesVersion) Reroute();
@@ -832,7 +854,7 @@ namespace Treeline.Sim
                     float best = float.MaxValue;
                     foreach (var d in defenders)
                     {
-                        if (!d.Alive || d.SeenChance <= 0f) continue;
+                        if (!d.Alive || d.SeenChance <= 0f || d.Def.Type == "aviation") continue;   // nothing of theirs shoots up yet
                         float dx = a.X - d.X, dy = a.Y - d.Y, dist = dx * dx + dy * dy;
                         if (dist > range * range || dist >= best) continue;
                         if (own && AimAt(a, d, true) <= 0f) continue;
@@ -843,6 +865,137 @@ namespace Treeline.Sim
                 if (target != null) Hit(a, target, Damage(a, target, AimAt(a, target, own), moving, dt));
             }
         }
+
+        // ---- drones ---------------------------------------------------------------------------------------------
+
+        static string ClassOfTarget(UnitDef d)
+        {
+            if (!string.IsNullOrEmpty(d.TargetClass)) return d.TargetClass;
+            return d.Type == "aviation" ? "aviation" : d.Type == "vehicle" ? "heavy" : "infantry";
+        }
+
+        // Position of a class in the operator's list; -1 when the operator never goes for it.
+        static int PriorityOf(UnitDef op, UnitDef target)
+        {
+            string cls = ClassOfTarget(target);
+            if (string.IsNullOrEmpty(op.TargetOrder)) return 0;
+            int rank = 0, from = 0;
+            while (from < op.TargetOrder.Length)
+            {
+                int space = op.TargetOrder.IndexOf(' ', from);
+                if (space < 0) space = op.TargetOrder.Length;
+                if (string.Equals(op.TargetOrder.Substring(from, space - from), cls, StringComparison.OrdinalIgnoreCase)) return rank;
+                rank++;
+                from = space + 1;
+            }
+            return -1;
+        }
+
+        // The best target for this operator right now: seen by anyone on our side, inside the operator's range, of a
+        // class it goes for. Highest priority first; among equals the one furthest along (closest to the rear edge).
+        Attacker PickDroneTarget(Defender op)
+        {
+            float range = RangeOf(op);
+            bool single = op.Def.DroneAmmo == 1;
+            Attacker best = null;
+            int bestRank = int.MaxValue;
+            foreach (var a in attackers)
+            {
+                if (!a.Alive || a.SeenChance <= 0f || !CanTarget(op.Def, a.Def) || !InRange(op, a, range)) continue;
+                int rank = PriorityOf(op.Def, a.Def);
+                if (rank < 0) continue;
+                if (single && TargetedByDrone(a)) continue;   // one single-use drone per target at a time
+                if (rank < bestRank || (rank == bestRank && (a.Y > best.Y || (a.Y == best.Y && a.Id < best.Id))))
+                {
+                    best = a; bestRank = rank;
+                }
+            }
+            return best;
+        }
+
+        bool TargetedByDrone(Attacker a)
+        {
+            foreach (var dr in drones) if (dr.Alive && dr.Target == a && dr.Def.DroneAmmo == 1) return true;
+            return false;
+        }
+
+        // Operators: when ready and something worth hitting is in sight, wait the launch delay (better targets may
+        // turn up), then send a drone at the best target.
+        void LaunchDrones(float dt)
+        {
+            foreach (var op in defenders)
+            {
+                if (!op.Alive || op.State != DefenderState.Standing || op.Def.DroneAmmo <= 0) continue;
+                if (op.ReloadLeft > 0f)
+                {
+                    op.ReloadLeft = Math.Max(0f, op.ReloadLeft - dt);
+                    op.LaunchWaitLeft = -1f;
+                    continue;
+                }
+                if (PickDroneTarget(op) == null) { op.LaunchWaitLeft = -1f; continue; }
+                if (op.LaunchWaitLeft < 0f) op.LaunchWaitLeft = op.Def.LaunchDelayS;
+                else op.LaunchWaitLeft -= dt;
+                if (op.LaunchWaitLeft > 0f) continue;
+
+                var target = PickDroneTarget(op);
+                op.LaunchWaitLeft = -1f;
+                if (target == null) continue;
+                drones.Add(new Drone { Id = nextId++, Owner = op, Def = op.Def, X = op.X, Y = op.Y, Target = target, AmmoLeft = op.Def.DroneAmmo });
+                op.ReloadLeft = op.Def.ReloadS;
+            }
+        }
+
+        void FlyDrones(float dt)
+        {
+            for (int i = 0; i < drones.Count; i++)
+            {
+                var dr = drones[i];
+                if (!dr.Alive) continue;
+                if (rules.DroneLostWithOperator && !dr.Owner.Alive) { dr.Alive = false; continue; }
+                if (dr.Target == null || !dr.Target.Alive)
+                {
+                    dr.Target = PickDroneTarget(dr.Owner);
+                    if (dr.Target == null) { dr.Alive = false; continue; }   // nothing left to hit: the drone is lost
+                }
+
+                float dx = dr.Target.X - dr.X, dy = dr.Target.Y - dr.Y;
+                float dist = (float)Math.Sqrt(dx * dx + dy * dy);
+                float step = Math.Max(0f, dr.Def.DroneSpeedMps) * dt;
+                if (dist > step)
+                {
+                    dr.X += dx / dist * step;
+                    dr.Y += dy / dist * step;
+                    continue;
+                }
+                dr.X = dr.Target.X; dr.Y = dr.Target.Y;
+
+                if (dr.Def.DropIntervalS <= 0f)
+                {
+                    // FPV: one strike, the drone is used up.
+                    Hit(dr.Owner, dr.Target, GrenadeDamage(dr.Def, dr.Target));
+                    dr.Alive = false;
+                    continue;
+                }
+
+                // Bomber: hovers over the target and drops a grenade every interval until the load is gone.
+                dr.DropTimer -= dt;
+                if (dr.DropTimer > 0f) continue;
+                dr.DropTimer = dr.Def.DropIntervalS;
+                float tx = dr.Target.X, ty = dr.Target.Y, r2 = dr.Def.BlastRadiusM * dr.Def.BlastRadiusM;
+                foreach (var a in attackers)
+                {
+                    if (!a.Alive || !CanTarget(dr.Def, a.Def)) continue;
+                    float ax = a.X - tx, ay = a.Y - ty;
+                    if (a == dr.Target || ax * ax + ay * ay <= r2) Hit(dr.Owner, a, GrenadeDamage(dr.Def, a));
+                }
+                if (--dr.AmmoLeft <= 0) dr.Alive = false;
+            }
+            drones.RemoveAll(e => !e.Alive);
+        }
+
+        // Expected damage of one warhead: no dice; armour counts, cover does not (it comes from above).
+        float GrenadeDamage(UnitDef op, Attacker target) =>
+            op.HitDamage * op.Accuracy * ArmourFactor(op.DamageType, target.Def.Armour);
 
         // ---- deaths ---------------------------------------------------------------------------------------------
 
