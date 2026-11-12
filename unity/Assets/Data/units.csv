@@ -1,7 +1,7 @@
 id,name,side,type,subtype,hp,armour,speed_mps,adaptation_lag_waves,damage_type,dps,range_m,accuracy,fire_on_move,move_accuracy_mult,sight_range_m,ew,ew_chance,nvg,tree_move_cost,line_damage,hit_damage,carries_unit,carries_count,dismount_at_hp,dismount_interval_s,blast_radius_m,wreck_radius_m,crosses_line,behaviour,requires,targetable_by,loss_value_usd,notes,weapon_class,build_cost,reload_s,launch_delay_s,drone_speed_mps,drone_ammo,drop_interval_s,target_class,target_order
-recruit,Recruit,attack,troops,infantry,10,none,4.5,4,small_arms,2,200,0.25,TRUE,1,25,never,,FALSE,,1,,,,,,,,,,,ground,15000,,,,,,,,,infantry,
-regular,Regular soldier,attack,troops,infantry,15,low,4.5,2,small_arms,5,250,0.45,TRUE,1,30,sometimes,0.15,FALSE,,1,,,,,,,,,,,ground,40000,,,,,,,,,infantry,
-special_forces,Special forces,attack,troops,infantry,30,low,6,1,small_arms,12,300,0.65,TRUE,1,40,always,,TRUE,,1,,,,,,,,,,,ground,150000,,,,,,,,,infantry,
+recruit,Recruit,attack,troops,infantry,10,none,4.5,4,small_arms,5,200,0.35,TRUE,1,25,never,,FALSE,,1,,,,,,,,,,,ground,15000,,,,,,,,,infantry,
+regular,Regular soldier,attack,troops,infantry,15,low,4.5,2,small_arms,7,250,0.65,TRUE,1,30,sometimes,0.15,FALSE,,1,,,,,,,,,,,ground,40000,,,,,,,,,infantry,
+special_forces,Special forces,attack,troops,infantry,30,low,6,1,small_arms,12,300,0.8,TRUE,1,40,always,,TRUE,,1,,,,,,,,,,,ground,150000,,,,,,,,,infantry,
 old_tank,Old Soviet-era tank,attack,vehicle,armoured,300,medium,4.5,3,explosive,5,600,0.4,TRUE,1,30,never,,FALSE,5,5,,,,,,,4,,,,ground,1000000,,,,,,,,,heavy,
 modern_tank,Modern tank,attack,vehicle,armoured,300,high,6,2,explosive,12,800,0.7,TRUE,1,30,sometimes,0.5,TRUE,5,8,,,,,,,4,,,,ground,4000000,,,,,,,,,heavy,
 ifv,Infantry fighting vehicle,attack,vehicle,armoured,300,medium,6,2,heavy,2,500,0.5,TRUE,1,30,sometimes,0.3,FALSE,5,4,,regular,8,0.2,0.7,8,4,,carrier,,ground,800000,,,,,,,,,heavy,
