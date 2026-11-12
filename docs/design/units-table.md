@@ -7,6 +7,16 @@ Tabs: `README`, `units` (one row per unit, side/type/subtype as columns, no wave
 
 Workflow: edit in the sheet, export each tab as CSV into `unity/Assets/Data/` (`units.csv`, `armour.csv`, `obstacles.csv`, `battle_rules.csv`), log the change in `docs/log/CHANGELOG.md`. The CSVs in the repo are snapshots of the sheet; `rules/attackers.json` is the older format, kept until the Unity loader replaces it.
 
+## Weapon cadence (2026-11-12)
+
+The `units` tab replaces the ambiguous `dps` column with two independent weapon stats:
+- `damage`: unmitigated hit points of damage **per successful shot** (before armour, cover and other damage multipliers).
+- `attack_speed`: **shots per second**. Interval between shots = `1 / attack_speed` seconds. An empty or zero attack speed means no regular shooting (e.g. unarmed units, spotters, FPV/bomber operators that use their own launch/drop mechanics).
+
+The nominal pre-accuracy firepower is `damage * attack_speed`; expected open-ground damage per second is `damage * attack_speed * accuracy * armour_multiplier`. The old numbers were migrated with attack speed **1 shot/s** as a temporary starting point, **not a final weapon-cadence design**. Animations may observe `Unit.ShotsFired` (increments on every shot, including misses) and `Unit.LastShotAt`. Current `Sim` applies hits immediately: projectile travel and animation are not yet implemented.
+
+Direct fire now rolls a seeded hit/miss once per shot (accuracy × detection × movement accuracy × cover accuracy); a successful hit applies damage reduced by armour and cover. Attacker movement accuracy is 1, per Yaroslav. The change from continuous expected DPS to discrete hit/miss means results can differ even when `damage * attack_speed` equals the former DPS. Keep `hit_damage` on drone operators separate: it remains damage per drone strike and is governed by operator launch/drop rules rather than regular attack speed.
+
 ## Vision and obstacles (decided 2026-11-05, Yaroslav)
 
 - Attackers have a separate sight radius, `sight_range_m`, distinct from `range_m` (attack range). Base is 30 m and it rises with unit level. Current values: recruit 25, regular 30, special forces 40 (proposal), vehicles 30, recon UAV 40; the rest are empty.
