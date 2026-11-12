@@ -10,7 +10,8 @@ namespace Treeline.Sim
         public string Id = "", Name = "", Side = "", Type = "", Subtype = "", Behaviour = "", WeaponClass = "";
         public string DamageType = "", Armour = "", TargetableBy = "";
         public float Hp, SpeedMps, SightRangeM, RangeM, BuildCost;
-        public float Dps, Accuracy, MoveAccuracyMult = 1f, LineDamage = 1f;
+        // AttackSpeed is shots per second; Damage is raw damage per successful shot.
+        public float Damage, AttackSpeed, Accuracy, MoveAccuracyMult = 1f, LineDamage = 1f;
         public bool FireOnMove;
         public string CarriesUnit = "";
         public int CarriesCount;
@@ -69,7 +70,8 @@ namespace Treeline.Sim
                     Armour = Cell(col, r, "armour"),
                     TargetableBy = Cell(col, r, "targetable_by"),
                     FireOnMove = Cell(col, r, "fire_on_move").Equals("TRUE", StringComparison.OrdinalIgnoreCase),
-                    Dps = Num(col, r, "dps"),
+                    Damage = Num(col, r, "damage"),
+                    AttackSpeed = Num(col, r, "attack_speed"),
                     Accuracy = Num(col, r, "accuracy"),
                     MoveAccuracyMult = NumOr(col, r, "move_accuracy_mult", 1f),
                     LineDamage = NumOr(col, r, "line_damage", 1f),
