@@ -25,6 +25,9 @@ namespace Treeline.Sim
         /// <summary>How far along <see cref="PathCells"/> it is.</summary>
         public int PathPosition => PathIndex;
 
+        public int ShotsFired;         // renderer can detect new shots by a rising counter
+        public float LastShotAt = -1f; // simulation time of most recent shot
+        internal float ShotCooldown;  // seconds until the next shot
         internal Unit Target;         // keeps firing at it while it stays valid
         internal List<int> Path;      // cells to walk
         internal int PathIndex;       // the cell the unit has reached
@@ -95,6 +98,7 @@ namespace Treeline.Sim
         /// <summary>Attackers that reached the rear edge.</summary>
         public int Crossed;
         public float LineDamage, DamageDealt, DamageTaken;
+        public int ShotsFired, ShotsHit;
     }
 
     /// <summary>
@@ -549,11 +553,11 @@ namespace Treeline.Sim
             var rate = new List<float>();
             foreach (var t in threats)
             {
-                if (t.Def.Dps <= 0f || !CanTarget(t.Def, def)) continue;
+                if (t.Def.Damage <= 0f || t.Def.AttackSpeed <= 0f || !CanTarget(t.Def, def)) continue;
                 float f = ArmourFactor(t.Def.DamageType, def.Armour);
                 if (f <= 0f) continue;
                 hurt.Add(t);
-                rate.Add(t.Def.Dps * t.Def.Accuracy * f * t.Weight);
+                rate.Add(t.Def.Damage * t.Def.AttackSpeed * t.Def.Accuracy * f * t.Weight);
             }
 
             if (hurt.Count == 0)
@@ -754,23 +758,42 @@ namespace Treeline.Sim
             }
         }
 
-        // Expected damage this step: no dice, so a run is repeatable and balance numbers are easy to read.
-        // aimSeen is how well the shooter's side sees the point it aims at.
-        float Damage(Unit shooter, Unit target, float aimSeen, bool moving, float dt)
+        // One discrete shot. Accuracy and detection determine a seeded hit roll;
+        // armour and protection scale damage after a hit. No damage per frame.
+        // The projectile/animation can track Unit.ShotsFired and Unit.LastShotAt.
+        float ShotDamage(Unit shooter, Unit target, float aimSeen, bool moving)
         {
-            var s = shooter.Def;
-            float dmg = s.Dps * s.Accuracy * aimSeen * dt;
-            if (moving) dmg *= s.MoveAccuracyMult;
-            dmg *= ArmourFactor(s.DamageType, target.Def.Armour);
+            var weapon = shooter.Def;
+            float hitChance = weapon.Accuracy * aimSeen;
+            if (moving) hitChance *= weapon.MoveAccuracyMult;
+            var cls = ClassOf(weapon);
+            var cover = vision != null ? vision.CoverFor(shooter.X, shooter.Y, target.X, target.Y) : null;
+            if (cover != null) hitChance *= cover.CoverAcc[(int)cls];
+            hitChance = Math.Max(0f, Math.Min(1f, hitChance));
+            if (rng.NextDouble() >= hitChance) return 0f;
+            StatsFor(shooter.Def).ShotsHit++;
+            float damage = weapon.Damage * ArmourFactor(weapon.DamageType, target.Def.Armour);
+            if (cover != null) damage *= cover.CoverDmg[(int)cls];
             if (vision != null)
             {
-                var cls = ClassOf(s);
-                var cover = vision.CoverFor(shooter.X, shooter.Y, target.X, target.Y);
-                if (cover != null) dmg *= cover.CoverAcc[(int)cls] * cover.CoverDmg[(int)cls];
                 var under = vision.ObstacleAt(target.X, target.Y);
-                if (under != null && cls != ShooterClass.Indirect) dmg *= under.OnCoverMult;
+                if (under != null && cls != ShooterClass.Indirect) damage *= under.OnCoverMult;
             }
-            return dmg;
+            return damage;
+        }
+
+        bool ReadyToShoot(Unit shooter, float dt)
+        {
+            shooter.ShotCooldown = Math.Max(0f, shooter.ShotCooldown - dt);
+            return shooter.ShotCooldown <= 0f && shooter.Def.AttackSpeed > 0f && shooter.Def.Damage > 0f;
+        }
+
+        void BeginShot(Unit shooter)
+        {
+            shooter.ShotCooldown = 1f / shooter.Def.AttackSpeed;
+            shooter.ShotsFired++;
+            shooter.LastShotAt = RoundTime;
+            StatsFor(shooter.Def).ShotsFired++;
         }
 
         float RangeOf(Unit u) => RangeAt(u.Def, u.X, u.Y);
@@ -801,7 +824,7 @@ namespace Treeline.Sim
         {
             foreach (var d in defenders)
             {
-                if (!d.Alive || d.State != DefenderState.Standing || d.Def.Dps <= 0f) continue;
+                if (!d.Alive || d.State != DefenderState.Standing || !ReadyToShoot(d, dt)) continue;
                 float range = RangeOf(d);
                 // Stay on the current target while it is alive, seen and in range; otherwise take the nearest.
                 bool own = OwnSightOnly(d.Def);
@@ -822,10 +845,11 @@ namespace Treeline.Sim
                 }
                 if (target == null) continue;
                 Record(d);   // firing gives the position away
+                BeginShot(d);
 
                 float aim = AimAt(d, target, own);
                 float blast = d.Def.Behaviour == "indirect_fire" ? d.Def.BlastRadiusM : 0f;
-                if (blast <= 0f) { Hit(d, target, Damage(d, target, aim, false, dt)); continue; }
+                if (blast <= 0f) { Hit(d, target, ShotDamage(d, target, aim, false)); continue; }
 
                 // Mortar: everything within the blast radius of the aiming point takes the hit.
                 float tx = target.X, ty = target.Y;
@@ -833,7 +857,7 @@ namespace Treeline.Sim
                 {
                     if (!a.Alive || !CanTarget(d.Def, a.Def)) continue;
                     float dx = a.X - tx, dy = a.Y - ty;
-                    if (dx * dx + dy * dy <= blast * blast) Hit(d, a, Damage(d, a, aim, false, dt));
+                    if (dx * dx + dy * dy <= blast * blast) Hit(d, a, ShotDamage(d, a, aim, false));
                 }
             }
         }
@@ -842,7 +866,7 @@ namespace Treeline.Sim
         {
             foreach (var a in attackers)
             {
-                if (!a.Alive || a.Def.Dps <= 0f) continue;
+                if (!a.Alive || !ReadyToShoot(a, dt)) continue;
                 bool moving = !a.Dismounting && !a.Stuck && a.Def.SpeedMps > 0f;
                 if (moving && !a.Def.FireOnMove) continue;
                 float range = RangeOf(a);
@@ -862,7 +886,11 @@ namespace Treeline.Sim
                     }
                     a.Target = target;
                 }
-                if (target != null) Hit(a, target, Damage(a, target, AimAt(a, target, own), moving, dt));
+                if (target != null)
+                {
+                    BeginShot(a);
+                    Hit(a, target, ShotDamage(a, target, AimAt(a, target, own), moving));
+                }
             }
         }
 
