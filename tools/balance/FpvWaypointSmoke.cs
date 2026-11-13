@@ -54,9 +54,9 @@ static class FpvWaypointSmoke
         Check(units.Get("ifv").Hp == 100f, "IFV HP");
         Check(units.Get("fpv_operator").Damage == 70f, "FPV damage");
         Check(Math.Abs(units.Get("fpv_operator").AttackSpeed - (1f/3f)) < 0.00001f, "3-second FPV cooldown");
-        Check(units.Get("fpv_operator").BlastRadiusM == 15f, "FPV blast radius");
+        Check(units.Get("fpv_operator").BlastRadiusM == 7f, "FPV blast radius");
         Check(units.Get("fpv_operator").DroneSpeedMps == 35f, "FPV air speed");
-        Check(units.Get("mortar").BlastRadiusM == 30f, "Mortar blast");
+        Check(units.Get("mortar").BlastRadiusM == 10f, "Mortar blast");
         Check(units.Get("anti_tank").BlastRadiusM == 5f, "ATGM blast");
         Check(Math.Abs(1f / units.Get("anti_tank").AttackSpeed - 7f) < 0.0001f, "ATGM 7-second interval");
         Check(Math.Abs(Battle.BlastFalloff(0f,15f)-1f)<0.00001f, "blast core");
@@ -127,8 +127,8 @@ static class FpvWaypointSmoke
         Check(other.DroneState==DroneWeaponState.Reloading,"still reloading before 3 sec");
         for(int i=0;i<10;i++) interception.Step(0.05f);
         Check(other.DroneState==DroneWeaponState.InFlight,"new drone ready and launched after reload");
-        CheckExplosiveSplash(dir, "mortar", 15f, 12f, 6f);
+        CheckExplosiveSplash(dir, "mortar", 5f, 12f, 6f);
         CheckExplosiveSplash(dir, "anti_tank", 2.5f, 80f, 40f);
-        Console.WriteLine("PASS: 35m/s, 70 damage, 3s post-loss reload, 5m/15m/30m blast radii and linear falloff.");
+        Console.WriteLine("PASS: 35m/s, 70 damage, 3s post-loss reload, 5m/7m/10m blast radii (ATGM/FPV/mortar) and linear falloff.");
     }
 }

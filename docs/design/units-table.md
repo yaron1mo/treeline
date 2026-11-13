@@ -14,7 +14,7 @@ Workflow: edit in the sheet, export each tab as CSV into `unity/Assets/Data/` (`
 - An FPV remains in **InFlight** (shot active) from launch until explosion, forced destruction, or operator loss. `Defender.DroneState` exposes `Ready`, `InFlight`, and `Reloading`. **Cooldown starts only at drone loss**, not at launch, and lasts three seconds; no second drone may be launched by the same operator during flight. `Battle.TryDestroyDrone(droneId)` is the hook for future hostile AA; enemy interceptors are not implemented yet.
 - **Flight speed**: 30 m/s × 1.2 = 36, rounded to nearest multiple of 5 = **35 m/s**.
 - Operator has `sight_range_m=20`, drone has its own `drone_sight_range_m=20`. `TrySetDroneWaypoint(operatorId,x,y,out why)` launches without prior enemy spotting, flies to the commanded point, scouts locally and attacks acquired targets; operator `range_m=600` bounds waypoint distance. FPV contributes local vision to its side. Waypoint UI is not wired yet; legacy auto-target without waypoint remains supported.
-- Explosive weapons use `blast_radius_m`: **ATGM 5m, mortar 30m, FPV 15m**, bomber 3m unchanged. Splash damage is **radially linear**: `base_damage × accuracy_resolution × armour_multiplier × max(0,1-distance/radius)`. A direct hit at centre gets full damage after armour; halfway gets half, at the edge gets zero. One mortar/ATGM projectile makes ONE accuracy roll before its entire splash; different victims do not re-roll the same projectile. FPV/bomber currently multiply impact damage by `accuracy` deterministically rather than rolling hit/miss, a separate modelling choice to revisit later.
+- Explosive weapons use `blast_radius_m`: **ATGM 5m, mortar 10m, FPV 7m** (Yaroslav, 2026-11-13; were mortar 30m, FPV 15m), bomber 3m unchanged. Splash damage is **radially linear**: `base_damage × accuracy_resolution × armour_multiplier × max(0,1-distance/radius)`. A direct hit at centre gets full damage after armour; halfway gets half, at the edge gets zero. One mortar/ATGM projectile makes ONE accuracy roll before its entire splash; different victims do not re-roll the same projectile. FPV/bomber currently multiply impact damage by `accuracy` deterministically rather than rolling hit/miss, a separate modelling choice to revisit later.
 - Carrier wreck `blast_radius_m` is still used for its own destruction event and is **not** treated as a normal gun attack radius.
 - Old tank, modern tank and IFV have 100 HP each; MRAP 60. This is a game balance abstraction. No cover, intel, upgrades or commander bonuses included in calibration.
 
@@ -70,7 +70,7 @@ Three separate rows for now; how they become upgrade branches of one operator is
 
 | id | What it does | Proposed numbers |
 | --- | --- | --- |
-| `fpv_operator` | One single-use drone in flight; waypoint search with 20m onboard sight; reload 3s **after** explosion/shot-down. | 400; 12 HP; command range 600m; drone 35m/s; damage 70, 15m radial falloff |
+| `fpv_operator` | One single-use drone in flight; waypoint search with 20m onboard sight; reload 3s **after** explosion/shot-down. | 400; 12 HP; command range 600m; drone 35m/s; damage 70, 7m radial falloff |
 | `bomber_operator` | One drone sortie (6 grenades at 4s intervals), then 20s post-sortie cooldown. | 450; 12 HP; command range 400m; drone 15m/s; damage 25, 3m falloff |
 | `recon_drone` | Spotter only: sees 120 m for the whole side. | 250; 8 HP; no weapon |
 
