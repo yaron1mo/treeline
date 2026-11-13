@@ -7,6 +7,17 @@ Tabs: `README`, `units` (one row per unit, side/type/subtype as columns, no wave
 
 Workflow: edit in the sheet, export each tab as CSV into `unity/Assets/Data/` (`units.csv`, `armour.csv`, `obstacles.csv`, `battle_rules.csv`), log the change in `docs/log/CHANGELOG.md`. The CSVs in the repo are snapshots of the sheet; `rules/attackers.json` is the older format, kept until the Unity loader replaces it.
 
+## FPV strike missions and armour HP (2026-11-13)
+
+- **FPV operator** has `sight_range_m=20` metres (own ground observation).
+- **FPV drone** launched by that operator has an independent `drone_sight_range_m=20` metres. This is the drone's onboard enemy acquisition/spotting radius and is distinct from the operator's sight.
+- A mission can be set by `Battle.TrySetDroneWaypoint(operatorId, x, y, out why)`; the waypoint must be on the map and within `range_m` of the operator (this represents the allowed launch/flight reach, not ground sight). UI marker/selection is not connected yet.
+- The FPV launches **without seeing an enemy**, after `launch_delay_s`, flies toward its assigned point at `drone_speed_mps` and scans for visible hostile targets within its own onboard 20m circle while travelling and while waiting there. On spotting a target, it follows its existing target priority and pursues it; if none is found it waits above the waypoint, not automatically re-targeting unseen enemies across the map. An existing drone retains its assigned mission if the operator updates a waypoint for future launches. One single-use FPV may be airborne per operator in waypoint mode.
+- The drone contributes local onboard spotting to shared side vision, using the same field/obstacle sight implementation. For compatibility, an operator without an explicit waypoint retains the earlier automatic launch behavior when another friendly unit spots a target. This fallback is **not** the new intended player-controlled waypoint workflow.
+- **FPV damage** is sourced from `hit_damage` on the `fpv_operator` row (35 raw per impact), not the `damage` column (used only by direct-fire weapons). The user's 35 entry was moved from `damage` to `hit_damage` to avoid a value ignored by `Sim`. Actual damage per hit is `hit_damage * accuracy * armour_multiplier` in the *current* engine; accuracy is a deterministic damage factor for drone impacts, unlike discrete rifle shots. Preserve this limitation until a separate drone-hit model is explicitly agreed.
+- **Old tank, modern tank and IFV: 100 HP each** instead of 300. MRAP remains 60 HP. This is a balance abstraction, not a real-world damage model.
+- Current baseline scenario: unaided FPV waypoints (no recon, upgrades, cover or bonuses). Existing `ArmourCalibration.cs` supplies a test-only waypoint at (20,80); it does not change operational unit presets.
+
 ## Weapon cadence (2026-11-12)
 
 The `units` tab replaces the ambiguous `dps` column with two independent weapon stats:
