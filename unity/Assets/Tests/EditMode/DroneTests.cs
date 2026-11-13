@@ -168,8 +168,10 @@ namespace Treeline.Tests
         [Test]
         public void ABomber_DropsItsLoadOnATank()
         {
-            var b = Make();
-            Setup(b, "bomber_operator");
+            // A long field with the operator far back: the tank must not reach and shoot it before all six grenades.
+            var b = Make(400f);
+            Assert.IsTrue(b.TryPlace("recon_drone", 20f, 60f, out _, out _));
+            Assert.IsTrue(b.TryPlace("bomber_operator", 20f, 330f, out _, out _));
             b.QueueWave("old_tank", 1, 0f, 1f);
             b.StartRound();
             Run(b, 60f);
@@ -192,6 +194,21 @@ namespace Treeline.Tests
             }
             Assert.IsTrue(seenFar, "seen from 60+ m away");
             Assert.IsTrue(b.Defenders.Count == 1 && b.Defenders[0].Hp == 8f, "the recon drone is untouched");
+        }
+
+        [Test]
+        public void AnOperator_NeverFiresDirectly_OnlyItsDronesHit()
+        {
+            // Regression 2026-11-13: with damage and attack_speed on its row the operator used to fire like a gun,
+            // 600 m with blast, at anything the side saw, before its drone had even arrived.
+            var b = Make();
+            Setup(b, "fpv_operator");
+            b.QueueWave("motorbike", 1, 0f, 1f);
+            b.StartRound();
+            for (float t = 0f; t < 1f; t += 0.05f) b.Step(0.05f);
+            Assert.AreEqual(1, b.Attackers.Count, "the motorbike is still there");
+            Assert.AreEqual(15f, b.Attackers[0].Hp, 1e-3f, "and untouched while the drone is on its way");
+            Assert.AreEqual(1, b.Drones.Count, "a drone is in the air");
         }
     }
 }

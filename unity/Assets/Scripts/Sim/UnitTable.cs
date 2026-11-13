@@ -20,6 +20,9 @@ namespace Treeline.Sim
         // Drones (operators launch them; see Battle.LaunchDrones).
         public float DroneSpeedMps, DropIntervalS, DroneSightRangeM;
         public int DroneAmmo;
+        /// <summary>Drone operators: their damage and attack_speed belong to the drones they launch, not to a gun of
+        /// their own, so they never fire directly and are not a direct-fire threat on attackers' routes.</summary>
+        public bool LaunchesDrones => DroneAmmo > 0;
         /// <summary>Attackers: what kind of target this is for a drone operator (aviation, fast, heavy, infantry).</summary>
         public string TargetClass = "";
         /// <summary>Operators: target classes in order of priority; a class that is not listed is never chosen.</summary>
