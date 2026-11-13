@@ -63,3 +63,24 @@ jobs:
         with:
           name: open-field-balance
           path: balance-output/*.csv
+
+  anti_armour:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Mono C# compiler and runtime
+        run: sudo apt-get update && sudo apt-get install -y mono-mcs mono-runtime
+      - name: Compile anti-armour calibration
+        run: mcs -langversion:latest -out:armour-calibration.exe unity/Assets/Scripts/Sim/*.cs tools/balance/ArmourCalibration.cs
+      - name: Anti-armour Monte Carlo and matched variants (9120 runs)
+        run: mono armour-calibration.exe balance-output/armour-runs.csv .
+      - name: Aggregate anti-armour baseline and paired comparisons
+        run: |
+          python3 tools/balance/summarize_armour.py \
+            balance-output/armour-runs.csv \
+            balance-output/armour-baseline.csv \
+            balance-output/armour-effects.csv
+      - uses: actions/upload-artifact@v4
+        with:
+          name: armour-calibration
+          path: balance-output/armour-*.csv
