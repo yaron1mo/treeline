@@ -48,6 +48,17 @@ jobs:
                       round(statistics.mean(float(r['seconds']) for r in group),3)])
           print('Completed',len(rows),'scenarios.')
           PY
+      - name: Compile Monte Carlo and sensitivity runner
+        run: mcs -langversion:latest -out:calibration.exe unity/Assets/Scripts/Sim/*.cs tools/balance/Calibration.cs
+      - name: Monte Carlo (13500 runs) and sensitivity (15120 runs)
+        run: mono calibration.exe balance-output/calibration-runs.csv .
+      - name: Aggregate confidence intervals and paired effects
+        run: |
+          python3 tools/balance/summarize_calibration.py \
+            balance-output/calibration-runs.csv \
+            balance-output/calibration-baseline.csv \
+            balance-output/calibration-effects.csv \
+            balance-output/calibration-rank.csv
       - uses: actions/upload-artifact@v4
         with:
           name: open-field-balance
