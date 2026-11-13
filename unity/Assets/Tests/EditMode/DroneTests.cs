@@ -77,8 +77,42 @@ namespace Treeline.Tests
             Run(b, 40f);
             Assert.AreEqual(1, b.Stats["regular"].Killed);
             Assert.AreEqual(0, b.Drones.Count);
-            // 60 x 0.8 x 0.9 (low armour) is more than the regular's 15 hit points.
-            Assert.AreEqual(15f, b.Stats["fpv_operator"].DamageDealt, 1e-3f);
+            // FPV 35 x 0.8 x low-armour multiplier 1.0 exceeds a Regular\'s 10 HP.
+            Assert.AreEqual(10f, b.Stats["fpv_operator"].DamageDealt, 1e-3f);
+        }
+
+        [Test]
+        public void FpvCanFlyToAWaypointAndFindTargetWithOwnSensor_WithoutRecon()
+        {
+            var b = Make();
+            Assert.IsTrue(b.TryPlace("fpv_operator", 20f, 150f, out var op, out _));
+            Assert.AreEqual(20f, op.Def.SightRangeM, 0.01f);
+            Assert.AreEqual(20f, op.Def.DroneSightRangeM, 0.01f);
+            Assert.IsTrue(b.TrySetDroneWaypoint(op.Id, 20f, 80f, out _));
+            b.QueueWave("recruit", 1, 0f, 1f);
+            b.StartRound();
+
+            // Recruit is >100 m from the operator initially; drone must launch without recon.
+            var launches = Run(b, 8f);
+            Assert.AreEqual(1, launches.Count, "FPV launched to waypoint without a visible target");
+            Assert.IsTrue(launches[0].Value.UsesWaypoint);
+            Assert.AreEqual(20f, launches[0].Value.WaypointX, 0.01f);
+            Assert.AreEqual(80f, launches[0].Value.WaypointY, 0.01f);
+            Assert.IsNull(launches[0].Value.Target, "still searching; recruit not in onboard range yet");
+
+            Run(b, 40f);
+            Assert.AreEqual(1, b.Stats["recruit"].Killed, "drone located and struck the recruit independently");
+        }
+
+        [Test]
+        public void FpvWaypointRejectsOutOfBoundsAndWrongUnitType()
+        {
+            var b = Make();
+            Assert.IsTrue(b.TryPlace("fpv_operator", 20f, 150f, out var op, out _));
+            Assert.IsFalse(b.TrySetDroneWaypoint(op.Id, 50f, 80f, out _));
+            Assert.IsFalse(b.TrySetDroneWaypoint(op.Id, 20f, -1f, out _));
+            Assert.IsTrue(b.TryPlace("rifle_squad", 10f, 150f, out var soldier, out _));
+            Assert.IsFalse(b.TrySetDroneWaypoint(soldier.Id, 20f, 80f, out _));
         }
 
         [Test]
