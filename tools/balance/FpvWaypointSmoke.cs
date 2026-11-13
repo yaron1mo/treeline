@@ -26,7 +26,7 @@ static class FpvWaypointSmoke
         string why;
         Check(b.TryPlace(defenderId,20f,100f,out weapon,out why),"place explosive " + defenderId);
         weapon.Def.Accuracy = 1f;
-        weapon.Def.SightRangeM = 100f;
+        weapon.Def.SightRangeM = 40f; // enemies at spawn ~100m away must NOT be shot before test positions
         Check(b.QueueWave("old_tank",2,0f,0f),"queue blast targets");
         b.StartRound();
         b.Step(0.05f);
@@ -39,7 +39,6 @@ static class FpvWaypointSmoke
         nearby.X = 20f; nearby.Y = 105f + separation;
         for(int i=0;i<20 && weapon.ShotsFired==0;i++) b.Step(0.05f);
         Check(weapon.ShotsFired == 1,"single exploding projectile fired: "+defenderId);
-        Console.WriteLine("DEBUG blast "+defenderId+" target@("+centre.X+","+centre.Y+") side@("+nearby.X+","+nearby.Y+") HP "+centre.Hp+"/"+nearby.Hp+" shot="+weapon.ShotsFired);
         Check(Math.Abs((100f-centre.Hp) - centerDamage)<0.05f,
             "centre damage "+defenderId+" got "+(100f-centre.Hp)+" wanted "+centerDamage);
         Check(Math.Abs((100f-nearby.Hp) - sideDamage)<0.05f,
