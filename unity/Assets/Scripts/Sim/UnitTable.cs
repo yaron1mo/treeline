@@ -18,7 +18,7 @@ namespace Treeline.Sim
         public float DismountAtHp, DismountIntervalS, BlastRadiusM, WreckRadiusM, TreeMoveCost;
         public int AdaptationLagWaves;
         // Drones (operators launch them; see Battle.LaunchDrones).
-        public float HitDamage, ReloadS, LaunchDelayS, DroneSpeedMps, DropIntervalS;
+        public float HitDamage, ReloadS, LaunchDelayS, DroneSpeedMps, DropIntervalS, DroneSightRangeM;
         public int DroneAmmo;
         /// <summary>Attackers: what kind of target this is for a drone operator (aviation, fast, heavy, infantry).</summary>
         public string TargetClass = "";
@@ -87,6 +87,7 @@ namespace Treeline.Sim
                     ReloadS = Num(col, r, "reload_s"),
                     LaunchDelayS = Num(col, r, "launch_delay_s"),
                     DroneSpeedMps = Num(col, r, "drone_speed_mps"),
+                    DroneSightRangeM = Num(col, r, "drone_sight_range_m"),
                     DropIntervalS = Num(col, r, "drop_interval_s"),
                     DroneAmmo = (int)Num(col, r, "drone_ammo"),
                     TargetClass = Cell(col, r, "target_class"),
