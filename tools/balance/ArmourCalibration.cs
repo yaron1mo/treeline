@@ -30,6 +30,9 @@ static class ArmourCalibration
         string why;
         if (!battle.TryPlace(defenderId, 20f, 200f, out defender, out why))
             throw new Exception("Cannot place " + defenderId + ": " + why);
+        // FPV pilot launches to a map point, scouts using the drone sensor; no recon required.
+        if (defenderId == "fpv_operator" && !battle.TrySetDroneWaypoint(defender.Id, 20f, 80f, out why))
+            throw new Exception("Cannot set FPV waypoint: " + why);
         battle.BeginWave();
         if (!battle.QueueWave(vehicleId, count, 0f, gap))
             throw new Exception("Cannot queue " + vehicleId);
@@ -84,9 +87,14 @@ static class ArmourCalibration
         foreach (var variant in new[] { "sight_x2", "hit_damage_x2" })
         {
             var weapon = units.Get(defender);
-            float saved = variant == "sight_x2" ? weapon.SightRangeM :
+            float saved = variant == "sight_x2" ?
+                (defender == "fpv_operator" ? weapon.DroneSightRangeM : weapon.SightRangeM) :
                 (defender == "fpv_operator" ? weapon.HitDamage : weapon.Damage);
-            if (variant == "sight_x2") weapon.SightRangeM = saved * 2f;
+            if (variant == "sight_x2")
+            {
+                if (defender == "fpv_operator") weapon.DroneSightRangeM = saved * 2f;
+                else weapon.SightRangeM = saved * 2f;
+            }
             else if (defender == "fpv_operator") weapon.HitDamage = saved * 2f;
             else weapon.Damage = saved * 2f;
             try
@@ -96,7 +104,11 @@ static class ArmourCalibration
             }
             finally
             {
-                if (variant == "sight_x2") weapon.SightRangeM = saved;
+                if (variant == "sight_x2")
+                {
+                    if (defender == "fpv_operator") weapon.DroneSightRangeM = saved;
+                    else weapon.SightRangeM = saved;
+                }
                 else if (defender == "fpv_operator") weapon.HitDamage = saved;
                 else weapon.Damage = saved;
             }
