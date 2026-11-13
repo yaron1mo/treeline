@@ -84,18 +84,17 @@ static class ArmourCalibration
         foreach (var defender in Defenders)
         foreach (var vehicle in Vehicles)
         foreach (int count in new[] { 1, 2 })
-        foreach (var variant in new[] { "sight_x2", "hit_damage_x2" })
+        foreach (var variant in new[] { "sight_x2", "damage_x2" })
         {
             var weapon = units.Get(defender);
             float saved = variant == "sight_x2" ?
                 (defender == "fpv_operator" ? weapon.DroneSightRangeM : weapon.SightRangeM) :
-                (defender == "fpv_operator" ? weapon.HitDamage : weapon.Damage);
+                weapon.Damage;
             if (variant == "sight_x2")
             {
                 if (defender == "fpv_operator") weapon.DroneSightRangeM = saved * 2f;
                 else weapon.SightRangeM = saved * 2f;
             }
-            else if (defender == "fpv_operator") weapon.HitDamage = saved * 2f;
             else weapon.Damage = saved * 2f;
             try
             {
@@ -109,7 +108,6 @@ static class ArmourCalibration
                     if (defender == "fpv_operator") weapon.DroneSightRangeM = saved;
                     else weapon.SightRangeM = saved;
                 }
-                else if (defender == "fpv_operator") weapon.HitDamage = saved;
                 else weapon.Damage = saved;
             }
         }
