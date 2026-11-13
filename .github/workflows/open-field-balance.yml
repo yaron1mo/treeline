@@ -70,6 +70,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Mono C# compiler and runtime
         run: sudo apt-get update && sudo apt-get install -y mono-mcs mono-runtime
+      - name: Compile and run FPV waypoint smoke checks
+        run: |
+          mcs -langversion:latest -out:fpv-smoke.exe unity/Assets/Scripts/Sim/*.cs tools/balance/FpvWaypointSmoke.cs
+          mono fpv-smoke.exe .
       - name: Compile anti-armour calibration
         run: mcs -langversion:latest -out:armour-calibration.exe unity/Assets/Scripts/Sim/*.cs tools/balance/ArmourCalibration.cs
       - name: Anti-armour Monte Carlo and matched variants (9120 runs)
