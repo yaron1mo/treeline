@@ -1,5 +1,17 @@
 # Infantry balance calibration — v1 (2026-11-13)
 
+## Updated difficulty and tactical defence specification (2026-11-13)
+
+- **Reference attacker = Regular soldier**, rather than Recruit. Recruit and special forces retain deliberately different matchup outcomes.
+- **Hard/open field:** a single ordinary Rifleman with no terrain defensive bonus should be overrun at approximately **1:2 Regulars**. Hard is the default difficulty for general play; campaign/story may later offer selectable difficulty.
+- **With a strong defensive position:** a Rifleman should hold against approximately **1:6–1:8 Regulars** (at least six). This is a target for the *defensive positional advantage*, not an automatic multiplier to sight, HP, or armour.
+- The numerical threshold is intentionally a **design target**, not yet a specified probability. The calibration report should separately show P(any breach), P(defender death), average number killed, and remaining defender HP, for each count.
+- Separate scenarios: (a) unfortified open field, (b) a future controlled, well-defended position. Do not silently infer the latter from open-field results; cover placement and exact cover multipliers still need definition.
+- Sight range: machine gunner **40 m**, sniper **60 m**. Attack range is unchanged. These values are changed in the authoritative Sheet and in the branch CSV.
+- Keep sniper anti-elite/high-priority and machine gun anti-mass/light-infantry roles as distinct qualitative constraints.
+
+Note that any claimed historic military attacker:defender ratio is not an empirical rule of this simulator; these are game-feel targets chosen by the designer.
+
 ## Game design goals (Yaroslav)
 - Balance baseline: **one ordinary defender, no terrain advantage**, versus a sequence of attackers.
 - Intended nominal *overrun threshold* (number of attackers required per defender): **Hard 3:1, Normal 4:1, Easy 5:1**. These are game-design objectives, not claims about military doctrine or preselected probabilities.
