@@ -31,7 +31,7 @@ variants=collections.defaultdict(list)
 for row in rows:
     key=(row["defender"],row["vehicle"],int(row["count"]),float(row["spawn_gap_s"]))
     if row["experiment"]=="baseline": baseline[key].append(row)
-    elif row["experiment"] in {"sight_x2","hit_damage_x2"}:
+    elif row["experiment"] in {"sight_x2","damage_x2"}:
         variants[(*key,row["experiment"])].append(row)
     else: raise AssertionError(row["experiment"])
 
