@@ -146,5 +146,19 @@ namespace Treeline.Tests
             Assert.AreEqual("x, y", rows[1][0]);
             Assert.AreEqual("he said \"hi\"", rows[1][1]);
         }
+
+        [Test]
+        public void ATrenchOnTheMap_GivesCoverButDoesNotHide()
+        {
+            // Regression 2026-11-13: obstacles with no effect on sight were skipped, so a trench drawn on a field
+            // gave no cover at all.
+            var table = ObstacleTable.Parse(File.ReadAllText(Path.Combine(Application.dataPath, "Data", "obstacles.csv")));
+            var field = new Field { Name = "test", Width = 100f, Height = 60f };
+            field.Features.Add(new Feature { Type = "trench", Poly = Box(48f, 28f, 52f, 32f) });
+            var v = new VisionMap(field, table);
+            var cover = v.CoverFor(50f, 5f, 50f, 30f);
+            Assert.IsTrue(cover != null && cover.Id == "trench", "standing in the trench is covered");
+            Assert.AreEqual(1f, v.SeeChance(50f, 5f, 50f, 30f, 40f), 1e-4f, "and still seen");
+        }
     }
 }

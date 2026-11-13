@@ -210,5 +210,20 @@ namespace Treeline.Tests
             Assert.AreEqual(15f, b.Attackers[0].Hp, 1e-3f, "and untouched while the drone is on its way");
             Assert.AreEqual(1, b.Drones.Count, "a drone is in the air");
         }
+
+        [Test]
+        public void AWaypointFpv_AlsoGoesForWhatTheSideSees()
+        {
+            // The drone flies to a point far from the motorbike, so its own 20 m camera never sees it;
+            // the recon drone does, and the FPV goes for it anyway.
+            var b = Make();
+            Assert.IsTrue(b.TryPlace("recon_drone", 20f, 60f, out _, out _));
+            Assert.IsTrue(b.TryPlace("fpv_operator", 20f, 190f, out var op, out _));
+            Assert.IsTrue(b.TrySetDroneWaypoint(op.Id, 20f, 170f, out _));
+            b.QueueWave("motorbike", 1, 0f, 1f);
+            b.StartRound();
+            for (float t = 0f; t < 6f && b.Outcome == BattleOutcome.Ongoing; t += 0.05f) b.Step(0.05f);
+            Assert.AreEqual(1, b.Stats["motorbike"].Killed, "killed well before it reached the waypoint");
+        }
     }
 }

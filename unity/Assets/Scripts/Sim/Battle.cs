@@ -1108,12 +1108,13 @@ namespace Treeline.Sim
 
                 if (dr.UsesWaypoint)
                 {
+                    // Its own camera first; otherwise anything the side sees (shared vision) within the operator's range.
                     if (dr.Target == null || !dr.Target.Alive)
-                        dr.Target = PickNearbyFpvTarget(dr);
+                        dr.Target = PickNearbyFpvTarget(dr) ?? PickDroneTarget(dr.Owner);
                     if (dr.Target == null)
                     {
                         MoveDroneTowards(dr, dr.WaypointX, dr.WaypointY, dt);
-                        dr.Target = PickNearbyFpvTarget(dr);
+                        dr.Target = PickNearbyFpvTarget(dr) ?? PickDroneTarget(dr.Owner);
                         if (dr.Target == null) continue;
                     }
                 }
