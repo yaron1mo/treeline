@@ -39,6 +39,7 @@ static class FpvWaypointSmoke
         nearby.X = 20f; nearby.Y = 105f + separation;
         for(int i=0;i<20 && weapon.ShotsFired==0;i++) b.Step(0.05f);
         Check(weapon.ShotsFired == 1,"single exploding projectile fired: "+defenderId);
+        Console.WriteLine("DEBUG blast "+defenderId+" target@("+centre.X+","+centre.Y+") side@("+nearby.X+","+nearby.Y+") HP "+centre.Hp+"/"+nearby.Hp+" shot="+weapon.ShotsFired);
         Check(Math.Abs((100f-centre.Hp) - centerDamage)<0.05f,
             "centre damage "+defenderId+" got "+(100f-centre.Hp)+" wanted "+centerDamage);
         Check(Math.Abs((100f-nearby.Hp) - sideDamage)<0.05f,
