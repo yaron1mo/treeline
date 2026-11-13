@@ -23,7 +23,17 @@ static class FpvWaypointSmoke
         Check(units.Get("old_tank").Hp == 100f, "old tank HP");
         Check(units.Get("modern_tank").Hp == 100f, "modern tank HP");
         Check(units.Get("ifv").Hp == 100f, "IFV HP");
-        Check(units.Get("fpv_operator").HitDamage == 35f, "FPV hit_damage");
+        Check(units.Get("fpv_operator").Damage == 70f, "FPV damage");
+        Check(Math.Abs(units.Get("fpv_operator").AttackSpeed - (1f/3f)) < 0.00001f, "3-second FPV cooldown");
+        Check(units.Get("fpv_operator").BlastRadiusM == 15f, "FPV blast radius");
+        Check(units.Get("fpv_operator").DroneSpeedMps == 35f, "FPV air speed");
+        Check(units.Get("mortar").BlastRadiusM == 30f, "Mortar blast");
+        Check(units.Get("anti_tank").BlastRadiusM == 5f, "ATGM blast");
+        Check(Math.Abs(1f / units.Get("anti_tank").AttackSpeed - 7f) < 0.0001f, "ATGM 7-second interval");
+        Check(Math.Abs(Battle.BlastFalloff(0f,15f)-1f)<0.00001f, "blast core");
+        Check(Math.Abs(Battle.BlastFalloff(7.5f,15f)-0.5f)<0.00001f, "half-radius blast");
+        Check(Math.Abs(Battle.BlastFalloff(15f,15f))<0.00001f, "blast boundary");
+        Check(Math.Abs(Battle.BlastFalloff(20f,15f))<0.00001f, "outside blast");
         Check(units.Get("fpv_operator").SightRangeM == 20f, "FPV operator sight");
         Check(units.Get("fpv_operator").DroneSightRangeM == 20f, "FPV drone sight");
 
@@ -46,11 +56,33 @@ static class FpvWaypointSmoke
                 if(dr.UsesWaypoint && dr.Target!=null) foundOwnTarget=true;
             }
         }
-        Check(totalLaunched==1,"expected exactly one FPV launch, got "+totalLaunched);
+        Check(totalLaunched==1,"expected exactly one FPV launched on this single-target wave, got "+totalLaunched);
         Check(flewToWaypoint,"drone did not reach waypoint");
         Check(foundOwnTarget,"drone did not find a target with its own sensor");
         Check(b.Stats.ContainsKey("regular") && b.Stats["regular"].Killed==1,"FPV strike failed");
         Check(b.Outcome==BattleOutcome.Won,"battle did not finish");
-        Console.WriteLine("FPV waypoint smoke tests PASS; 100HP tanks, 35 damage, independent 20m drone sensor.");
+        Check(op.DroneState==DroneWeaponState.Reloading,"weapon must enter reload after explosion");
+        Check(op.ReloadLeft>0f && op.ReloadLeft<=3.001f,"reload starts after detonation");
+
+        // Independently verify the shot-down case: no countdown while drone is airborne.
+        var interception = Make(dir);
+        Defender other;
+        Check(interception.TryPlace("fpv_operator",20f,150f,out other,out why),"place operator for interception");
+        Check(interception.TrySetDroneWaypoint(other.Id,20f,80f,out why),"waypoint for interception");
+        Check(interception.QueueWave("regular",1,0f,1f),"queue interception wave");
+        interception.StartRound();
+        interception.Step(0.05f);
+        Check(other.DroneState==DroneWeaponState.InFlight,"drone in flight must show shooting state");
+        Check(other.ReloadLeft==0f,"reload must NOT start at launch");
+        Check(interception.Drones.Count==1,"exactly one active drone");
+        int shotDroneId=interception.Drones[0].Id;
+        Check(interception.TryDestroyDrone(shotDroneId),"drone shot down");
+        Check(other.DroneState==DroneWeaponState.Reloading,"shot down starts reload");
+        Check(Math.Abs(other.ReloadLeft-3f)<0.0001f,"3 seconds after shootdown");
+        for(int i=0;i<55;i++) interception.Step(0.05f);
+        Check(other.DroneState==DroneWeaponState.Reloading,"still reloading before 3 sec");
+        for(int i=0;i<10;i++) interception.Step(0.05f);
+        Check(other.DroneState==DroneWeaponState.InFlight,"new drone ready and launched after reload");
+        Console.WriteLine("PASS: 35m/s, 70 damage, 3s post-loss reload, 5m/15m/30m blast radii and linear falloff.");
     }
 }
