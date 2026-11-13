@@ -61,6 +61,7 @@ static class FpvWaypointSmoke
         Check(foundOwnTarget,"drone did not find a target with its own sensor");
         Check(b.Stats.ContainsKey("regular") && b.Stats["regular"].Killed==1,"FPV strike failed");
         Check(b.Outcome==BattleOutcome.Won,"battle did not finish");
+        Console.WriteLine("DEBUG first shot: state=" + op.DroneState + " reload=" + op.ReloadLeft + " inFlight=" + op.DroneInFlight + " alive=" + op.Alive + " time=" + b.RoundTime + " shots=" + op.ShotsFired + " drones=" + b.Drones.Count);
         Check(op.DroneState==DroneWeaponState.Reloading,"weapon must enter reload after explosion");
         Check(op.ReloadLeft>0f && op.ReloadLeft<=3.001f,"reload starts after detonation");
 
