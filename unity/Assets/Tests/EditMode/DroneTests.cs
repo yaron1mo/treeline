@@ -53,7 +53,7 @@ namespace Treeline.Tests
         }
 
         [Test]
-        public void TheOperatorWaitsTheLaunchDelay_ThenGoesForTheFastTargetBeforeInfantry()
+        public void TheOperatorLaunchesImmediately_AndGoesForTheFastTargetBeforeInfantry()
         {
             var b = Make();
             Setup(b, "fpv_operator");
@@ -62,8 +62,7 @@ namespace Treeline.Tests
             b.StartRound();
             var launches = Run(b, 20f);
             Assert.IsTrue(launches.Count > 0, "a drone was launched");
-            Assert.IsTrue(launches[0].Key >= 3f - 0.01f, "not before the 3 s launch delay, was " + launches[0].Key);
-            Assert.IsTrue(launches[0].Key < 3.5f, "and then straight away, was " + launches[0].Key);
+            Assert.IsTrue(launches[0].Key < 0.2f, "no separate launch delay: " + launches[0].Key);
             Assert.AreEqual("motorbike", launches[0].Value.Target.Def.Id);
         }
 
@@ -77,7 +76,7 @@ namespace Treeline.Tests
             Run(b, 40f);
             Assert.AreEqual(1, b.Stats["regular"].Killed);
             Assert.AreEqual(0, b.Drones.Count);
-            // FPV 35 x 0.8 x low-armour multiplier 1.0 exceeds a Regular\'s 10 HP.
+            // FPV 70 x 0.9 x low-armour multiplier 1.0 exceeds Regular 10 HP.
             Assert.AreEqual(10f, b.Stats["fpv_operator"].DamageDealt, 1e-3f);
         }
 
@@ -116,7 +115,7 @@ namespace Treeline.Tests
         }
 
         [Test]
-        public void TheOperatorReloads_AtLeast15sBetweenLaunches()
+        public void TheOperatorReloads_AfterDroneIsGone_NotWhileInFlight()
         {
             var b = Make();
             Setup(b, "fpv_operator");
@@ -125,7 +124,31 @@ namespace Treeline.Tests
             var launches = Run(b, 60f);
             Assert.IsTrue(launches.Count >= 2, "launched " + launches.Count);
             for (int i = 1; i < launches.Count; i++)
-                Assert.IsTrue(launches[i].Key - launches[i - 1].Key >= 15f - 0.1f, "gap " + (launches[i].Key - launches[i - 1].Key));
+                Assert.IsTrue(launches[i].Key - launches[i - 1].Key >= 3f - 0.05f,
+                    "at least 3s between launch times: " + (launches[i].Key - launches[i - 1].Key));
+        }
+
+        [Test]
+        public void FpvWeaponState_ReloadBeginsAfterShootdown()
+        {
+            var b = Make();
+            Assert.IsTrue(b.TryPlace("fpv_operator", 20f, 150f, out var op, out _));
+            Assert.IsTrue(b.TrySetDroneWaypoint(op.Id, 20f, 80f, out _));
+            b.QueueWave("regular", 1, 0f, 1f);
+            b.StartRound();
+            b.Step(0.05f);
+            Assert.AreEqual(DroneWeaponState.InFlight, op.DroneState);
+            Assert.AreEqual(0f, op.ReloadLeft);
+            Assert.AreEqual(1, op.ShotsFired);
+
+            Assert.IsTrue(b.TryDestroyDrone(b.Drones[0].Id));
+            Assert.AreEqual(DroneWeaponState.Reloading, op.DroneState);
+            Assert.AreEqual(3f, op.ReloadLeft, 1e-4f);
+            for (int i = 0; i < 55; i++) b.Step(0.05f);
+            Assert.AreEqual(DroneWeaponState.Reloading, op.DroneState);
+            for (int i = 0; i < 10; i++) b.Step(0.05f);
+            Assert.AreEqual(DroneWeaponState.InFlight, op.DroneState);
+            Assert.AreEqual(2, op.ShotsFired);
         }
 
         [Test]
