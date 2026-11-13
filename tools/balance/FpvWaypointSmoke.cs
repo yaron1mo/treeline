@@ -16,6 +16,35 @@ static class FpvWaypointSmoke
         return new Battle(new NavGrid(field, obstacles), units, 5000f,
             new VisionMap(field, obstacles), armour, 1000f, 1, rules);
     }
+    // End-to-end splash test: same impact damages multiple nearby vehicles,
+    // and radial falloff (not separate accuracy rolls) halves the outer hit.
+    static void CheckExplosiveSplash(string dir, string defenderId, float separation,
+        float centerDamage, float sideDamage)
+    {
+        var b = Make(dir);
+        Defender weapon;
+        string why;
+        Check(b.TryPlace(defenderId,20f,100f,out weapon,out why),"place explosive " + defenderId);
+        weapon.Def.Accuracy = 1f;
+        weapon.Def.SightRangeM = 100f;
+        Check(b.QueueWave("old_tank",2,0f,0f),"queue blast targets");
+        b.StartRound();
+        b.Step(0.05f);
+        Check(b.Attackers.Count == 2,"two spawned vehicles");
+        var centre = b.Attackers[0];
+        var nearby = b.Attackers[1];
+        centre.Def.SpeedMps = 0f; // freeze both at exact spatial offsets
+        centre.Def.Damage = 0f;   // disable return fire for this test
+        centre.X = 20f; centre.Y = 105f;
+        nearby.X = 20f; nearby.Y = 105f + separation;
+        for(int i=0;i<20 && weapon.ShotsFired==0;i++) b.Step(0.05f);
+        Check(weapon.ShotsFired == 1,"single exploding projectile fired: "+defenderId);
+        Check(Math.Abs((100f-centre.Hp) - centerDamage)<0.05f,
+            "centre damage "+defenderId+" got "+(100f-centre.Hp)+" wanted "+centerDamage);
+        Check(Math.Abs((100f-nearby.Hp) - sideDamage)<0.05f,
+            "splash falloff "+defenderId+" got "+(100f-nearby.Hp)+" wanted "+sideDamage);
+    }
+
     static void Main(string[] args)
     {
         var dir = Path.Combine(args.Length > 0 ? args[0] : ".", "unity/Assets/Data");
@@ -98,6 +127,8 @@ static class FpvWaypointSmoke
         Check(other.DroneState==DroneWeaponState.Reloading,"still reloading before 3 sec");
         for(int i=0;i<10;i++) interception.Step(0.05f);
         Check(other.DroneState==DroneWeaponState.InFlight,"new drone ready and launched after reload");
+        CheckExplosiveSplash(dir, "mortar", 15f, 12f, 6f);
+        CheckExplosiveSplash(dir, "anti_tank", 2.5f, 80f, 40f);
         Console.WriteLine("PASS: 35m/s, 70 damage, 3s post-loss reload, 5m/15m/30m blast radii and linear falloff.");
     }
 }
