@@ -61,9 +61,22 @@ static class FpvWaypointSmoke
         Check(foundOwnTarget,"drone did not find a target with its own sensor");
         Check(b.Stats.ContainsKey("regular") && b.Stats["regular"].Killed==1,"FPV strike failed");
         Check(b.Outcome==BattleOutcome.Won,"battle did not finish");
-        Console.WriteLine("DEBUG first shot: state=" + op.DroneState + " reload=" + op.ReloadLeft + " inFlight=" + op.DroneInFlight + " alive=" + op.Alive + " time=" + b.RoundTime + " shots=" + op.ShotsFired + " drones=" + b.Drones.Count);
-        Check(op.DroneState==DroneWeaponState.Reloading,"weapon must enter reload after explosion");
-        Check(op.ReloadLeft>0f && op.ReloadLeft<=3.001f,"reload starts after detonation");
+        // A separate controlled point-blank impact guarantees we inspect the instant of the explosion.
+        var impact = Make(dir);
+        Defender impactOp;
+        Check(impact.TryPlace("fpv_operator",20f,150f,out impactOp,out why),"place impact test operator");
+        Check(impact.TrySetDroneWaypoint(impactOp.Id,20f,80f,out why),"point for impact");
+        Check(impact.QueueWave("regular",1,0f,1f),"queue impact target");
+        impact.StartRound();
+        impact.Step(0.05f);  // launch drone while target is initially far away
+        Check(impactOp.DroneState==DroneWeaponState.InFlight,"in flight before impact");
+        Check(impactOp.ReloadLeft==0f,"no cooldown while flying");
+        Check(impact.Attackers.Count==1,"target spawned for impact");
+        impact.Attackers[0].X=20f; impact.Attackers[0].Y=148f;
+        for(int i=0;i<20 && impact.Outcome==BattleOutcome.Ongoing;i++) impact.Step(0.05f);
+        Check(impact.Stats["regular"].Killed==1,"detonated FPV kills point-blank regular");
+        Check(impactOp.DroneState==DroneWeaponState.Reloading,"reload starts on detonation");
+        Check(impactOp.ReloadLeft>2.9f,"full 3 seconds start on detonation");
 
         // Independently verify the shot-down case: no countdown while drone is airborne.
         var interception = Make(dir);
