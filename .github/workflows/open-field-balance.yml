@@ -1,0 +1,90 @@
+name: Open-field balance sweep
+on:
+  pull_request:
+    paths:
+      - 'tools/balance/**'
+      - 'unity/Assets/Data/**'
+      - 'unity/Assets/Scripts/Sim/**'
+      - '.github/workflows/open-field-balance.yml'
+jobs:
+  simulate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Mono C# compiler and runtime
+        run: sudo apt-get update && sudo apt-get install -y mono-mcs mono-runtime
+      - name: Compile open-field sweep
+        run: mcs -langversion:latest -out:open-field.exe unity/Assets/Scripts/Sim/*.cs tools/balance/OpenField.cs
+      - name: Run open-field sweep (20 seeds per scenario)
+        run: mono open-field.exe balance-output/open-field.csv .
+      - name: Summarize results
+        run: |
+          python3 - <<'PY'
+          import csv, collections, statistics
+          with open('balance-output/open-field.csv', newline='') as f:
+              rows = list(csv.DictReader(f))
+          assert len(rows) == 900, len(rows)
+          assert all(r['completed'] == 'TRUE' for r in rows), 'Incomplete simulations!'
+          # A single interpretable defence outcome: average % of starting HP left.
+          # A dead defender counts as 0%; 100% means no damage taken.
+          # Do not confuse the mean with survival probability (still reported separately).
+          with open('unity/Assets/Data/units.csv', newline='') as f:
+              max_hp = {r['id']: float(r['hp']) for r in csv.DictReader(f)}
+          groups = collections.defaultdict(list)
+          for row in rows:
+              groups[(row['defender'],row['attacker'],int(row['count']))].append(row)
+          with open('balance-output/summary.csv','w',newline='') as f:
+              writer = csv.writer(f)
+              writer.writerow(['defender','attacker','count','n','mean_penetration','mean_killed','mean_defender_survival','mean_defender_hp_remaining_pct','mean_line_damage','mean_seconds'])
+              for key, group in sorted(groups.items()):
+                  hp = max_hp[key[0]]
+                  assert hp > 0, 'Defender maximum HP must be positive'
+                  writer.writerow([*key,len(group),
+                      round(statistics.mean(float(r['penetration_rate']) for r in group),4),
+                      round(statistics.mean(int(r['killed']) for r in group),3),
+                      round(statistics.mean(r['defender_survived']=='TRUE' for r in group),4),
+                      round(statistics.mean(100.0*float(r['defender_hp_left'])/hp for r in group),1),
+                      round(statistics.mean(float(r['line_damage']) for r in group),3),
+                      round(statistics.mean(float(r['seconds']) for r in group),3)])
+          print('Completed',len(rows),'scenarios.')
+          PY
+      - name: Compile Monte Carlo and sensitivity runner
+        run: mcs -langversion:latest -out:calibration.exe unity/Assets/Scripts/Sim/*.cs tools/balance/Calibration.cs
+      - name: Monte Carlo (13500 runs) and sensitivity (15120 runs)
+        run: mono calibration.exe balance-output/calibration-runs.csv .
+      - name: Aggregate confidence intervals and paired effects
+        run: |
+          python3 tools/balance/summarize_calibration.py \
+            balance-output/calibration-runs.csv \
+            balance-output/calibration-baseline.csv \
+            balance-output/calibration-effects.csv \
+            balance-output/calibration-rank.csv
+      - uses: actions/upload-artifact@v4
+        with:
+          name: open-field-balance
+          path: balance-output/*.csv
+
+  anti_armour:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Mono C# compiler and runtime
+        run: sudo apt-get update && sudo apt-get install -y mono-mcs mono-runtime
+      - name: Compile and run FPV waypoint smoke checks
+        run: |
+          mcs -langversion:latest -out:fpv-smoke.exe unity/Assets/Scripts/Sim/*.cs tools/balance/FpvWaypointSmoke.cs
+          mono fpv-smoke.exe .
+      - name: Compile anti-armour calibration
+        run: mcs -langversion:latest -out:armour-calibration.exe unity/Assets/Scripts/Sim/*.cs tools/balance/ArmourCalibration.cs
+      - name: Anti-armour Monte Carlo and matched variants (9120 runs)
+        run: mono armour-calibration.exe balance-output/armour-runs.csv .
+      - name: Aggregate anti-armour baseline and paired comparisons
+        run: |
+          python3 tools/balance/summarize_armour.py \
+            balance-output/armour-runs.csv \
+            balance-output/armour-baseline.csv \
+            balance-output/armour-effects.csv
+      - uses: actions/upload-artifact@v4
+        with:
+          name: armour-calibration
+          path: balance-output/armour-*.csv

@@ -53,7 +53,7 @@ namespace Treeline.Tests
         }
 
         [Test]
-        public void TheOperatorWaitsTheLaunchDelay_ThenGoesForTheFastTargetBeforeInfantry()
+        public void TheOperatorLaunchesImmediately_AndGoesForTheFastTargetBeforeInfantry()
         {
             var b = Make();
             Setup(b, "fpv_operator");
@@ -62,8 +62,7 @@ namespace Treeline.Tests
             b.StartRound();
             var launches = Run(b, 20f);
             Assert.IsTrue(launches.Count > 0, "a drone was launched");
-            Assert.IsTrue(launches[0].Key >= 3f - 0.01f, "not before the 3 s launch delay, was " + launches[0].Key);
-            Assert.IsTrue(launches[0].Key < 3.5f, "and then straight away, was " + launches[0].Key);
+            Assert.IsTrue(launches[0].Key < 0.2f, "no separate launch delay: " + launches[0].Key);
             Assert.AreEqual("motorbike", launches[0].Value.Target.Def.Id);
         }
 
@@ -77,12 +76,46 @@ namespace Treeline.Tests
             Run(b, 40f);
             Assert.AreEqual(1, b.Stats["regular"].Killed);
             Assert.AreEqual(0, b.Drones.Count);
-            // 60 x 0.8 x 0.9 (low armour) is more than the regular's 15 hit points.
-            Assert.AreEqual(15f, b.Stats["fpv_operator"].DamageDealt, 1e-3f);
+            // FPV 70 x 0.9 x low-armour multiplier 1.0 exceeds Regular 10 HP.
+            Assert.AreEqual(10f, b.Stats["fpv_operator"].DamageDealt, 1e-3f);
         }
 
         [Test]
-        public void TheOperatorReloads_AtLeast15sBetweenLaunches()
+        public void FpvCanFlyToAWaypointAndFindTargetWithOwnSensor_WithoutRecon()
+        {
+            var b = Make();
+            Assert.IsTrue(b.TryPlace("fpv_operator", 20f, 150f, out var op, out _));
+            Assert.AreEqual(20f, op.Def.SightRangeM, 0.01f);
+            Assert.AreEqual(20f, op.Def.DroneSightRangeM, 0.01f);
+            Assert.IsTrue(b.TrySetDroneWaypoint(op.Id, 20f, 80f, out _));
+            b.QueueWave("recruit", 1, 0f, 1f);
+            b.StartRound();
+
+            // Recruit is >100 m from the operator initially; drone must launch without recon.
+            var launches = Run(b, 8f);
+            Assert.AreEqual(1, launches.Count, "FPV launched to waypoint without a visible target");
+            Assert.IsTrue(launches[0].Value.UsesWaypoint);
+            Assert.AreEqual(20f, launches[0].Value.WaypointX, 0.01f);
+            Assert.AreEqual(80f, launches[0].Value.WaypointY, 0.01f);
+            Assert.IsNull(launches[0].Value.Target, "still searching; recruit not in onboard range yet");
+
+            Run(b, 40f);
+            Assert.AreEqual(1, b.Stats["recruit"].Killed, "drone located and struck the recruit independently");
+        }
+
+        [Test]
+        public void FpvWaypointRejectsOutOfBoundsAndWrongUnitType()
+        {
+            var b = Make();
+            Assert.IsTrue(b.TryPlace("fpv_operator", 20f, 150f, out var op, out _));
+            Assert.IsFalse(b.TrySetDroneWaypoint(op.Id, 50f, 80f, out _));
+            Assert.IsFalse(b.TrySetDroneWaypoint(op.Id, 20f, -1f, out _));
+            Assert.IsTrue(b.TryPlace("rifle_squad", 10f, 150f, out var soldier, out _));
+            Assert.IsFalse(b.TrySetDroneWaypoint(soldier.Id, 20f, 80f, out _));
+        }
+
+        [Test]
+        public void TheOperatorReloads_AfterDroneIsGone_NotWhileInFlight()
         {
             var b = Make();
             Setup(b, "fpv_operator");
@@ -91,7 +124,31 @@ namespace Treeline.Tests
             var launches = Run(b, 60f);
             Assert.IsTrue(launches.Count >= 2, "launched " + launches.Count);
             for (int i = 1; i < launches.Count; i++)
-                Assert.IsTrue(launches[i].Key - launches[i - 1].Key >= 15f - 0.1f, "gap " + (launches[i].Key - launches[i - 1].Key));
+                Assert.IsTrue(launches[i].Key - launches[i - 1].Key >= 3f - 0.05f,
+                    "at least 3s between launch times: " + (launches[i].Key - launches[i - 1].Key));
+        }
+
+        [Test]
+        public void FpvWeaponState_ReloadBeginsAfterShootdown()
+        {
+            var b = Make();
+            Assert.IsTrue(b.TryPlace("fpv_operator", 20f, 150f, out var op, out _));
+            Assert.IsTrue(b.TrySetDroneWaypoint(op.Id, 20f, 80f, out _));
+            b.QueueWave("regular", 1, 0f, 1f);
+            b.StartRound();
+            b.Step(0.05f);
+            Assert.AreEqual(DroneWeaponState.InFlight, op.DroneState);
+            Assert.AreEqual(0f, op.ReloadLeft);
+            Assert.AreEqual(1, op.ShotsFired);
+
+            Assert.IsTrue(b.TryDestroyDrone(b.Drones[0].Id));
+            Assert.AreEqual(DroneWeaponState.Reloading, op.DroneState);
+            Assert.AreEqual(3f, op.ReloadLeft, 1e-4f);
+            for (int i = 0; i < 55; i++) b.Step(0.05f);
+            Assert.AreEqual(DroneWeaponState.Reloading, op.DroneState);
+            for (int i = 0; i < 10; i++) b.Step(0.05f);
+            Assert.AreEqual(DroneWeaponState.InFlight, op.DroneState);
+            Assert.AreEqual(2, op.ShotsFired);
         }
 
         [Test]
@@ -111,8 +168,10 @@ namespace Treeline.Tests
         [Test]
         public void ABomber_DropsItsLoadOnATank()
         {
-            var b = Make();
-            Setup(b, "bomber_operator");
+            // A long field with the operator far back: the tank must not reach and shoot it before all six grenades.
+            var b = Make(400f);
+            Assert.IsTrue(b.TryPlace("recon_drone", 20f, 60f, out _, out _));
+            Assert.IsTrue(b.TryPlace("bomber_operator", 20f, 330f, out _, out _));
             b.QueueWave("old_tank", 1, 0f, 1f);
             b.StartRound();
             Run(b, 60f);
@@ -135,6 +194,36 @@ namespace Treeline.Tests
             }
             Assert.IsTrue(seenFar, "seen from 60+ m away");
             Assert.IsTrue(b.Defenders.Count == 1 && b.Defenders[0].Hp == 8f, "the recon drone is untouched");
+        }
+
+        [Test]
+        public void AnOperator_NeverFiresDirectly_OnlyItsDronesHit()
+        {
+            // Regression 2026-11-13: with damage and attack_speed on its row the operator used to fire like a gun,
+            // 600 m with blast, at anything the side saw, before its drone had even arrived.
+            var b = Make();
+            Setup(b, "fpv_operator");
+            b.QueueWave("motorbike", 1, 0f, 1f);
+            b.StartRound();
+            for (float t = 0f; t < 1f; t += 0.05f) b.Step(0.05f);
+            Assert.AreEqual(1, b.Attackers.Count, "the motorbike is still there");
+            Assert.AreEqual(15f, b.Attackers[0].Hp, 1e-3f, "and untouched while the drone is on its way");
+            Assert.AreEqual(1, b.Drones.Count, "a drone is in the air");
+        }
+
+        [Test]
+        public void AWaypointFpv_AlsoGoesForWhatTheSideSees()
+        {
+            // The drone flies to a point far from the motorbike, so its own 20 m camera never sees it;
+            // the recon drone does, and the FPV goes for it anyway.
+            var b = Make();
+            Assert.IsTrue(b.TryPlace("recon_drone", 20f, 60f, out _, out _));
+            Assert.IsTrue(b.TryPlace("fpv_operator", 20f, 190f, out var op, out _));
+            Assert.IsTrue(b.TrySetDroneWaypoint(op.Id, 20f, 170f, out _));
+            b.QueueWave("motorbike", 1, 0f, 1f);
+            b.StartRound();
+            for (float t = 0f; t < 6f && b.Outcome == BattleOutcome.Ongoing; t += 0.05f) b.Step(0.05f);
+            Assert.AreEqual(1, b.Stats["motorbike"].Killed, "killed well before it reached the waypoint");
         }
     }
 }

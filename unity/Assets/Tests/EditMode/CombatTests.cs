@@ -158,6 +158,24 @@ namespace Treeline.Tests
         }
 
         [Test]
+        public void DirectFire_UsesDiscreteShotsAndAnAttackSpeedCooldown()
+        {
+            var b = Make(Open(), seed: 1);
+            Assert.IsTrue(b.TryPlace("rifle_squad", 20f, 15f, out var defender, out _));
+            Assert.AreEqual(1f, defender.Def.AttackSpeed);
+            Assert.AreEqual(8f, defender.Def.Damage);
+            Assert.IsTrue(b.QueueWave("recruit", 1, 0f, 1f));
+            b.StartRound();
+            b.Step(0.05f);
+            Assert.AreEqual(1, defender.ShotsFired, "first attack is a discrete shot");
+            Assert.AreEqual(1, b.Stats["rifle_squad"].ShotsFired);
+            for (int i = 0; i < 8; i++) b.Step(0.05f);
+            Assert.AreEqual(1, defender.ShotsFired, "cannot fire again before its attack interval");
+            Run(b, 1.0f);
+            Assert.GreaterOrEqual(defender.ShotsFired, 2, "fires again after cooldown");
+        }
+
+        [Test]
         public void WeaponClasses_OnlyHitWhatTheyShould()
         {
             var u = UnitTable.Parse(Data("units.csv"));
@@ -175,7 +193,7 @@ namespace Treeline.Tests
         {
             var a = ArmourTable.Parse(Data("armour.csv"));
             Assert.AreEqual(1f, a.Factor("small_arms", ""), "empty armour means none");
-            Assert.AreEqual(0.5f, a.Factor("small_arms", "low"));
+            Assert.AreEqual(0.8f, a.Factor("small_arms", "low"));
             Assert.AreEqual(0f, a.Factor("small_arms", "high"));
             Assert.Greater(a.Factor("anti_tank", "high"), a.Factor("small_arms", "high"));
             Assert.AreEqual(1f, a.Factor("unknown", "high"), "unknown damage types do not reduce damage");

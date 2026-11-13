@@ -63,7 +63,7 @@ namespace Treeline.Tests
             Assert.IsTrue(sawDismounting, "the van stopped to unload");
             Assert.IsTrue(sawRecruit, "troops got out");
             Assert.AreEqual(12, s.Battle.Stats["recruit"].Spawned, "every passenger is counted, out or dead inside");
-            Assert.AreEqual(1, s.Battle.Stats["van"].Killed);
+            // Whether the van also dies is balance (since 2026-11-12 the unloaded recruits can kill the gunner first).
         }
 
         [Test]

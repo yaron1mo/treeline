@@ -10,15 +10,19 @@ namespace Treeline.Sim
         public string Id = "", Name = "", Side = "", Type = "", Subtype = "", Behaviour = "", WeaponClass = "";
         public string DamageType = "", Armour = "", TargetableBy = "";
         public float Hp, SpeedMps, SightRangeM, RangeM, BuildCost;
-        public float Dps, Accuracy, MoveAccuracyMult = 1f, LineDamage = 1f;
+        // AttackSpeed is shots per second; Damage is raw damage per successful shot.
+        public float Damage, AttackSpeed, Accuracy, MoveAccuracyMult = 1f, LineDamage = 1f;
         public bool FireOnMove;
         public string CarriesUnit = "";
         public int CarriesCount;
         public float DismountAtHp, DismountIntervalS, BlastRadiusM, WreckRadiusM, TreeMoveCost;
         public int AdaptationLagWaves;
         // Drones (operators launch them; see Battle.LaunchDrones).
-        public float HitDamage, ReloadS, LaunchDelayS, DroneSpeedMps, DropIntervalS;
+        public float DroneSpeedMps, DropIntervalS, DroneSightRangeM;
         public int DroneAmmo;
+        /// <summary>Drone operators: their damage and attack_speed belong to the drones they launch, not to a gun of
+        /// their own, so they never fire directly and are not a direct-fire threat on attackers' routes.</summary>
+        public bool LaunchesDrones => DroneAmmo > 0;
         /// <summary>Attackers: what kind of target this is for a drone operator (aviation, fast, heavy, infantry).</summary>
         public string TargetClass = "";
         /// <summary>Operators: target classes in order of priority; a class that is not listed is never chosen.</summary>
@@ -69,7 +73,8 @@ namespace Treeline.Sim
                     Armour = Cell(col, r, "armour"),
                     TargetableBy = Cell(col, r, "targetable_by"),
                     FireOnMove = Cell(col, r, "fire_on_move").Equals("TRUE", StringComparison.OrdinalIgnoreCase),
-                    Dps = Num(col, r, "dps"),
+                    Damage = Num(col, r, "damage"),
+                    AttackSpeed = Num(col, r, "attack_speed"),
                     Accuracy = Num(col, r, "accuracy"),
                     MoveAccuracyMult = NumOr(col, r, "move_accuracy_mult", 1f),
                     LineDamage = NumOr(col, r, "line_damage", 1f),
@@ -81,10 +86,8 @@ namespace Treeline.Sim
                     WreckRadiusM = Num(col, r, "wreck_radius_m"),
                     TreeMoveCost = Num(col, r, "tree_move_cost"),
                     AdaptationLagWaves = (int)Num(col, r, "adaptation_lag_waves"),
-                    HitDamage = Num(col, r, "hit_damage"),
-                    ReloadS = Num(col, r, "reload_s"),
-                    LaunchDelayS = Num(col, r, "launch_delay_s"),
                     DroneSpeedMps = Num(col, r, "drone_speed_mps"),
+                    DroneSightRangeM = Num(col, r, "drone_sight_range_m"),
                     DropIntervalS = Num(col, r, "drop_interval_s"),
                     DroneAmmo = (int)Num(col, r, "drone_ammo"),
                     TargetClass = Cell(col, r, "target_class"),

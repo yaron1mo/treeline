@@ -32,7 +32,7 @@ namespace Treeline.Sim
             foreach (var f in field.Features)
             {
                 if (!table.TryGet(f.Type, out var o)) continue;
-                if (o.Sight == SightEffect.None && !o.HasOnBonus) continue;
+                if (o.Sight == SightEffect.None && !o.HasOnBonus && string.IsNullOrEmpty(o.CoverApplies)) continue;   // a trench hides nothing but still covers
                 var pts = f.Poly ?? f.Line;
                 if (pts == null || pts.Length == 0) continue;
                 Paint(f, o, pts);

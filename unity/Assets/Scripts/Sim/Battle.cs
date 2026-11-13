@@ -8,6 +8,7 @@ namespace Treeline.Sim
     public enum DefenderState { Standing, Running }
 
     public enum BattleOutcome { Ongoing, Won, Lost }
+    public enum DroneWeaponState { Ready, InFlight, Reloading }
 
     /// <summary>Anything with a position and hit points on the field.</summary>
     public abstract class Unit
@@ -25,6 +26,9 @@ namespace Treeline.Sim
         /// <summary>How far along <see cref="PathCells"/> it is.</summary>
         public int PathPosition => PathIndex;
 
+        public int ShotsFired;         // renderer can detect new shots by a rising counter
+        public float LastShotAt = -1f; // simulation time of most recent shot
+        internal float ShotCooldown;  // seconds until the next shot
         internal Unit Target;         // keeps firing at it while it stays valid
         internal List<int> Path;      // cells to walk
         internal int PathIndex;       // the cell the unit has reached
@@ -38,8 +42,13 @@ namespace Treeline.Sim
         public DefenderState State;
         /// <summary>Drone operators: seconds until the next drone may be launched.</summary>
         public float ReloadLeft;
-        /// <summary>Drone operators: seconds left of the wait before launching, or -1 when not waiting.</summary>
-        public float LaunchWaitLeft = -1f;
+        /// <summary>True while this operator's projectile drone is airborne (firing state).</summary>
+        public bool DroneInFlight;
+        public DroneWeaponState DroneState => DroneInFlight ? DroneWeaponState.InFlight :
+            ReloadLeft > 0f ? DroneWeaponState.Reloading : DroneWeaponState.Ready;
+        /// <summary>Optional point for the next FPV launch to search; no prior enemy spotting is required.</summary>
+        public bool HasDroneWaypoint;
+        public float DroneWaypointX, DroneWaypointY;
     }
 
     /// <summary>A drone in the air: flies from its operator to an attacker, then strikes (FPV) or drops grenades (bomber).</summary>
@@ -50,6 +59,9 @@ namespace Treeline.Sim
         public UnitDef Def;      // the operator's row: damage, speed, ammo
         public float X, Y;
         public Attacker Target;
+        /// <summary>FPV mission: fly to this point and search using the drone's own sight radius.</summary>
+        public bool UsesWaypoint;
+        public float WaypointX, WaypointY;
         public int AmmoLeft;
         public bool Alive = true;
         internal float DropTimer;
@@ -95,6 +107,7 @@ namespace Treeline.Sim
         /// <summary>Attackers that reached the rear edge.</summary>
         public int Crossed;
         public float LineDamage, DamageDealt, DamageTaken;
+        public int ShotsFired, ShotsHit;
     }
 
     /// <summary>
@@ -216,6 +229,24 @@ namespace Treeline.Sim
             StatsFor(def).Spawned++;
             Send(d, flow, x, y);
             placed = d;
+            return true;
+        }
+
+        /// <summary>Order an FPV launcher to search at this field point on future launches.
+        /// No external detection is needed. RangeM bounds launch waypoints, DroneSightRangeM governs onboard search.</summary>
+        public bool TrySetDroneWaypoint(int defenderId, float x, float y, out string why)
+        {
+            var op = defenders.Find(d => d.Id == defenderId);
+            if (op == null || op.Def.Behaviour != "fpv_launcher") { why = "Not an FPV operator"; return false; }
+            if (x < 0f || x > grid.Width || y < 0f || y > grid.Height)
+            { why = "Waypoint outside field"; return false; }
+            float dx = x - op.X, dy = y - op.Y;
+            if (dx * dx + dy * dy > op.Def.RangeM * op.Def.RangeM)
+            { why = "Waypoint beyond FPV flight range"; return false; }
+            op.HasDroneWaypoint = true;
+            op.DroneWaypointX = x;
+            op.DroneWaypointY = y;
+            why = "";
             return true;
         }
 
@@ -549,11 +580,11 @@ namespace Treeline.Sim
             var rate = new List<float>();
             foreach (var t in threats)
             {
-                if (t.Def.Dps <= 0f || !CanTarget(t.Def, def)) continue;
+                if (t.Def.Damage <= 0f || t.Def.AttackSpeed <= 0f || t.Def.LaunchesDrones || !CanTarget(t.Def, def)) continue;
                 float f = ArmourFactor(t.Def.DamageType, def.Armour);
                 if (f <= 0f) continue;
                 hurt.Add(t);
-                rate.Add(t.Def.Dps * t.Def.Accuracy * f * t.Weight);
+                rate.Add(t.Def.Damage * t.Def.AttackSpeed * t.Def.Accuracy * f * t.Weight);
             }
 
             if (hurt.Count == 0)
@@ -701,6 +732,13 @@ namespace Treeline.Sim
                     float c = Seen(d.X, d.Y, SightOf(d.Def), a.X, a.Y);
                     if (c > a.SeenChance) a.SeenChance = c;
                 }
+                // Airborne drones contribute their own (short) onboard sensor range to shared vision.
+                foreach (var dr in drones)
+                {
+                    if (!dr.Alive || dr.Def.DroneSightRangeM <= 0f) continue;
+                    float c = Seen(dr.X, dr.Y, dr.Def.DroneSightRangeM, a.X, a.Y);
+                    if (c > a.SeenChance) a.SeenChance = c;
+                }
             }
             foreach (var d in defenders)
             {
@@ -754,23 +792,42 @@ namespace Treeline.Sim
             }
         }
 
-        // Expected damage this step: no dice, so a run is repeatable and balance numbers are easy to read.
-        // aimSeen is how well the shooter's side sees the point it aims at.
-        float Damage(Unit shooter, Unit target, float aimSeen, bool moving, float dt)
+        // One discrete shot. Accuracy and detection determine a seeded hit roll;
+        // armour and protection scale damage after a hit. No damage per frame.
+        // The projectile/animation can track Unit.ShotsFired and Unit.LastShotAt.
+        float ShotDamage(Unit shooter, Unit target, float aimSeen, bool moving)
         {
-            var s = shooter.Def;
-            float dmg = s.Dps * s.Accuracy * aimSeen * dt;
-            if (moving) dmg *= s.MoveAccuracyMult;
-            dmg *= ArmourFactor(s.DamageType, target.Def.Armour);
+            var weapon = shooter.Def;
+            float hitChance = weapon.Accuracy * aimSeen;
+            if (moving) hitChance *= weapon.MoveAccuracyMult;
+            var cls = ClassOf(weapon);
+            var cover = vision != null ? vision.CoverFor(shooter.X, shooter.Y, target.X, target.Y) : null;
+            if (cover != null) hitChance *= cover.CoverAcc[(int)cls];
+            hitChance = Math.Max(0f, Math.Min(1f, hitChance));
+            if (rng.NextDouble() >= hitChance) return 0f;
+            StatsFor(shooter.Def).ShotsHit++;
+            float damage = weapon.Damage * ArmourFactor(weapon.DamageType, target.Def.Armour);
+            if (cover != null) damage *= cover.CoverDmg[(int)cls];
             if (vision != null)
             {
-                var cls = ClassOf(s);
-                var cover = vision.CoverFor(shooter.X, shooter.Y, target.X, target.Y);
-                if (cover != null) dmg *= cover.CoverAcc[(int)cls] * cover.CoverDmg[(int)cls];
                 var under = vision.ObstacleAt(target.X, target.Y);
-                if (under != null && cls != ShooterClass.Indirect) dmg *= under.OnCoverMult;
+                if (under != null && cls != ShooterClass.Indirect) damage *= under.OnCoverMult;
             }
-            return dmg;
+            return damage;
+        }
+
+        bool ReadyToShoot(Unit shooter, float dt)
+        {
+            shooter.ShotCooldown = Math.Max(0f, shooter.ShotCooldown - dt);
+            return shooter.ShotCooldown <= 0f && shooter.Def.AttackSpeed > 0f && shooter.Def.Damage > 0f;
+        }
+
+        void BeginShot(Unit shooter)
+        {
+            shooter.ShotCooldown = 1f / shooter.Def.AttackSpeed;
+            shooter.ShotsFired++;
+            shooter.LastShotAt = RoundTime;
+            StatsFor(shooter.Def).ShotsFired++;
         }
 
         float RangeOf(Unit u) => RangeAt(u.Def, u.X, u.Y);
@@ -797,13 +854,45 @@ namespace Treeline.Sim
             if (target.Hp <= 0f) target.Alive = false;
         }
 
+        // Radial linear falloff: at impact centre 100% damage, at radius 0%.
+        // Armour applies per victim. Do not roll accuracy again for each unit caught in the blast.
+        public static float BlastFalloff(float distance, float radius)
+        {
+            if (radius <= 0f) return distance <= 0f ? 1f : 0f;
+            return Math.Max(0f, Math.Min(1f, 1f - Math.Max(0f, distance) / radius));
+        }
+
+        void Explode(Unit shooter, float cx, float cy, float baseDamage,
+            float radius, bool fromAbove)
+        {
+            var weapon = shooter.Def;
+            foreach (var a in attackers)
+            {
+                if (!a.Alive) continue;
+                float dx = a.X - cx, dy = a.Y - cy;
+                float dist = (float)Math.Sqrt(dx * dx + dy * dy);
+                float scale = BlastFalloff(dist, radius);
+                if (scale <= 0f) continue;
+                float dmg = baseDamage * ArmourFactor(weapon.DamageType, a.Def.Armour) * scale;
+                if (!fromAbove && vision != null)
+                {
+                    var cover = vision.CoverFor(shooter.X, shooter.Y, a.X, a.Y);
+                    var cls = ClassOf(weapon);
+                    if (cover != null) dmg *= cover.CoverDmg[(int)cls];
+                    var obstacle = vision.ObstacleAt(a.X, a.Y);
+                    if (obstacle != null && cls != ShooterClass.Indirect) dmg *= obstacle.OnCoverMult;
+                }
+                Hit(shooter, a, dmg);
+            }
+        }
+
         void FireDefenders(float dt)
         {
             foreach (var d in defenders)
             {
-                if (!d.Alive || d.State != DefenderState.Standing || d.Def.Dps <= 0f) continue;
+                if (!d.Alive || d.State != DefenderState.Standing || d.Def.LaunchesDrones || !ReadyToShoot(d, dt)) continue;
                 float range = RangeOf(d);
-                // Stay on the current target while it is alive, seen and in range; otherwise take the nearest.
+                // Retain a live visible target, otherwise pick nearest. Indirect fire uses shared sight.
                 bool own = OwnSightOnly(d.Def);
                 var target = d.Target as Attacker;
                 if (target == null || !target.Alive || AimAt(d, target, own) <= 0f || !InRange(d, target, range))
@@ -821,20 +910,18 @@ namespace Treeline.Sim
                     d.Target = target;
                 }
                 if (target == null) continue;
-                Record(d);   // firing gives the position away
-
+                Record(d);
+                BeginShot(d);
                 float aim = AimAt(d, target, own);
-                float blast = d.Def.Behaviour == "indirect_fire" ? d.Def.BlastRadiusM : 0f;
-                if (blast <= 0f) { Hit(d, target, Damage(d, target, aim, false, dt)); continue; }
-
-                // Mortar: everything within the blast radius of the aiming point takes the hit.
-                float tx = target.X, ty = target.Y;
-                foreach (var a in attackers)
+                if (d.Def.BlastRadiusM <= 0f)
                 {
-                    if (!a.Alive || !CanTarget(d.Def, a.Def)) continue;
-                    float dx = a.X - tx, dy = a.Y - ty;
-                    if (dx * dx + dy * dy <= blast * blast) Hit(d, a, Damage(d, a, aim, false, dt));
+                    Hit(d, target, ShotDamage(d, target, aim, false));
+                    continue;
                 }
+                // One successful hit creates ONE blast. A miss does not damage other targets.
+                float centerX = target.X, centerY = target.Y;
+                if (ShotDamage(d, target, aim, false) <= 0f) continue;
+                Explode(d, centerX, centerY, d.Def.Damage, d.Def.BlastRadiusM, false);
             }
         }
 
@@ -842,7 +929,7 @@ namespace Treeline.Sim
         {
             foreach (var a in attackers)
             {
-                if (!a.Alive || a.Def.Dps <= 0f) continue;
+                if (!a.Alive || !ReadyToShoot(a, dt)) continue;
                 bool moving = !a.Dismounting && !a.Stuck && a.Def.SpeedMps > 0f;
                 if (moving && !a.Def.FireOnMove) continue;
                 float range = RangeOf(a);
@@ -862,7 +949,11 @@ namespace Treeline.Sim
                     }
                     a.Target = target;
                 }
-                if (target != null) Hit(a, target, Damage(a, target, AimAt(a, target, own), moving, dt));
+                if (target != null)
+                {
+                    BeginShot(a);
+                    Hit(a, target, ShotDamage(a, target, AimAt(a, target, own), moving));
+                }
             }
         }
 
@@ -919,30 +1010,92 @@ namespace Treeline.Sim
             return false;
         }
 
-        // Operators: when ready and something worth hitting is in sight, wait the launch delay (better targets may
-        // turn up), then send a drone at the best target.
+        bool ActiveDroneFor(Defender op)
+        {
+            foreach (var dr in drones) if (dr.Alive && dr.Owner == op) return true;
+            return false;
+        }
+
+        Attacker PickNearbyFpvTarget(Drone dr)
+        {
+            if (dr.Def.DroneSightRangeM <= 0f) return null;
+            Attacker best = null;
+            int rank = int.MaxValue;
+            foreach (var a in attackers)
+            {
+                if (!a.Alive || !CanTarget(dr.Def, a.Def) ||
+                    Seen(dr.X, dr.Y, dr.Def.DroneSightRangeM, a.X, a.Y) <= 0f ||
+                    TargetedByDrone(a)) continue;
+                int candidate = PriorityOf(dr.Def, a.Def);
+                if (candidate < 0) continue;
+                if (candidate < rank || (candidate == rank && (best == null || a.Y > best.Y ||
+                    (a.Y == best.Y && a.Id < best.Id))))
+                {
+                    best = a; rank = candidate;
+                }
+            }
+            return best;
+        }
+
+        static void MoveDroneTowards(Drone dr, float x, float y, float dt)
+        {
+            float dx = x - dr.X, dy = y - dr.Y;
+            float dist = (float)Math.Sqrt(dx * dx + dy * dy);
+            float step = Math.Max(0f, dr.Def.DroneSpeedMps) * dt;
+            if (dist <= step) { dr.X = x; dr.Y = y; }
+            else if (dist > 0f) { dr.X += dx / dist * step; dr.Y += dy / dist * step; }
+        }
+
+        // Launch uses attack_speed in shots/second. A drone in flight IS the active shot.
+        // No cooldown starts until it detonates or is destroyed.
         void LaunchDrones(float dt)
         {
             foreach (var op in defenders)
             {
-                if (!op.Alive || op.State != DefenderState.Standing || op.Def.DroneAmmo <= 0) continue;
+                if (!op.Alive || op.State != DefenderState.Standing || op.Def.DroneAmmo <= 0 ||
+                    op.Def.AttackSpeed <= 0f) continue;
                 if (op.ReloadLeft > 0f)
                 {
                     op.ReloadLeft = Math.Max(0f, op.ReloadLeft - dt);
-                    op.LaunchWaitLeft = -1f;
-                    continue;
+                    if (op.ReloadLeft > 0f) continue;
                 }
-                if (PickDroneTarget(op) == null) { op.LaunchWaitLeft = -1f; continue; }
-                if (op.LaunchWaitLeft < 0f) op.LaunchWaitLeft = op.Def.LaunchDelayS;
-                else op.LaunchWaitLeft -= dt;
-                if (op.LaunchWaitLeft > 0f) continue;
-
-                var target = PickDroneTarget(op);
-                op.LaunchWaitLeft = -1f;
-                if (target == null) continue;
-                drones.Add(new Drone { Id = nextId++, Owner = op, Def = op.Def, X = op.X, Y = op.Y, Target = target, AmmoLeft = op.Def.DroneAmmo });
-                op.ReloadLeft = op.Def.ReloadS;
+                if (op.DroneInFlight || ActiveDroneFor(op)) continue;
+                bool waypoint = op.Def.Behaviour == "fpv_launcher" && op.HasDroneWaypoint;
+                var target = waypoint ? null : PickDroneTarget(op);
+                if (!waypoint && target == null) continue;
+                drones.Add(new Drone
+                {
+                    Id = nextId++, Owner = op, Def = op.Def, X = op.X, Y = op.Y,
+                    Target = target, AmmoLeft = op.Def.DroneAmmo,
+                    UsesWaypoint = waypoint, WaypointX = op.DroneWaypointX, WaypointY = op.DroneWaypointY
+                });
+                op.DroneInFlight = true;
+                op.ShotsFired++;
+                op.LastShotAt = RoundTime;
+                StatsFor(op.Def).ShotsFired++;
             }
+        }
+
+        // Single lifecycle hook for either a successful explosion or the drone being shot down.
+        void EndDroneFlight(Drone dr)
+        {
+            if (!dr.Alive) return;
+            dr.Alive = false;
+            dr.Owner.DroneInFlight = false;
+            dr.Owner.ReloadLeft = dr.Def.AttackSpeed > 0f ? 1f / dr.Def.AttackSpeed : 0f;
+        }
+
+        /// <summary>Destroy an airborne drone (e.g., when it is shot down).
+        /// Hostile AA interception is not yet simulated; this API is its future integration hook.</summary>
+        public bool TryDestroyDrone(int droneId)
+        {
+            foreach (var dr in drones)
+            {
+                if (!dr.Alive || dr.Id != droneId) continue;
+                EndDroneFlight(dr);
+                return true;
+            }
+            return false;
         }
 
         void FlyDrones(float dt)
@@ -951,51 +1104,54 @@ namespace Treeline.Sim
             {
                 var dr = drones[i];
                 if (!dr.Alive) continue;
-                if (rules.DroneLostWithOperator && !dr.Owner.Alive) { dr.Alive = false; continue; }
-                if (dr.Target == null || !dr.Target.Alive)
+                if (rules.DroneLostWithOperator && !dr.Owner.Alive) { EndDroneFlight(dr); continue; }
+
+                if (dr.UsesWaypoint)
+                {
+                    // Its own camera first; otherwise anything the side sees (shared vision) within the operator's range.
+                    if (dr.Target == null || !dr.Target.Alive)
+                        dr.Target = PickNearbyFpvTarget(dr) ?? PickDroneTarget(dr.Owner);
+                    if (dr.Target == null)
+                    {
+                        MoveDroneTowards(dr, dr.WaypointX, dr.WaypointY, dt);
+                        dr.Target = PickNearbyFpvTarget(dr) ?? PickDroneTarget(dr.Owner);
+                        if (dr.Target == null) continue;
+                    }
+                }
+                else if (dr.Target == null || !dr.Target.Alive)
                 {
                     dr.Target = PickDroneTarget(dr.Owner);
-                    if (dr.Target == null) { dr.Alive = false; continue; }   // nothing left to hit: the drone is lost
+                    if (dr.Target == null) { EndDroneFlight(dr); continue; }
                 }
 
-                float dx = dr.Target.X - dr.X, dy = dr.Target.Y - dr.Y;
-                float dist = (float)Math.Sqrt(dx * dx + dy * dy);
-                float step = Math.Max(0f, dr.Def.DroneSpeedMps) * dt;
-                if (dist > step)
-                {
-                    dr.X += dx / dist * step;
-                    dr.Y += dy / dist * step;
-                    continue;
-                }
-                dr.X = dr.Target.X; dr.Y = dr.Target.Y;
+                MoveDroneTowards(dr, dr.Target.X, dr.Target.Y, dt);
+                if (!InRangeDrone(dr, dr.Target)) continue;
 
                 if (dr.Def.DropIntervalS <= 0f)
                 {
-                    // FPV: one strike, the drone is used up.
-                    Hit(dr.Owner, dr.Target, GrenadeDamage(dr.Def, dr.Target));
-                    dr.Alive = false;
+                    // FPV: detonate once. Core damage is Damage * Accuracy; armour/falloff per victim.
+                    Explode(dr.Owner, dr.Target.X, dr.Target.Y,
+                        dr.Def.Damage * dr.Def.Accuracy, dr.Def.BlastRadiusM, true);
+                    EndDroneFlight(dr); // starts 3-second reload AFTER the blast
                     continue;
                 }
 
-                // Bomber: hovers over the target and drops a grenade every interval until the load is gone.
+                // Bomber: six successive grenade drops before the drone returns / is consumed.
                 dr.DropTimer -= dt;
                 if (dr.DropTimer > 0f) continue;
                 dr.DropTimer = dr.Def.DropIntervalS;
-                float tx = dr.Target.X, ty = dr.Target.Y, r2 = dr.Def.BlastRadiusM * dr.Def.BlastRadiusM;
-                foreach (var a in attackers)
-                {
-                    if (!a.Alive || !CanTarget(dr.Def, a.Def)) continue;
-                    float ax = a.X - tx, ay = a.Y - ty;
-                    if (a == dr.Target || ax * ax + ay * ay <= r2) Hit(dr.Owner, a, GrenadeDamage(dr.Def, a));
-                }
-                if (--dr.AmmoLeft <= 0) dr.Alive = false;
+                Explode(dr.Owner, dr.Target.X, dr.Target.Y,
+                    dr.Def.Damage * dr.Def.Accuracy, dr.Def.BlastRadiusM, true);
+                if (--dr.AmmoLeft <= 0) EndDroneFlight(dr);
             }
-            drones.RemoveAll(e => !e.Alive);
+            drones.RemoveAll(d => !d.Alive);
         }
 
-        // Expected damage of one warhead: no dice; armour counts, cover does not (it comes from above).
-        float GrenadeDamage(UnitDef op, Attacker target) =>
-            op.HitDamage * op.Accuracy * ArmourFactor(op.DamageType, target.Def.Armour);
+        static bool InRangeDrone(Drone dr, Attacker target)
+        {
+            float dx = target.X - dr.X, dy = target.Y - dr.Y;
+            return dx * dx + dy * dy < 0.0001f;
+        }
 
         // ---- deaths ---------------------------------------------------------------------------------------------
 

@@ -1,0 +1,20 @@
+name: EditMode tests (Mono)
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - 'unity/Assets/Scripts/Sim/**'
+      - 'unity/Assets/Tests/**'
+      - 'unity/Assets/Data/**'
+      - 'tools/tests/**'
+      - '.github/workflows/editmode-tests.yml'
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Mono C# compiler and runtime
+        run: sudo apt-get update && sudo apt-get install -y mono-mcs mono-runtime
+      - name: Build Sim and the EditMode tests, run them
+        run: tools/tests/run_editmode.sh
