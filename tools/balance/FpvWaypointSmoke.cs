@@ -72,6 +72,7 @@ static class FpvWaypointSmoke
         Check(impactOp.DroneState==DroneWeaponState.InFlight,"in flight before impact");
         Check(impactOp.ReloadLeft==0f,"no cooldown while flying");
         Check(impact.Attackers.Count==1,"target spawned for impact");
+        impact.Attackers[0].Def.SpeedMps=0f; // freeze target: walking otherwise rewrites manually set coordinates
         impact.Attackers[0].X=20f; impact.Attackers[0].Y=148f;
         for(int i=0;i<20 && impact.Outcome==BattleOutcome.Ongoing;i++) impact.Step(0.05f);
         Check(impact.Stats["regular"].Killed==1,"detonated FPV kills point-blank regular");
