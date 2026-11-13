@@ -25,17 +25,25 @@ jobs:
               rows = list(csv.DictReader(f))
           assert len(rows) == 900, len(rows)
           assert all(r['completed'] == 'TRUE' for r in rows), 'Incomplete simulations!'
+          # A single interpretable defence outcome: average % of starting HP left.
+          # A dead defender counts as 0%; 100% means no damage taken.
+          # Do not confuse the mean with survival probability (still reported separately).
+          with open('unity/Assets/Data/units.csv', newline='') as f:
+              max_hp = {r['id']: float(r['hp']) for r in csv.DictReader(f)}
           groups = collections.defaultdict(list)
           for row in rows:
               groups[(row['defender'],row['attacker'],int(row['count']))].append(row)
           with open('balance-output/summary.csv','w',newline='') as f:
               writer = csv.writer(f)
-              writer.writerow(['defender','attacker','count','n','mean_penetration','mean_killed','mean_defender_survival','mean_line_damage','mean_seconds'])
+              writer.writerow(['defender','attacker','count','n','mean_penetration','mean_killed','mean_defender_survival','mean_defender_hp_remaining_pct','mean_line_damage','mean_seconds'])
               for key, group in sorted(groups.items()):
+                  hp = max_hp[key[0]]
+                  assert hp > 0, 'Defender maximum HP must be positive'
                   writer.writerow([*key,len(group),
                       round(statistics.mean(float(r['penetration_rate']) for r in group),4),
                       round(statistics.mean(int(r['killed']) for r in group),3),
                       round(statistics.mean(r['defender_survived']=='TRUE' for r in group),4),
+                      round(statistics.mean(100.0*float(r['defender_hp_left'])/hp for r in group),1),
                       round(statistics.mean(float(r['line_damage']) for r in group),3),
                       round(statistics.mean(float(r['seconds']) for r in group),3)])
           print('Completed',len(rows),'scenarios.')
