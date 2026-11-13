@@ -580,7 +580,7 @@ namespace Treeline.Sim
             var rate = new List<float>();
             foreach (var t in threats)
             {
-                if (t.Def.Damage <= 0f || t.Def.AttackSpeed <= 0f || !CanTarget(t.Def, def)) continue;
+                if (t.Def.DroneAmmo > 0 || t.Def.Damage <= 0f || t.Def.AttackSpeed <= 0f || !CanTarget(t.Def, def)) continue;
                 float f = ArmourFactor(t.Def.DamageType, def.Armour);
                 if (f <= 0f) continue;
                 hurt.Add(t);
@@ -890,7 +890,7 @@ namespace Treeline.Sim
         {
             foreach (var d in defenders)
             {
-                if (!d.Alive || d.State != DefenderState.Standing || !ReadyToShoot(d, dt)) continue;
+                if (!d.Alive || d.State != DefenderState.Standing || d.Def.DroneAmmo > 0 || !ReadyToShoot(d, dt)) continue;
                 float range = RangeOf(d);
                 // Retain a live visible target, otherwise pick nearest. Indirect fire uses shared sight.
                 bool own = OwnSightOnly(d.Def);
