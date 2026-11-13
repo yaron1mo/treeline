@@ -43,6 +43,9 @@ namespace Treeline.Sim
         public float ReloadLeft;
         /// <summary>Drone operators: seconds left of the wait before launching, or -1 when not waiting.</summary>
         public float LaunchWaitLeft = -1f;
+        /// <summary>Optional point for the next FPV launch to search; no prior enemy spotting is required.</summary>
+        public bool HasDroneWaypoint;
+        public float DroneWaypointX, DroneWaypointY;
     }
 
     /// <summary>A drone in the air: flies from its operator to an attacker, then strikes (FPV) or drops grenades (bomber).</summary>
@@ -53,6 +56,9 @@ namespace Treeline.Sim
         public UnitDef Def;      // the operator's row: damage, speed, ammo
         public float X, Y;
         public Attacker Target;
+        /// <summary>FPV mission: fly to this point and search using the drone's own sight radius.</summary>
+        public bool UsesWaypoint;
+        public float WaypointX, WaypointY;
         public int AmmoLeft;
         public bool Alive = true;
         internal float DropTimer;
@@ -220,6 +226,25 @@ namespace Treeline.Sim
             StatsFor(def).Spawned++;
             Send(d, flow, x, y);
             placed = d;
+            return true;
+        }
+
+        /// <summary>Order an FPV launcher to search at this field point on future launches.
+        /// No external detection is needed. RangeM bounds launch waypoints, DroneSightRangeM governs onboard search.</summary>
+        public bool TrySetDroneWaypoint(int defenderId, float x, float y, out string why)
+        {
+            var op = defenders.Find(d => d.Id == defenderId);
+            if (op == null || op.Def.Behaviour != "fpv_launcher") { why = "Not an FPV operator"; return false; }
+            if (x < 0f || x > grid.Width || y < 0f || y > grid.Height)
+            { why = "Waypoint outside field"; return false; }
+            float dx = x - op.X, dy = y - op.Y;
+            if (dx * dx + dy * dy > op.Def.RangeM * op.Def.RangeM)
+            { why = "Waypoint beyond FPV flight range"; return false; }
+            op.HasDroneWaypoint = true;
+            op.DroneWaypointX = x;
+            op.DroneWaypointY = y;
+            op.LaunchWaitLeft = -1f;
+            why = "";
             return true;
         }
 
@@ -705,6 +730,13 @@ namespace Treeline.Sim
                     float c = Seen(d.X, d.Y, SightOf(d.Def), a.X, a.Y);
                     if (c > a.SeenChance) a.SeenChance = c;
                 }
+                // Airborne drones contribute their own (short) onboard sensor range to shared vision.
+                foreach (var dr in drones)
+                {
+                    if (!dr.Alive || dr.Def.DroneSightRangeM <= 0f) continue;
+                    float c = Seen(dr.X, dr.Y, dr.Def.DroneSightRangeM, a.X, a.Y);
+                    if (c > a.SeenChance) a.SeenChance = c;
+                }
             }
             foreach (var d in defenders)
             {
@@ -947,8 +979,46 @@ namespace Treeline.Sim
             return false;
         }
 
-        // Operators: when ready and something worth hitting is in sight, wait the launch delay (better targets may
-        // turn up), then send a drone at the best target.
+        bool ActiveFpvFor(Defender op)
+        {
+            foreach (var dr in drones) if (dr.Alive && dr.Owner == op && dr.Def.DroneAmmo == 1) return true;
+            return false;
+        }
+
+        // An FPV has its OWN small field of view, not the operator's view and not
+        // global recon. Priority rules still decide among locally seen candidates.
+        Attacker PickNearbyFpvTarget(Drone dr)
+        {
+            if (dr.Def.DroneSightRangeM <= 0f) return null;
+            Attacker best = null;
+            int rank = int.MaxValue;
+            foreach (var a in attackers)
+            {
+                if (!a.Alive || !CanTarget(dr.Def, a.Def) ||
+                    Seen(dr.X, dr.Y, dr.Def.DroneSightRangeM, a.X, a.Y) <= 0f ||
+                    TargetedByDrone(a)) continue;
+                int candidate = PriorityOf(dr.Def, a.Def);
+                if (candidate < 0) continue;
+                if (candidate < rank || (candidate == rank && (best == null || a.Y > best.Y ||
+                    (a.Y == best.Y && a.Id < best.Id))))
+                {
+                    best = a; rank = candidate;
+                }
+            }
+            return best;
+        }
+
+        static void MoveDroneTowards(Drone dr, float x, float y, float dt)
+        {
+            float dx = x - dr.X, dy = y - dr.Y;
+            float dist = (float)Math.Sqrt(dx * dx + dy * dy);
+            float step = Math.Max(0f, dr.Def.DroneSpeedMps) * dt;
+            if (dist <= step) { dr.X = x; dr.Y = y; }
+            else if (dist > 0f) { dr.X += dx / dist * step; dr.Y += dy / dist * step; }
+        }
+
+        // FPV operators can launch toward a commanded waypoint WITHOUT external spotting.
+        // Existing auto-target mode stays available when no waypoint is assigned.
         void LaunchDrones(float dt)
         {
             foreach (var op in defenders)
@@ -960,15 +1030,22 @@ namespace Treeline.Sim
                     op.LaunchWaitLeft = -1f;
                     continue;
                 }
-                if (PickDroneTarget(op) == null) { op.LaunchWaitLeft = -1f; continue; }
+                bool waypoint = op.Def.Behaviour == "fpv_launcher" && op.HasDroneWaypoint;
+                if (waypoint && ActiveFpvFor(op)) { op.LaunchWaitLeft = -1f; continue; }
+                if (!waypoint && PickDroneTarget(op) == null) { op.LaunchWaitLeft = -1f; continue; }
                 if (op.LaunchWaitLeft < 0f) op.LaunchWaitLeft = op.Def.LaunchDelayS;
                 else op.LaunchWaitLeft -= dt;
                 if (op.LaunchWaitLeft > 0f) continue;
 
-                var target = PickDroneTarget(op);
+                var target = waypoint ? null : PickDroneTarget(op);
                 op.LaunchWaitLeft = -1f;
-                if (target == null) continue;
-                drones.Add(new Drone { Id = nextId++, Owner = op, Def = op.Def, X = op.X, Y = op.Y, Target = target, AmmoLeft = op.Def.DroneAmmo });
+                if (!waypoint && target == null) continue;
+                drones.Add(new Drone
+                {
+                    Id = nextId++, Owner = op, Def = op.Def, X = op.X, Y = op.Y,
+                    Target = target, AmmoLeft = op.Def.DroneAmmo,
+                    UsesWaypoint = waypoint, WaypointX = op.DroneWaypointX, WaypointY = op.DroneWaypointY
+                });
                 op.ReloadLeft = op.Def.ReloadS;
             }
         }
@@ -980,32 +1057,35 @@ namespace Treeline.Sim
                 var dr = drones[i];
                 if (!dr.Alive) continue;
                 if (rules.DroneLostWithOperator && !dr.Owner.Alive) { dr.Alive = false; continue; }
-                if (dr.Target == null || !dr.Target.Alive)
+
+                if (dr.UsesWaypoint)
+                {
+                    // Search at the drone's current position while travelling and over the waypoint.
+                    if (dr.Target == null || !dr.Target.Alive)
+                        dr.Target = PickNearbyFpvTarget(dr);
+                    if (dr.Target == null)
+                    {
+                        MoveDroneTowards(dr, dr.WaypointX, dr.WaypointY, dt);
+                        dr.Target = PickNearbyFpvTarget(dr);
+                        if (dr.Target == null) continue; // loiter above the waypoint
+                    }
+                }
+                else if (dr.Target == null || !dr.Target.Alive)
                 {
                     dr.Target = PickDroneTarget(dr.Owner);
-                    if (dr.Target == null) { dr.Alive = false; continue; }   // nothing left to hit: the drone is lost
+                    if (dr.Target == null) { dr.Alive = false; continue; }
                 }
 
-                float dx = dr.Target.X - dr.X, dy = dr.Target.Y - dr.Y;
-                float dist = (float)Math.Sqrt(dx * dx + dy * dy);
-                float step = Math.Max(0f, dr.Def.DroneSpeedMps) * dt;
-                if (dist > step)
-                {
-                    dr.X += dx / dist * step;
-                    dr.Y += dy / dist * step;
-                    continue;
-                }
-                dr.X = dr.Target.X; dr.Y = dr.Target.Y;
+                MoveDroneTowards(dr, dr.Target.X, dr.Target.Y, dt);
+                if (!InRangeDrone(dr, dr.Target)) continue;
 
                 if (dr.Def.DropIntervalS <= 0f)
                 {
-                    // FPV: one strike, the drone is used up.
                     Hit(dr.Owner, dr.Target, GrenadeDamage(dr.Def, dr.Target));
                     dr.Alive = false;
                     continue;
                 }
 
-                // Bomber: hovers over the target and drops a grenade every interval until the load is gone.
                 dr.DropTimer -= dt;
                 if (dr.DropTimer > 0f) continue;
                 dr.DropTimer = dr.Def.DropIntervalS;
@@ -1019,6 +1099,12 @@ namespace Treeline.Sim
                 if (--dr.AmmoLeft <= 0) dr.Alive = false;
             }
             drones.RemoveAll(e => !e.Alive);
+        }
+
+        static bool InRangeDrone(Drone dr, Attacker target)
+        {
+            float dx = target.X - dr.X, dy = target.Y - dr.Y;
+            return dx * dx + dy * dy < 0.0001f;
         }
 
         // Expected damage of one warhead: no dice; armour counts, cover does not (it comes from above).
