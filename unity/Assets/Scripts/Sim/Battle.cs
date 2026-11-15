@@ -129,6 +129,12 @@ namespace Treeline.Sim
 
         internal bool Crossed, Handled;
         internal float DismountTimer;
+        // Aircraft (enemy aviation, 2026-11-15): 0 = flying in, 1 = over its spot (loitering or dropping troops),
+        // 2 = flying out. The defender an FPV is diving at.
+        internal int AirPhase;
+        internal float AirTimer;
+        internal Defender AirTarget;
+        public bool Airborne => Def != null && Def.Type == "aviation";
         internal float[] MoveCost;
     }
 
@@ -364,11 +370,11 @@ namespace Treeline.Sim
         /// <summary>
         /// Queue attackers into the current wave: <paramref name="count"/> units of <paramref name="unitId"/>, the first
         /// after <paramref name="delay"/> seconds from now, then one every <paramref name="interval"/> seconds.
-        /// Starts wave 1 if no wave was begun. Aircraft are not simulated yet and are refused.
+        /// Starts wave 1 if no wave was begun. Aircraft fly straight in from the top edge (see FlyAircraft).
         /// </summary>
         public bool QueueWave(string unitId, int count, float delay, float interval)
         {
-            if (!units.TryGet(unitId, out var def) || def.IsDefence || def.Type == "aviation") return false;
+            if (!units.TryGet(unitId, out var def) || def.IsDefence) return false;
             if (WaveNumber == 0) BeginWave();
             // Times count from now, so a second wave can be sent while the round runs (or after a won wave).
             for (int i = 0; i < count; i++)
@@ -469,6 +475,7 @@ namespace Treeline.Sim
             {
                 var a = attackers[n];
                 if (!a.Alive) continue;
+                if (a.Airborne) { FlyAircraft(a, dt); continue; }
 
                 if (a.Passengers > 0 && !a.Dismounting && a.Def.DismountAtHp > 0f && a.Hp <= a.Def.DismountAtHp * a.Def.Hp)
                 {
@@ -502,6 +509,123 @@ namespace Treeline.Sim
             }
         }
 
+        // ---- enemy aircraft -------------------------------------------------------------------------------------
+        // They fly straight over everything at their speed, from the top edge.
+        //   spotter (recon UAV): flies to its spot (40% down the field), stays aviation_loiter_s, then flies out.
+        //   strike_spotted_position (FPV): dives at the nearest defender its side sees (shared vision, its own camera
+        //     included); with nothing seen it flies on down the field and is gone at the rear edge. Single use.
+        //   fly_to_rear (one-way drone): straight to the rear edge, its line damage counts there.
+        //   air_assault (helicopter): flies to its drop point (dismount_at_hp = share of the way down), drops its
+        //     troops one every dismount_interval_s, then flies back out.
+
+        void FlyAircraft(Attacker a, float dt)
+        {
+            float speed = Math.Max(0f, a.Def.SpeedMps);
+            switch (a.Def.Behaviour)
+            {
+                case "strike_spotted_position":
+                {
+                    if (a.AirTarget == null || !a.AirTarget.Alive || a.AirTarget.SeenChance <= 0f) a.AirTarget = NearestSeenDefender(a);
+                    if (a.AirTarget == null) { if (FlyTo(a, a.X, grid.Height, speed, dt)) Leave(a); return; }
+                    if (!FlyTo(a, a.AirTarget.X, a.AirTarget.Y, speed, dt)) return;
+                    GuidedImpact(a.Def, a.AirTarget.X, a.AirTarget.Y, out float ix, out float iy);
+                    ExplodeOnDefenders(a, ix, iy, a.Def.Damage, a.Def.BlastRadiusM);
+                    Leave(a);   // used up
+                    return;
+                }
+                case "fly_to_rear":
+                    if (FlyTo(a, a.X, grid.Height, speed, dt)) CrossLine(a);
+                    return;
+                case "air_assault":
+                {
+                    if (a.AirPhase == 0)
+                    {
+                        float dropY = grid.Height * (a.Def.DismountAtHp > 0f ? a.Def.DismountAtHp : 0.5f);
+                        if (FlyTo(a, a.X, dropY, speed, dt)) { a.AirPhase = 1; a.DismountTimer = 0f; a.Dismounting = true; }
+                        return;
+                    }
+                    if (a.AirPhase == 1)
+                    {
+                        a.DismountTimer -= dt;
+                        while (a.DismountTimer <= 0f && a.Passengers > 0)
+                        {
+                            Dismount(a);
+                            a.DismountTimer += Math.Max(0.05f, a.Def.DismountIntervalS);
+                        }
+                        if (a.Passengers == 0) { a.AirPhase = 2; a.Dismounting = false; }
+                        return;
+                    }
+                    if (FlyTo(a, a.X, 0f, speed, dt)) Leave(a);
+                    return;
+                }
+                default:   // spotter and anything else: fly to a spot, loiter, fly out
+                {
+                    if (a.AirPhase == 0) { if (FlyTo(a, a.X, grid.Height * 0.4f, speed, dt)) a.AirPhase = 1; return; }
+                    if (a.AirPhase == 1) { a.AirTimer += dt; if (a.AirTimer >= rules.AviationLoiterS) a.AirPhase = 2; return; }
+                    if (FlyTo(a, a.X, 0f, speed, dt)) Leave(a);
+                    return;
+                }
+            }
+        }
+
+        // Moves towards (x, y); true on arrival.
+        static bool FlyTo(Attacker a, float x, float y, float speed, float dt)
+        {
+            float dx = x - a.X, dy = y - a.Y, dist = (float)Math.Sqrt(dx * dx + dy * dy), step = speed * dt;
+            if (dist <= step || dist < 1e-3f) { a.X = x; a.Y = y; return true; }
+            a.X += dx / dist * step;
+            a.Y += dy / dist * step;
+            return false;
+        }
+
+        Defender NearestSeenDefender(Attacker a)
+        {
+            Defender best = null;
+            float bestD = float.MaxValue;
+            float sight = SightOf(a.Def);
+            foreach (var d in defenders)
+            {
+                if (!d.Alive || d.Def.Type == "aviation") continue;
+                float dx = d.X - a.X, dy = d.Y - a.Y, dist = dx * dx + dy * dy;
+                if (d.SeenChance <= 0f && Seen(a.X, a.Y, sight, d.X, d.Y) <= 0f) continue;
+                if (dist < bestD) { bestD = dist; best = d; }
+            }
+            return best;
+        }
+
+        // An aircraft leaves the field without crossing the line and without being destroyed.
+        void Leave(Attacker a)
+        {
+            a.Crossed = true;   // not counted as killed
+            a.Alive = false;
+        }
+
+        void CrossLine(Attacker a)
+        {
+            float dmg = a.Def.LineDamage;
+            if (a.Passengers > 0 && units.TryGet(a.Def.CarriesUnit, out var p)) dmg += a.Passengers * p.LineDamage;
+            LineDamage += dmg;
+            var st = StatsFor(a.Def);
+            st.Crossed++;
+            st.LineDamage += dmg;
+            a.Crossed = true;
+            a.Alive = false;
+        }
+
+        // An enemy warhead (FPV) bursting among our defenders. From above: cover does not help.
+        void ExplodeOnDefenders(Attacker shooter, float cx, float cy, float baseDamage, float radius)
+        {
+            foreach (var d in defenders)
+            {
+                if (!d.Alive || d.Def.Type == "aviation") continue;
+                float dx = d.X - cx, dy = d.Y - cy;
+                float dist = Math.Max(0f, (float)Math.Sqrt(dx * dx + dy * dy) - HitRadiusOf(d.Def));
+                float scale = BlastFalloff(dist, radius);
+                if (scale <= 0f) continue;
+                Hit(shooter, d, baseDamage * ArmourFactor(shooter.Def.DamageType, d.Def.Armour) * scale);
+            }
+        }
+
         void Dismount(Attacker carrier)
         {
             carrier.Passengers--;
@@ -524,6 +648,18 @@ namespace Treeline.Sim
             {
                 var sp = spawns[nextSpawn++];
                 var def = units.Get(sp.UnitId);
+                if (def.Type == "aviation")
+                {
+                    float x = grid.SpawnXs != null && grid.SpawnXs.Length > 0
+                        ? grid.SpawnXs[rng.Next(grid.SpawnXs.Length)] : (float)rng.NextDouble() * grid.Width;
+                    attackers.Add(new Attacker
+                    {
+                        Id = nextId++, Def = def, Hp = def.Hp, Class = UnitClass.Infantry, Wave = sp.Wave, X = x, Y = 0.5f,
+                        Passengers = def.CarriesCount > 0 && units.TryGet(def.CarriesUnit, out _) ? def.CarriesCount : 0,
+                    });
+                    StatsFor(def).Spawned++;
+                    continue;
+                }
                 var route = RouteFor(def, sp.Wave);
                 if (route.Starts.Length == 0) continue;   // no way across this field for this unit
                 int start = route.Starts[rng.Next(route.Starts.Length)];
@@ -904,6 +1040,12 @@ namespace Treeline.Sim
             float dist = (float)Math.Sqrt((target.X - s.X) * (target.X - s.X) + (target.Y - s.Y) * (target.Y - s.Y));
             Lead(target, dist / speed, out float px, out float py);
             BlindAim(aimSeen, ref px, ref py);
+            if (target is Attacker air && air.Airborne)
+            {
+                // Aircraft weave and change speed: the shooter's aim point is off by about aircraft_evasion_m.
+                px += (float)Gauss() * rules.AircraftEvasionM;
+                py += (float)Gauss() * rules.AircraftEvasionM;
+            }
             float sigma = Ballistics.AngularSpread(w.Accuracy, w.RangeM);
             if (moving && w.MoveAccuracyMult > 0f) sigma /= w.MoveAccuracyMult;
             double ang = Math.Atan2(py - s.Y, px - s.X) + Gauss() * sigma;

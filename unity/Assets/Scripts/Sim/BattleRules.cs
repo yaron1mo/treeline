@@ -29,6 +29,10 @@ namespace Treeline.Sim
         public float BlindAimErrorM = 4f;
         /// <summary>Area fire with spread_m: share of rounds landing in each equally wide ring, inner to outer.</summary>
         public float[] SpreadRingShares = { 0.4f, 0.35f, 0.25f };
+        /// <summary>How long an enemy spotter (recon UAV) stays over its spot before flying out.</summary>
+        public float AviationLoiterS = 60f;
+        /// <summary>Aircraft weave: a shooter aiming at one is off by about this much (standard deviation).</summary>
+        public float AircraftEvasionM = 1f;
 
         public static BattleRules Parse(string csv)
         {
@@ -52,6 +56,8 @@ namespace Treeline.Sim
             r.DroneAltitudeM = Num(values, "drone_altitude_m", r.DroneAltitudeM);
             r.GuidedMissM = Num(values, "guided_miss_m", r.GuidedMissM);
             r.BlindAimErrorM = Num(values, "blind_aim_error_m", r.BlindAimErrorM);
+            r.AviationLoiterS = Num(values, "aviation_loiter_s", r.AviationLoiterS);
+            r.AircraftEvasionM = Num(values, "aircraft_evasion_m", r.AircraftEvasionM);
             if (values.TryGetValue("spread_ring_shares", out var rings) && rings.Length > 0)
             {
                 var parts = rings.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
