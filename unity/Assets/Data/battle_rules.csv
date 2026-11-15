@@ -9,3 +9,7 @@ route_choice_slack,0.1,Proposal. With threats known attackers pick a random entr
 dismount_blast_kills,TRUE,Proposal. A carrier destroyed while troops are still inside or getting out kills attacking troops within its blast_radius_m.
 direct_fire_needs_own_sight,FALSE,"Decided by Yaroslav 2026-11-06: shared vision for both sides; every unit fires at what any friendly unit sees, out to its own range_m. TRUE would limit direct fire to what the shooter itself sees (kept as a switch for tests)."
 drone_lost_with_operator,TRUE,Proposal. Drones in the air are lost when their operator dies.
+lead_error,0.15,"Proposal. Shooters lead a moving target by its speed times the round's flight time, misjudging the speed by this share (standard deviation)."
+drone_altitude_m,30,Proposal. Height bomber drones drop grenades from (the grenade falls drone_altitude_m / projectile_speed_mps seconds).
+guided_miss_m,6,"Proposal. When guidance fails (ATGM, FPV: chance 1 - accuracy) the round lands 0.5 to 1.5 times this far from the target."
+blind_aim_error_m,4,"Proposal. A target that is only partly seen (seen chance below 1, e.g. in a forest belt): with chance 1 - seen the shooter aims at a guess this far off (standard deviation), so concealment still protects at close range."

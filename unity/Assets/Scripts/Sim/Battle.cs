@@ -26,6 +26,10 @@ namespace Treeline.Sim
         /// <summary>How far along <see cref="PathCells"/> it is.</summary>
         public int PathPosition => PathIndex;
 
+        /// <summary>Velocity over the last step, m/s (shooters lead moving targets by it).</summary>
+        public float VX, VY;
+        internal float PrevX, PrevY;
+
         public int ShotsFired;         // renderer can detect new shots by a rising counter
         public float LastShotAt = -1f; // simulation time of most recent shot
         internal float ShotCooldown;  // seconds until the next shot
@@ -65,6 +69,37 @@ namespace Treeline.Sim
         public int AmmoLeft;
         public bool Alive = true;
         internal float DropTimer;
+    }
+
+    public enum ProjectileKind { Shell, Missile }
+
+    /// <summary>A round in the air for longer than a bullet: a mortar shell or bomber grenade falling to a fixed point
+    /// (Shell), or a guided missile following its target (Missile). X, Y is where it is now, for drawing.</summary>
+    public sealed class Projectile
+    {
+        public int Id;
+        public ProjectileKind Kind;
+        public Unit Shooter;
+        public UnitDef Weapon;
+        public float X, Y;
+        public float FromX, FromY;
+        /// <summary>Shell: where it lands. Missile: where it is heading.</summary>
+        public float ToX, ToY;
+        public float LaunchedAt, LandsAt;
+        public Unit Target;
+        public float Damage;
+        public bool FromAbove;
+        public bool Alive = true;
+    }
+
+    /// <summary>One bullet or tank round, for drawing: from the shooter to where it hit or went. It is worked out at
+    /// once (Ballistics.cs); the hit counts when the round arrives, ArrivesAt.</summary>
+    public struct ShotTrace
+    {
+        public int ShooterId;
+        public float FromX, FromY, ToX, ToY;
+        public float FiredAt, ArrivesAt;
+        public bool Hit;
     }
 
     /// <summary>How an attacker chose its route (rules/attackers.json, pathfinding).</summary>
@@ -154,6 +189,11 @@ namespace Treeline.Sim
         readonly List<Defender> defenders = new List<Defender>();
         readonly List<Attacker> attackers = new List<Attacker>();
         readonly List<Drone> drones = new List<Drone>();
+        readonly List<Projectile> projectiles = new List<Projectile>();
+        readonly List<ShotTrace> traces = new List<ShotTrace>();
+        struct PendingHit { public float Due; public Unit Shooter, Victim; public float Damage; }
+        readonly List<PendingHit> pendingHits = new List<PendingHit>();
+        const float TraceKeepS = 1.5f;
         readonly List<Spawn> spawns = new List<Spawn>();
         readonly List<Sighting> sightings = new List<Sighting>();
         readonly Dictionary<string, Route> routes = new Dictionary<string, Route>();
@@ -170,6 +210,10 @@ namespace Treeline.Sim
         public IReadOnlyList<Attacker> Attackers => attackers;
         /// <summary>Drones in the air now.</summary>
         public IReadOnlyList<Drone> Drones => drones;
+        /// <summary>Shells, grenades and missiles in the air now.</summary>
+        public IReadOnlyList<Projectile> Projectiles => projectiles;
+        /// <summary>Bullets and tank rounds of the last moments, for drawing.</summary>
+        public IReadOnlyList<ShotTrace> ShotTraces => traces;
         public float RunSpeedMps { get; }
         public BattleOutcome Outcome { get; private set; } = BattleOutcome.Ongoing;
         public float RoundTime { get; private set; }
@@ -343,8 +387,15 @@ namespace Treeline.Sim
             RoundTime += dt;
 
             SpawnDue();
+            foreach (var u in attackers) { u.PrevX = u.X; u.PrevY = u.Y; }
+            foreach (var u in defenders) { u.PrevX = u.X; u.PrevY = u.Y; }
             MoveDefenders(dt);
             MoveAttackers(dt);
+            if (dt > 0f)
+            {
+                foreach (var u in attackers) { u.VX = (u.X - u.PrevX) / dt; u.VY = (u.Y - u.PrevY) / dt; }
+                foreach (var u in defenders) { u.VX = (u.X - u.PrevX) / dt; u.VY = (u.Y - u.PrevY) / dt; }
+            }
 
             visionTimer += dt;
             if (visionTimer >= VisionInterval) { RefreshVision(); visionTimer = 0f; }
@@ -353,6 +404,9 @@ namespace Treeline.Sim
             LaunchDrones(dt);
             FlyDrones(dt);
             FireAttackers(dt);
+            FlyProjectiles(dt);
+            ApplyArrivedHits();
+            traces.RemoveAll(t => t.ArrivesAt < RoundTime - TraceKeepS);
             Cleanup();
             if (grid.Version != routesVersion) Reroute();
 
@@ -792,28 +846,215 @@ namespace Treeline.Sim
             }
         }
 
-        // One discrete shot. Accuracy and detection determine a seeded hit roll;
-        // armour and protection scale damage after a hit. No damage per frame.
-        // The projectile/animation can track Unit.ShotsFired and Unit.LastShotAt.
-        float ShotDamage(Unit shooter, Unit target, float aimSeen, bool moving)
+        // ---- shots (Ballistics.cs) -------------------------------------------------------------------------------
+        // A bullet or tank round is a line: aimed where the target will be when the round gets there, turned by a
+        // random angle from the weapon's spread, and it hits the first enemy it passes close enough to (target, a
+        // neighbour, someone behind). Worked out at once; the damage counts when the round arrives.
+
+        const float DefaultBulletMps = 800f, DefaultShellMps = 100f, DefaultMissileMps = 200f, DefaultGrenadeMps = 20f;
+
+        static float HitRadiusOf(UnitDef d)
         {
-            var weapon = shooter.Def;
-            float hitChance = weapon.Accuracy * aimSeen;
-            if (moving) hitChance *= weapon.MoveAccuracyMult;
-            var cls = ClassOf(weapon);
-            var cover = vision != null ? vision.CoverFor(shooter.X, shooter.Y, target.X, target.Y) : null;
-            if (cover != null) hitChance *= cover.CoverAcc[(int)cls];
-            hitChance = Math.Max(0f, Math.Min(1f, hitChance));
-            if (rng.NextDouble() >= hitChance) return 0f;
-            StatsFor(shooter.Def).ShotsHit++;
-            float damage = weapon.Damage * ArmourFactor(weapon.DamageType, target.Def.Armour);
-            if (cover != null) damage *= cover.CoverDmg[(int)cls];
-            if (vision != null)
+            if (d.HitRadiusM > 0f) return d.HitRadiusM;
+            switch (d.Type)
             {
-                var under = vision.ObstacleAt(target.X, target.Y);
-                if (under != null && cls != ShooterClass.Indirect) damage *= under.OnCoverMult;
+                case "vehicle": return 2.5f;
+                case "emplacement": return 1.5f;
+                case "aviation": return d.Subtype == "helicopter" ? 4f : 0.3f;
+                default: return Ballistics.ReferenceHitRadiusM;
             }
-            return damage;
+        }
+
+        double Gauss() => Ballistics.Gauss(rng);
+
+        // Where to aim so the round meets a moving target, misjudging its speed a little.
+        void Lead(Unit target, float flightS, out float x, out float y)
+        {
+            float judged = 1f + (float)Gauss() * rules.LeadError;
+            x = target.X + target.VX * flightS * judged;
+            y = target.Y + target.VY * flightS * judged;
+        }
+
+        // A target only half seen (forest belt, dusk): with chance 1 - seen the shooter does not really know where it
+        // is and aims at a guess around it.
+        void BlindAim(float seen, ref float x, ref float y)
+        {
+            if (rng.NextDouble() < seen) return;
+            x += (float)Gauss() * rules.BlindAimErrorM;
+            y += (float)Gauss() * rules.BlindAimErrorM;
+        }
+
+        // How far along the line from (sx, sy) in direction (ux, uy) the round meets u, or -1 if it passes by.
+        float AlongIfHit(float sx, float sy, float ux, float uy, float speed, float range, Unit u)
+        {
+            float dx0 = u.X - sx, dy0 = u.Y - sy;
+            float t = (float)Math.Sqrt(dx0 * dx0 + dy0 * dy0) / speed;
+            float wx = dx0 + u.VX * t, wy = dy0 + u.VY * t;   // where it will be when the round gets there
+            float along = wx * ux + wy * uy;
+            if (along <= 0f || along > range) return -1f;
+            float lateral = Math.Abs(wx * uy - wy * ux);
+            return lateral <= HitRadiusOf(u.Def) ? along : -1f;
+        }
+
+        void FireLine(Unit s, Unit target, float aimSeen, bool moving)
+        {
+            var w = s.Def;
+            float speed = w.ProjectileSpeedMps > 0f ? w.ProjectileSpeedMps : DefaultBulletMps;
+            float range = RangeOf(s);
+            float dist = (float)Math.Sqrt((target.X - s.X) * (target.X - s.X) + (target.Y - s.Y) * (target.Y - s.Y));
+            Lead(target, dist / speed, out float px, out float py);
+            BlindAim(aimSeen, ref px, ref py);
+            float sigma = Ballistics.AngularSpread(w.Accuracy, w.RangeM);
+            if (moving && w.MoveAccuracyMult > 0f) sigma /= w.MoveAccuracyMult;
+            double ang = Math.Atan2(py - s.Y, px - s.X) + Gauss() * sigma;
+            float ux = (float)Math.Cos(ang), uy = (float)Math.Sin(ang);
+
+            Unit victim = null;
+            float best = float.MaxValue;
+            if (s is Defender)
+            {
+                foreach (var a in attackers)
+                {
+                    if (!a.Alive || !CanTarget(w, a.Def)) continue;
+                    float along = AlongIfHit(s.X, s.Y, ux, uy, speed, range, a);
+                    if (along >= 0f && along < best) { best = along; victim = a; }
+                }
+            }
+            else
+            {
+                foreach (var d in defenders)
+                {
+                    if (!d.Alive || d.Def.Type == "aviation") continue;   // nothing of theirs shoots up yet
+                    float along = AlongIfHit(s.X, s.Y, ux, uy, speed, range, d);
+                    if (along >= 0f && along < best) { best = along; victim = d; }
+                }
+            }
+
+            float endAlong = victim != null ? best : Math.Min(range, dist + 30f);
+            float dmg = 0f;
+            if (victim != null)
+            {
+                var cls = ClassOf(w);
+                var cover = vision != null ? vision.CoverFor(s.X, s.Y, victim.X, victim.Y) : null;
+                if (cover != null && rng.NextDouble() >= cover.CoverAcc[(int)cls]) victim = null;   // stopped by the cover
+                else
+                {
+                    dmg = w.Damage * ArmourFactor(w.DamageType, victim.Def.Armour);
+                    if (cover != null) dmg *= cover.CoverDmg[(int)cls];
+                    var under = vision != null ? vision.ObstacleAt(victim.X, victim.Y) : null;
+                    if (under != null) dmg *= under.OnCoverMult;
+                }
+            }
+            float arrives = RoundTime + endAlong / speed;
+            traces.Add(new ShotTrace
+            {
+                ShooterId = s.Id, FromX = s.X, FromY = s.Y, ToX = s.X + ux * endAlong, ToY = s.Y + uy * endAlong,
+                FiredAt = RoundTime, ArrivesAt = arrives, Hit = victim != null
+            });
+            if (w.BlastRadiusM > 0f)
+            {
+                // An explosive round without guidance: it bursts where it ends.
+                projectiles.Add(new Projectile
+                {
+                    Id = nextId++, Kind = ProjectileKind.Shell, Shooter = s, Weapon = w, X = s.X, Y = s.Y,
+                    FromX = s.X, FromY = s.Y, ToX = s.X + ux * endAlong, ToY = s.Y + uy * endAlong,
+                    LaunchedAt = RoundTime, LandsAt = arrives, Damage = w.Damage
+                });
+                return;
+            }
+            if (victim != null && dmg > 0f)
+                pendingHits.Add(new PendingHit { Due = arrives, Shooter = s, Victim = victim, Damage = dmg });
+        }
+
+        // Mortar: the shell flies over everything to where the target will be, and lands with a spread that grows
+        // with distance; it bursts there, whoever is near.
+        void FireShell(Unit s, Unit target, float aimSeen)
+        {
+            var w = s.Def;
+            float speed = w.ProjectileSpeedMps > 0f ? w.ProjectileSpeedMps : DefaultShellMps;
+            float dist = (float)Math.Sqrt((target.X - s.X) * (target.X - s.X) + (target.Y - s.Y) * (target.Y - s.Y));
+            float flight = dist / speed;
+            Lead(target, flight, out float px, out float py);
+            BlindAim(aimSeen, ref px, ref py);
+            float dRef = Math.Max(1f, w.RangeM / 2f);
+            float sigma = Ballistics.GroundSpread(w.Accuracy, w.BlastRadiusM) * dist / dRef;
+            AddShell(s, w, s.X, s.Y, px + (float)Gauss() * sigma, py + (float)Gauss() * sigma, flight, w.Damage, false);
+        }
+
+        void AddShell(Unit s, UnitDef w, float fromX, float fromY, float toX, float toY, float flight, float damage, bool fromAbove)
+        {
+            projectiles.Add(new Projectile
+            {
+                Id = nextId++, Kind = ProjectileKind.Shell, Shooter = s, Weapon = w, X = fromX, Y = fromY,
+                FromX = fromX, FromY = fromY, ToX = toX, ToY = toY, LaunchedAt = RoundTime, LandsAt = RoundTime + flight,
+                Damage = damage, FromAbove = fromAbove
+            });
+        }
+
+        // ATGM: flies at its speed and follows the target; at the end the guidance works with chance accuracy.
+        void LaunchMissile(Unit s, Unit target)
+        {
+            projectiles.Add(new Projectile
+            {
+                Id = nextId++, Kind = ProjectileKind.Missile, Shooter = s, Weapon = s.Def, X = s.X, Y = s.Y,
+                FromX = s.X, FromY = s.Y, ToX = target.X, ToY = target.Y, LaunchedAt = RoundTime, Target = target,
+                Damage = s.Def.Damage
+            });
+        }
+
+        // Where a guided round ends: on the target, or a few metres off when the guidance fails.
+        void GuidedImpact(UnitDef w, float tx, float ty, out float x, out float y)
+        {
+            x = tx; y = ty;
+            if (rng.NextDouble() < w.Accuracy) return;
+            double a = rng.NextDouble() * 2.0 * Math.PI;
+            float r = rules.GuidedMissM * (0.5f + (float)rng.NextDouble());
+            x += (float)Math.Cos(a) * r;
+            y += (float)Math.Sin(a) * r;
+        }
+
+        void FlyProjectiles(float dt)
+        {
+            foreach (var p in projectiles)
+            {
+                if (!p.Alive) continue;
+                if (p.Kind == ProjectileKind.Shell)
+                {
+                    float f = p.LandsAt > p.LaunchedAt ? Math.Min(1f, (RoundTime - p.LaunchedAt) / (p.LandsAt - p.LaunchedAt)) : 1f;
+                    p.X = p.FromX + (p.ToX - p.FromX) * f;
+                    p.Y = p.FromY + (p.ToY - p.FromY) * f;
+                    if (RoundTime + 1e-4f < p.LandsAt) continue;
+                    Burst(p, p.ToX, p.ToY);
+                    continue;
+                }
+                // Missile: head for the target while it lives, then for where it was.
+                if (p.Target != null && p.Target.Alive) { p.ToX = p.Target.X; p.ToY = p.Target.Y; }
+                float speed = p.Weapon.ProjectileSpeedMps > 0f ? p.Weapon.ProjectileSpeedMps : DefaultMissileMps;
+                float dx = p.ToX - p.X, dy = p.ToY - p.Y, dist = (float)Math.Sqrt(dx * dx + dy * dy), step = speed * dt;
+                if (dist > step) { p.X += dx / dist * step; p.Y += dy / dist * step; continue; }
+                float ix = p.ToX, iy = p.ToY;
+                if (p.Target != null && p.Target.Alive) GuidedImpact(p.Weapon, p.ToX, p.ToY, out ix, out iy);
+                Burst(p, ix, iy);
+            }
+            projectiles.RemoveAll(p => !p.Alive);
+        }
+
+        void Burst(Projectile p, float x, float y)
+        {
+            p.X = x; p.Y = y; p.Alive = false;
+            if (p.Shooter is Defender) Explode(p.Shooter, x, y, p.Damage, p.Weapon.BlastRadiusM, p.FromAbove, p.Weapon);
+        }
+
+        void ApplyArrivedHits()
+        {
+            for (int i = 0; i < pendingHits.Count; i++)
+            {
+                var h = pendingHits[i];
+                if (h.Due > RoundTime + 1e-4f) continue;
+                if (h.Victim.Alive) { StatsFor(h.Shooter.Def).ShotsHit++; Hit(h.Shooter, h.Victim, h.Damage); }
+                pendingHits[i] = new PendingHit { Due = float.MinValue };
+            }
+            pendingHits.RemoveAll(h => h.Due == float.MinValue);
         }
 
         bool ReadyToShoot(Unit shooter, float dt)
@@ -863,14 +1104,15 @@ namespace Treeline.Sim
         }
 
         void Explode(Unit shooter, float cx, float cy, float baseDamage,
-            float radius, bool fromAbove)
+            float radius, bool fromAbove, UnitDef weapon = null)
         {
-            var weapon = shooter.Def;
+            weapon = weapon ?? shooter.Def;
             foreach (var a in attackers)
             {
                 if (!a.Alive) continue;
                 float dx = a.X - cx, dy = a.Y - cy;
-                float dist = (float)Math.Sqrt(dx * dx + dy * dy);
+                // Measured to its edge, not its centre: a shell landing on a tank's hull hits it in full.
+                float dist = Math.Max(0f, (float)Math.Sqrt(dx * dx + dy * dy) - HitRadiusOf(a.Def));
                 float scale = BlastFalloff(dist, radius);
                 if (scale <= 0f) continue;
                 float dmg = baseDamage * ArmourFactor(weapon.DamageType, a.Def.Armour) * scale;
@@ -913,15 +1155,9 @@ namespace Treeline.Sim
                 Record(d);
                 BeginShot(d);
                 float aim = AimAt(d, target, own);
-                if (d.Def.BlastRadiusM <= 0f)
-                {
-                    Hit(d, target, ShotDamage(d, target, aim, false));
-                    continue;
-                }
-                // One successful hit creates ONE blast. A miss does not damage other targets.
-                float centerX = target.X, centerY = target.Y;
-                if (ShotDamage(d, target, aim, false) <= 0f) continue;
-                Explode(d, centerX, centerY, d.Def.Damage, d.Def.BlastRadiusM, false);
+                if (d.Def.IndirectFire) FireShell(d, target, aim);
+                else if (d.Def.Guided) LaunchMissile(d, target);
+                else FireLine(d, target, aim, false);
             }
         }
 
@@ -952,7 +1188,7 @@ namespace Treeline.Sim
                 if (target != null)
                 {
                     BeginShot(a);
-                    Hit(a, target, ShotDamage(a, target, AimAt(a, target, own), moving));
+                    FireLine(a, target, AimAt(a, target, own), moving);
                 }
             }
         }
@@ -1129,9 +1365,10 @@ namespace Treeline.Sim
 
                 if (dr.Def.DropIntervalS <= 0f)
                 {
-                    // FPV: detonate once. Core damage is Damage * Accuracy; armour/falloff per victim.
-                    Explode(dr.Owner, dr.Target.X, dr.Target.Y,
-                        dr.Def.Damage * dr.Def.Accuracy, dr.Def.BlastRadiusM, true);
+                    // FPV: guided to the target; the guidance works with chance accuracy, otherwise it hits a few
+                    // metres off. Full damage at the point of impact, falling off to the blast radius.
+                    GuidedImpact(dr.Def, dr.Target.X, dr.Target.Y, out float fx, out float fy);
+                    Explode(dr.Owner, fx, fy, dr.Def.Damage, dr.Def.BlastRadiusM, true);
                     EndDroneFlight(dr); // starts 3-second reload AFTER the blast
                     continue;
                 }
@@ -1140,8 +1377,12 @@ namespace Treeline.Sim
                 dr.DropTimer -= dt;
                 if (dr.DropTimer > 0f) continue;
                 dr.DropTimer = dr.Def.DropIntervalS;
-                Explode(dr.Owner, dr.Target.X, dr.Target.Y,
-                    dr.Def.Damage * dr.Def.Accuracy, dr.Def.BlastRadiusM, true);
+                // The grenade falls from the drone's height: aimed where the target will be, landing with a spread.
+                float gSpeed = dr.Def.ProjectileSpeedMps > 0f ? dr.Def.ProjectileSpeedMps : DefaultGrenadeMps;
+                float fall = rules.DroneAltitudeM / gSpeed;
+                Lead(dr.Target, fall, out float gx, out float gy);
+                float gs = Ballistics.GroundSpread(dr.Def.Accuracy, dr.Def.BlastRadiusM);
+                AddShell(dr.Owner, dr.Def, dr.X, dr.Y, gx + (float)Gauss() * gs, gy + (float)Gauss() * gs, fall, dr.Def.Damage, true);
                 if (--dr.AmmoLeft <= 0) EndDroneFlight(dr);
             }
             drones.RemoveAll(d => !d.Alive);

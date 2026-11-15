@@ -19,6 +19,14 @@ namespace Treeline.Sim
         public bool DirectFireNeedsOwnSight;
         /// <summary>Drones in the air are lost when their operator dies.</summary>
         public bool DroneLostWithOperator = true;
+        /// <summary>How wrongly a shooter judges a moving target's speed when leading it (standard deviation, share of the speed).</summary>
+        public float LeadError = 0.15f;
+        /// <summary>Height bomber drones drop their grenades from.</summary>
+        public float DroneAltitudeM = 30f;
+        /// <summary>When guidance fails, the round lands about this far from the target (0.5x to 1.5x).</summary>
+        public float GuidedMissM = 6f;
+        /// <summary>A shooter who does not clearly see its target (seen chance below 1) aims this far off, on average.</summary>
+        public float BlindAimErrorM = 4f;
 
         public static BattleRules Parse(string csv)
         {
@@ -38,6 +46,10 @@ namespace Treeline.Sim
             r.DismountBlastKills = Flag(values, "dismount_blast_kills", r.DismountBlastKills);
             r.DirectFireNeedsOwnSight = Flag(values, "direct_fire_needs_own_sight", r.DirectFireNeedsOwnSight);
             r.DroneLostWithOperator = Flag(values, "drone_lost_with_operator", r.DroneLostWithOperator);
+            r.LeadError = Num(values, "lead_error", r.LeadError);
+            r.DroneAltitudeM = Num(values, "drone_altitude_m", r.DroneAltitudeM);
+            r.GuidedMissM = Num(values, "guided_miss_m", r.GuidedMissM);
+            r.BlindAimErrorM = Num(values, "blind_aim_error_m", r.BlindAimErrorM);
             return r;
         }
 

@@ -79,3 +79,20 @@ Three separate rows for now; how they become upgrade branches of one operator is
 **Rules of the drone:** it flies straight (ignores terrain) and follows its target; if the target dies on the way it picks the next one, or is lost when there is none. Armour counts, cover does not (it comes from above). Drones in the air are lost when the operator dies (`battle_rules.drone_lost_with_operator`).
 
 **Not built yet:** enemy aviation and our air defence use; automatic enemy shooting-down of our drones (the `TryDestroyDrone` interception hook exists, but no hostile AA behavior is implemented yet); recon view from above (it still sees through obstacles the same way ground units do); operators giving their position away (attackers do not yet route around them).
+
+## Shots, spread and rounds in flight (2026-11-15, Yaroslav)
+
+Code: `unity/Assets/Scripts/Sim/Ballistics.cs` and the firing part of `Battle.cs`. Replaces the hit roll ("accuracy = chance the shot counts, a hit blast is always centred on the target").
+
+**What `accuracy` means now**
+- Bullets and tank rounds: chance to hit a standing soldier (0.5 m) at half the weapon's `range_m`, shooter standing still. The code turns it into an angular spread. Further away, against a smaller or moving target, or firing on the move (`move_accuracy_mult`) the chance falls by itself; against a vehicle (bigger `hit_radius_m`) it rises. Blurred sight (forest belt) widens the spread.
+- Mortar (`behaviour` indirect_fire) and bomber grenades: chance that a round lands within `blast_radius_m` of the aim point (mortar: at half range, wider further out; grenades: always, they fall from `drone_altitude_m`).
+- Guided (`guided` TRUE: ATGM; and the FPV): chance the guidance works. If not, the round lands `guided_miss_m` x 0.5-1.5 away and only its blast may still reach the target.
+
+**A bullet is a line, worked out at once.** Aimed where the target will be when the round gets there (its speed times the flight time, misjudged by `lead_error`), turned by a random angle from the spread, and it hits the first enemy it passes within `hit_radius_m` of: the target, a neighbour, or someone behind it. So an inaccurate machine gun still does well against a crowd. Cover on the way stops it with the obstacle's cover chance. The damage counts when the round arrives (`distance / projectile_speed_mps`). `Battle.ShotTraces` lists every round for drawing (from, to, fired, arrives, hit).
+
+**Rounds that fly for seconds are objects** (`Battle.Projectiles`): mortar shells (100 m/s: 3 s at 300 m), bomber grenades (30 m at 20 m/s: 1.5 s), ATGM missiles (200 m/s, follow the target). A shell lands where it was aimed, wherever the target has gone; it bursts there.
+
+**Blasts** are measured to the victim's edge (`hit_radius_m`), not its centre: full damage on the hull of a tank, falling off to zero at `blast_radius_m` beyond it.
+
+New columns: `projectile_speed_mps`, `guided`, `hit_radius_m` (units); `lead_error`, `drone_altitude_m`, `guided_miss_m` (battle_rules). All values proposals.

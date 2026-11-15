@@ -23,6 +23,15 @@ namespace Treeline.Sim
         /// <summary>Drone operators: their damage and attack_speed belong to the drones they launch, not to a gun of
         /// their own, so they never fire directly and are not a direct-fire threat on attackers' routes.</summary>
         public bool LaunchesDrones => DroneAmmo > 0;
+        // Shots (Ballistics.cs).
+        /// <summary>How fast its rounds fly; 0 = the default for its kind of fire.</summary>
+        public float ProjectileSpeedMps;
+        /// <summary>A guided missile (ATGM): flies to the target and follows it; accuracy is the chance the guidance works.</summary>
+        public bool Guided;
+        /// <summary>How big it is as a target: a round passing this close hits it. 0 = the default for its type.</summary>
+        public float HitRadiusM;
+        /// <summary>Indirect fire: shells fly over everything and land with a spread around the aim point.</summary>
+        public bool IndirectFire => Behaviour == "indirect_fire";
         /// <summary>Attackers: what kind of target this is for a drone operator (aviation, fast, heavy, infantry).</summary>
         public string TargetClass = "";
         /// <summary>Operators: target classes in order of priority; a class that is not listed is never chosen.</summary>
@@ -97,6 +106,9 @@ namespace Treeline.Sim
                     SightRangeM = Num(col, r, "sight_range_m"),
                     RangeM = Num(col, r, "range_m"),
                     BuildCost = Num(col, r, "build_cost"),
+                    ProjectileSpeedMps = Num(col, r, "projectile_speed_mps"),
+                    Guided = Cell(col, r, "guided").Equals("TRUE", StringComparison.OrdinalIgnoreCase),
+                    HitRadiusM = Num(col, r, "hit_radius_m"),
                 };
                 if (table.byId.ContainsKey(id)) throw new FormatException("Unit '" + id + "' appears twice");
                 table.byId[id] = u;
