@@ -32,7 +32,7 @@ static class Matchups
         "buggy", "motorbike", "van", "fpv", "helicopter" };
     static readonly string[] Positions = { "open", "trench_belt" };
     static readonly int[] Counts = { 1, 2, 3, 4, 5 };
-    const float GapS = 2f;
+    static readonly float GapS = string.IsNullOrEmpty(Environment.GetEnvironmentVariable("MATCHUPS_GAP")) ? 2f : float.Parse(Environment.GetEnvironmentVariable("MATCHUPS_GAP"), CultureInfo.InvariantCulture);
     static bool NeedsRecon(string d) => d == "mortar" || d == "anti_tank" || d == "air_defence" || d == "fpv_operator" || d == "bomber_operator";
 
     static Pt[] Box(float x0, float y0, float x1, float y1) =>
@@ -72,6 +72,8 @@ static class Matchups
         foreach (var def in Defenders)
         if (string.IsNullOrEmpty(only) || Array.IndexOf(only.Split(','), def) >= 0)
         foreach (var veh in Vehicles)
+        if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("MATCHUPS_ATTACKERS")) ||
+            Array.IndexOf(Environment.GetEnvironmentVariable("MATCHUPS_ATTACKERS").Split(','), veh) >= 0)
         foreach (var count in Counts)
         foreach (var pos in Positions)
         foreach (var recon in new[] { NeedsRecon(def) })
