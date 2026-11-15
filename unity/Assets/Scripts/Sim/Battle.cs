@@ -976,6 +976,13 @@ namespace Treeline.Sim
             float flight = dist / speed;
             Lead(target, flight, out float px, out float py);
             BlindAim(aimSeen, ref px, ref py);
+            if (w.SpreadM > 0f)
+            {
+                // A zone around the aim point, rings with their own share of rounds (Yaroslav, 2026-11-15).
+                Ballistics.SampleZone(rng, w.SpreadM, rules.SpreadRingShares, out float zx, out float zy);
+                AddShell(s, w, s.X, s.Y, px + zx, py + zy, flight, w.Damage, false);
+                return;
+            }
             float dRef = Math.Max(1f, w.RangeM / 2f);
             float sigma = Ballistics.GroundSpread(w.Accuracy, w.BlastRadiusM) * dist / dRef;
             AddShell(s, w, s.X, s.Y, px + (float)Gauss() * sigma, py + (float)Gauss() * sigma, flight, w.Damage, false);

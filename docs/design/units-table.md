@@ -96,3 +96,5 @@ Code: `unity/Assets/Scripts/Sim/Ballistics.cs` and the firing part of `Battle.cs
 **Blasts** are measured to the victim's edge (`hit_radius_m`), not its centre: full damage on the hull of a tank, falling off to zero at `blast_radius_m` beyond it.
 
 New columns: `projectile_speed_mps`, `guided`, `hit_radius_m` (units); `lead_error`, `drone_altitude_m`, `guided_miss_m` (battle_rules). All values proposals.
+
+**Mortar zone (2026-11-15, Yaroslav).** A weapon with `spread_m` ignores `accuracy` for where its rounds land: each lands in a zone of that radius around the aim point (where the target will be), in equally wide rings with the shares in `battle_rules.spread_ring_shares` (mortar: 35 m, 40% in the inner 0-11.7 m, 35% in 11.7-23.3 m, 25% in 23.3-35 m), uniform inside a ring. Low accuracy, but every round still bursts and its blast (10 m) catches whoever is near. `explosive` against armour lowered (medium 0.6 → 0.2, high 0.35 → 0.05): a shell barely scratches a tank; grenades likewise.

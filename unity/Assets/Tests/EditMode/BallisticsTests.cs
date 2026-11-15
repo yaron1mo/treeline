@@ -158,5 +158,22 @@ namespace Treeline.Tests
             Assert.Greater(before, 0, "it fired while the tank was further away");
             Assert.IsFalse(firedClose, "no shell at a target within 55 m");
         }
+
+        [Test]
+        public void AZoneSpread_PutsTheRingSharesOfRoundsInEachRing()
+        {
+            var rng = new System.Random(7);
+            var shares = new[] { 0.4f, 0.35f, 0.25f };
+            int[] count = new int[3];
+            const int N = 20000;
+            for (int i = 0; i < N; i++)
+            {
+                Ballistics.SampleZone(rng, 30f, shares, out float dx, out float dy);
+                float r = (float)System.Math.Sqrt(dx * dx + dy * dy);
+                Assert.LessOrEqual(r, 30.001f);
+                count[System.Math.Min(2, (int)(r / 10f))]++;
+            }
+            for (int k = 0; k < 3; k++) Assert.AreEqual(shares[k], (float)count[k] / N, 0.015f, "ring " + k);
+        }
     }
 }

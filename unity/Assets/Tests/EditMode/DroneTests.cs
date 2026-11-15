@@ -175,8 +175,10 @@ namespace Treeline.Tests
             b.QueueWave("old_tank", 1, 0f, 1f);
             b.StartRound();
             Run(b, 60f);
-            // 25 x 0.5 x 0.6 (medium armour) = 7.5 per grenade, six grenades.
-            Assert.IsTrue(b.Stats["old_tank"].DamageTaken >= 45f - 1e-2f, "tank took " + b.Stats["old_tank"].DamageTaken);
+            // Six grenades of 25 x 0.2 (explosive vs medium armour) = at most 5 each; they land with a spread, so
+            // most but not all hit the hull in full. A scratch, as intended (2026-11-15).
+            float took = b.Stats["old_tank"].DamageTaken;
+            Assert.IsTrue(took > 15f && took <= 30f + 1e-3f, "tank took " + took);
         }
 
         [Test]

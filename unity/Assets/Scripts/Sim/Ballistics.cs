@@ -10,7 +10,8 @@ namespace Treeline.Sim
     ///   <see cref="ReferenceHitRadiusM"/>) at half the weapon's range, standing still. From it comes an angular spread;
     ///   further away, against smaller or moving targets, or while moving yourself, the chance falls by itself.
     /// - area fire (mortar shells, bomber grenades): the chance that a round lands within its blast radius of the aim
-    ///   point (mortar: at half its range; grenades: always, they fall from the same height).
+    ///   point (mortar: at half its range; grenades: always, they fall from the same height). A weapon with spread_m
+    ///   ignores accuracy: its rounds land in a zone of that radius, by rings (battle_rules spread_ring_shares).
     /// - guided (ATGM, FPV): the chance the guidance works; if not, the round lands a few metres off.
     /// </summary>
     public static class Ballistics
@@ -53,6 +54,30 @@ namespace Treeline.Sim
         {
             float r = radiusM > 0f ? radiusM : ReferenceHitRadiusM;
             return (float)(r / Math.Sqrt(-2.0 * Math.Log(1.0 - Clamp(accuracy))));
+        }
+
+        /// <summary>
+        /// Where an area round lands within a zone of radius <paramref name="radiusM"/> around the aim point, split into
+        /// equally wide rings (inner to outer) with the given shares of rounds; uniform inside a ring. Returns the offset.
+        /// </summary>
+        public static void SampleZone(Random rng, float radiusM, float[] ringShares, out float dx, out float dy)
+        {
+            int n = ringShares != null && ringShares.Length > 0 ? ringShares.Length : 1;
+            float total = 0f;
+            for (int i = 0; i < n; i++) total += ringShares != null && ringShares.Length > 0 ? ringShares[i] : 1f;
+            double pick = rng.NextDouble() * total;
+            int ring = n - 1;
+            for (int i = 0; i < n; i++)
+            {
+                float share = ringShares != null && ringShares.Length > 0 ? ringShares[i] : 1f;
+                if (pick < share) { ring = i; break; }
+                pick -= share;
+            }
+            double r0 = radiusM * ring / n, r1 = radiusM * (ring + 1) / n;
+            double r = Math.Sqrt(rng.NextDouble() * (r1 * r1 - r0 * r0) + r0 * r0);   // uniform over the ring's area
+            double a = rng.NextDouble() * 2.0 * Math.PI;
+            dx = (float)(Math.Cos(a) * r);
+            dy = (float)(Math.Sin(a) * r);
         }
 
         /// <summary>Error function (Abramowitz and Stegun 7.1.26).</summary>

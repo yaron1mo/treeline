@@ -27,6 +27,8 @@ namespace Treeline.Sim
         public float GuidedMissM = 6f;
         /// <summary>A shooter who does not clearly see its target (seen chance below 1) aims this far off, on average.</summary>
         public float BlindAimErrorM = 4f;
+        /// <summary>Area fire with spread_m: share of rounds landing in each equally wide ring, inner to outer.</summary>
+        public float[] SpreadRingShares = { 0.4f, 0.35f, 0.25f };
 
         public static BattleRules Parse(string csv)
         {
@@ -50,6 +52,12 @@ namespace Treeline.Sim
             r.DroneAltitudeM = Num(values, "drone_altitude_m", r.DroneAltitudeM);
             r.GuidedMissM = Num(values, "guided_miss_m", r.GuidedMissM);
             r.BlindAimErrorM = Num(values, "blind_aim_error_m", r.BlindAimErrorM);
+            if (values.TryGetValue("spread_ring_shares", out var rings) && rings.Length > 0)
+            {
+                var parts = rings.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                r.SpreadRingShares = new float[parts.Length];
+                for (int i = 0; i < parts.Length; i++) r.SpreadRingShares[i] = float.Parse(parts[i], CultureInfo.InvariantCulture);
+            }
             return r;
         }
 

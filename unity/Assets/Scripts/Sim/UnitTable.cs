@@ -32,6 +32,9 @@ namespace Treeline.Sim
         public float HitRadiusM;
         /// <summary>Cannot fire at anything closer than this (mortar).</summary>
         public float MinRangeM;
+        /// <summary>Area fire: rounds land in a zone of this radius around the aim point (rings: battle_rules
+        /// spread_ring_shares). 0 = spread from accuracy instead.</summary>
+        public float SpreadM;
         /// <summary>Indirect fire: shells fly over everything and land with a spread around the aim point.</summary>
         public bool IndirectFire => Behaviour == "indirect_fire";
         /// <summary>Attackers: what kind of target this is for a drone operator (aviation, fast, heavy, infantry).</summary>
@@ -112,6 +115,7 @@ namespace Treeline.Sim
                     Guided = Cell(col, r, "guided").Equals("TRUE", StringComparison.OrdinalIgnoreCase),
                     HitRadiusM = Num(col, r, "hit_radius_m"),
                     MinRangeM = Num(col, r, "min_range_m"),
+                    SpreadM = Num(col, r, "spread_m"),
                 };
                 if (table.byId.ContainsKey(id)) throw new FormatException("Unit '" + id + "' appears twice");
                 table.byId[id] = u;

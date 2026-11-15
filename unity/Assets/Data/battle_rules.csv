@@ -13,3 +13,4 @@ lead_error,0.15,"Proposal. Shooters lead a moving target by its speed times the 
 drone_altitude_m,30,Proposal. Height bomber drones drop grenades from (the grenade falls drone_altitude_m / projectile_speed_mps seconds).
 guided_miss_m,6,"Proposal. When guidance fails (ATGM, FPV: chance 1 - accuracy) the round lands 0.5 to 1.5 times this far from the target."
 blind_aim_error_m,4,"Proposal. A target that is only partly seen (seen chance below 1, e.g. in a forest belt): with chance 1 - seen the shooter aims at a guess this far off (standard deviation), so concealment still protects at close range."
+spread_ring_shares,0.4 0.35 0.25,"Proposal (Yaroslav: a 30-40 m zone with rings). Area fire with spread_m (mortar): share of rounds landing in each equally wide ring of the zone, inner to outer; uniform inside a ring."
