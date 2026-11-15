@@ -2,7 +2,7 @@
 // Compile: mcs -langversion:latest -out:matchups.exe unity/Assets/Scripts/Sim/*.cs tools/balance/Matchups.cs
 // Run:     mono matchups.exe <out.csv> <repo root>
 // Same field as ArmourHidden.cs; positions: open (25 m beside the route) and trench_belt (a trench inside a forest belt,
-// same spot). 1 to 5 attackers of one type, GapS apart. The mortar, the anti-tank team and the
+// same spot). 1 to 5 attackers of one type, GapS apart (default 0.3 s: a group arriving together; Yaroslav, 2026-11-15). The mortar, the anti-tank team and the
 // drone operators always get a recon drone over the approach (Yaroslav: recon is their base condition); the others
 // fight alone. Columns: killed = how many of the attackers were destroyed (a carrier or helicopter: the vehicle itself);
 // line_damage = what reached the rear edge (troops let out count).
@@ -32,7 +32,7 @@ static class Matchups
         "buggy", "motorbike", "van", "fpv", "helicopter" };
     static readonly string[] Positions = { "open", "trench_belt" };
     static readonly int[] Counts = { 1, 2, 3, 4, 5 };
-    static readonly float GapS = string.IsNullOrEmpty(Environment.GetEnvironmentVariable("MATCHUPS_GAP")) ? 2f : float.Parse(Environment.GetEnvironmentVariable("MATCHUPS_GAP"), CultureInfo.InvariantCulture);
+    static readonly float GapS = string.IsNullOrEmpty(Environment.GetEnvironmentVariable("MATCHUPS_GAP")) ? 0.3f : float.Parse(Environment.GetEnvironmentVariable("MATCHUPS_GAP"), CultureInfo.InvariantCulture);
     static bool NeedsRecon(string d) => d == "mortar" || d == "anti_tank" || d == "air_defence" || d == "fpv_operator" || d == "bomber_operator";
 
     static Pt[] Box(float x0, float y0, float x1, float y1) =>
