@@ -1,5 +1,6 @@
 # Change log
 
+- 2026-11-15 — [claude] balance — Matrix rerun with group attacks (0.3 s apart) and the new sights: `docs/balance/2026-11-15-matrix-groups/`, Sheet tab `balance_1v1` replaced. New `tools/balance/summarize_matchups.py` makes the summary and the Sheet grid.
 - 2026-11-15 — [claude] data/balance — Yaroslav: special forces sight 40 → 50, sniper sight 70 → 65 (Sheet and CSV); machine gunner HP stays 20; no aim jitter. `Matchups.cs` default gap between attackers 2 s → 0.3 s (attacks arrive as a group).
 - 2026-11-15 — [claude] tools — `Matchups.cs`: environment overrides `MATCHUPS_GAP` (seconds between attackers) and `MATCHUPS_ATTACKERS` (subset), for quick checks (groups 0.3 s apart; FPV reload/damage variants). No data changed.
 - 2026-11-15 — [claude] sim/balance — Trench inside a forest belt: `VisionMap` keeps cover-only objects (trench) in their own layer, so a trench dug inside a belt keeps its cover while the belt still hides (test `ATrenchInsideAForestBelt_...`; 68 pass). `Matchups.cs` now runs 1 to 5 attackers of each type against each defender, open and trench+belt (48,000 runs); results in `docs/balance/2026-11-15-matrix/` and on the Sheet, new tab `balance_1v1`.
