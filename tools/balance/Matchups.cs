@@ -1,9 +1,10 @@
 // Every defender against every attacker, 1 v 1, in the open and hidden (Yaroslav, 2026-11-15): the full matrix.
 // Compile: mcs -langversion:latest -out:matchups.exe unity/Assets/Scripts/Sim/*.cs tools/balance/Matchups.cs
 // Run:     mono matchups.exe <out.csv> <repo root>
-// Same field and positions as ArmourHidden.cs (route and rock left out). The mortar, the anti-tank team and the
+// Same field as ArmourHidden.cs; positions: open (25 m beside the route) and trench_belt (a trench inside a forest belt,
+// same spot). 1 to 5 attackers of one type, GapS apart. The mortar, the anti-tank team and the
 // drone operators always get a recon drone over the approach (Yaroslav: recon is their base condition); the others
-// fight alone. Columns: stopped = the attacker was destroyed (a carrier or helicopter: the vehicle itself);
+// fight alone. Columns: killed = how many of the attackers were destroyed (a carrier or helicopter: the vehicle itself);
 // line_damage = what reached the rear edge (troops let out count).
 //
 // Field 120 x 300 m, one entry point at x = 40, so the vehicle drives straight down x ~ 40 to the rear edge.
@@ -24,12 +25,14 @@ using Treeline.Sim;
 static class Matchups
 {
     const float Dt = 0.05f;
-    const int Seeds = 100;
+    const int Seeds = 50;
     static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
     static readonly string[] Defenders = { "rifle_squad", "machine_gun", "sniper", "mortar", "anti_tank", "air_defence", "fpv_operator", "bomber_operator" };
     static readonly string[] Vehicles = { "recruit", "regular", "special_forces", "old_tank", "modern_tank", "ifv", "mrap",
         "buggy", "motorbike", "van", "fpv", "helicopter" };
-    static readonly string[] Positions = { "open", "trench", "belt" };
+    static readonly string[] Positions = { "open", "trench_belt" };
+    static readonly int[] Counts = { 1, 2, 3, 4, 5 };
+    const float GapS = 2f;
     static bool NeedsRecon(string d) => d == "mortar" || d == "anti_tank" || d == "air_defence" || d == "fpv_operator" || d == "bomber_operator";
 
     static Pt[] Box(float x0, float y0, float x1, float y1) =>
@@ -45,6 +48,10 @@ static class Matchups
             case "route": dx = 40f; break;
             case "trench": f.Features.Add(new Feature { Type = "trench", Poly = Box(62f, 198f, 68f, 202f) }); break;
             case "belt": f.Features.Add(new Feature { Type = "belt", Poly = Box(59f, 150f, 71f, 250f) }); break;
+            case "trench_belt":   // a trench dug inside a forest belt along the route (Yaroslav, 2026-11-15)
+                f.Features.Add(new Feature { Type = "belt", Poly = Box(59f, 150f, 71f, 250f) });
+                f.Features.Add(new Feature { Type = "trench", Poly = Box(62f, 198f, 68f, 202f) });
+                break;
             case "rock": f.Features.Add(new Feature { Type = "rock", Poly = Box(62f, 194f, 68f, 197f) }); dy = 199f; break;
         }
         return f;
@@ -60,11 +67,12 @@ static class Matchups
         var armour = ArmourTable.Parse(File.ReadAllText(Path.Combine(data, "armour.csv")));
         var rules = BattleRules.Parse(File.ReadAllText(Path.Combine(data, "battle_rules.csv")));
 
-        var csv = new StringBuilder("defender,vehicle,position,recon,seed,stopped,defender_alive,vehicle_damage_pct,line_damage,seconds\n");
+        var csv = new StringBuilder("defender,vehicle,count,position,recon,seed,killed,defender_alive,line_damage,seconds\n");
         var only = Environment.GetEnvironmentVariable("MATCHUPS_DEFENDERS");   // e.g. "air_defence" to rerun one
         foreach (var def in Defenders)
         if (string.IsNullOrEmpty(only) || Array.IndexOf(only.Split(','), def) >= 0)
         foreach (var veh in Vehicles)
+        foreach (var count in Counts)
         foreach (var pos in Positions)
         foreach (var recon in new[] { NeedsRecon(def) })
         for (int seed = 1; seed <= Seeds; seed++)
@@ -74,18 +82,16 @@ static class Matchups
             if (!b.TryPlace(def, x, y, out var d, out var why)) throw new Exception(def + " at " + pos + ": " + why);
             if (recon && !b.TryPlace("recon_drone", 65f, 100f, out _, out why)) throw new Exception("recon: " + why);
             b.BeginWave();
-            b.QueueWave(veh, 1, 0f, 1f);
+            b.QueueWave(veh, count, 0f, GapS);
             b.StartRound();
             while (b.Outcome == BattleOutcome.Ongoing && b.RoundTime < 400f) b.Step(Dt);
             b.Stats.TryGetValue(veh, out var vs);
-            float dmg = vs != null ? 100f * vs.DamageTaken / units.Get(veh).Hp : 0f;
-            csv.Append(def).Append(',').Append(veh).Append(',').Append(pos).Append(',').Append(recon ? 1 : 0).Append(',')
-               .Append(seed).Append(',').Append(vs != null && vs.Killed > 0 ? 1 : 0).Append(',').Append(d.Alive ? 1 : 0).Append(',')
-               .Append(dmg.ToString("0.#", Inv)).Append(',').Append(b.LineDamage.ToString("0.#", Inv)).Append(',')
-               .Append(b.RoundTime.ToString("0.#", Inv)).Append('\n');
+            csv.Append(def).Append(',').Append(veh).Append(',').Append(count).Append(',').Append(pos).Append(',').Append(recon ? 1 : 0).Append(',')
+               .Append(seed).Append(',').Append(vs != null ? vs.Killed : 0).Append(',').Append(d.Alive ? 1 : 0).Append(',')
+               .Append(b.LineDamage.ToString("0.#", Inv)).Append(',').Append(b.RoundTime.ToString("0.#", Inv)).Append('\n');
         }
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(outPath)));
         File.WriteAllText(outPath, csv.ToString());
-        Console.WriteLine("Runs: " + (Defenders.Length * Vehicles.Length * Positions.Length * Seeds));
+        Console.WriteLine("Done");
     }
 }

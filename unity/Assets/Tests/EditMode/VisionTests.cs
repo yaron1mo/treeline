@@ -160,5 +160,18 @@ namespace Treeline.Tests
             Assert.IsTrue(cover != null && cover.Id == "trench", "standing in the trench is covered");
             Assert.AreEqual(1f, v.SeeChance(50f, 5f, 50f, 30f, 40f), 1e-4f, "and still seen");
         }
+
+        [Test]
+        public void ATrenchInsideAForestBelt_StillGivesTrenchCover_AndTheBeltStillHides()
+        {
+            var table = ObstacleTable.Parse(File.ReadAllText(Path.Combine(Application.dataPath, "Data", "obstacles.csv")));
+            var field = new Field { Name = "test", Width = 100f, Height = 60f };
+            field.Features.Add(new Feature { Type = "belt", Poly = Box(40f, 20f, 60f, 40f) });
+            field.Features.Add(new Feature { Type = "trench", Poly = Box(48f, 28f, 52f, 32f) });
+            var v = new VisionMap(field, table);
+            var cover = v.CoverFor(50f, 5f, 50f, 30f);
+            Assert.IsTrue(cover != null && cover.Id == "trench", "the trench's cover");
+            Assert.Less(v.SeeChance(50f, 5f, 50f, 30f, 40f), 1f, "and the belt hides it");
+        }
     }
 }
