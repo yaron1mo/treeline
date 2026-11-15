@@ -129,5 +129,34 @@ namespace Treeline.Tests
             }
             Assert.Greater(ahead / lands, 3f, "on average it lands ahead of where the tank was when fired (it leads)");
         }
+
+        [Test]
+        public void AMortar_DoesNotFireAtAnythingCloserThanItsMinimumRange()
+        {
+            var units = UnitTable.Parse(Data("units.csv"));
+            Assert.AreEqual(55f, units.Get("mortar").MinRangeM);
+            var field = new Field { Name = "t", Width = 60f, Height = 200f };
+            var obstacles = ObstacleTable.Parse(Data("obstacles.csv"));
+            var b = new Battle(new NavGrid(field, obstacles), units, 5000f, new VisionMap(field, obstacles),
+                ArmourTable.Parse(Data("armour.csv")), 1000f, 1);
+            Assert.IsTrue(b.TryPlace("recon_drone", 30f, 100f, out _, out _));   // so it can fire at range
+            Assert.IsTrue(b.TryPlace("mortar", 30f, 190f, out var m, out _));
+            b.QueueWave("modern_tank", 1, 0f, 1f);   // high armour: it lives long enough to come close
+            b.StartRound();
+            bool firedClose = false;
+            int before = 0;
+            for (float t = 0f; t < 60f && b.Outcome == BattleOutcome.Ongoing; t += 0.05f)
+            {
+                b.Step(0.05f);
+                if (m.ShotsFired > before)
+                {
+                    before = m.ShotsFired;
+                    foreach (var a in b.Attackers)
+                        if ((a.X - m.X) * (a.X - m.X) + (a.Y - m.Y) * (a.Y - m.Y) < 55f * 55f) firedClose = true;
+                }
+            }
+            Assert.Greater(before, 0, "it fired while the tank was further away");
+            Assert.IsFalse(firedClose, "no shell at a target within 55 m");
+        }
     }
 }

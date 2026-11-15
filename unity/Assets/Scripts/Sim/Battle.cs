@@ -1137,7 +1137,9 @@ namespace Treeline.Sim
                 // Retain a live visible target, otherwise pick nearest. Indirect fire uses shared sight.
                 bool own = OwnSightOnly(d.Def);
                 var target = d.Target as Attacker;
-                if (target == null || !target.Alive || AimAt(d, target, own) <= 0f || !InRange(d, target, range))
+                float minRange = d.Def.MinRangeM;
+                if (target == null || !target.Alive || AimAt(d, target, own) <= 0f || !InRange(d, target, range) ||
+                    (minRange > 0f && InRange(d, target, minRange)))
                 {
                     target = null;
                     float best = float.MaxValue;
@@ -1145,7 +1147,7 @@ namespace Treeline.Sim
                     {
                         if (!a.Alive || a.SeenChance <= 0f || !CanTarget(d.Def, a.Def)) continue;
                         float dx = a.X - d.X, dy = a.Y - d.Y, dist = dx * dx + dy * dy;
-                        if (dist > range * range || dist >= best) continue;
+                        if (dist > range * range || dist >= best || dist < minRange * minRange) continue;
                         if (own && AimAt(d, a, true) <= 0f) continue;
                         best = dist; target = a;
                     }
