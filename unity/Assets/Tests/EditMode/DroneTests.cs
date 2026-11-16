@@ -274,5 +274,65 @@ namespace Treeline.Tests
             Assert.IsFalse(op.DroneInFlight);
             Assert.AreEqual(3f, op.ReloadLeft, 0.01f, "next launch 1/attack_speed after it is lost");
         }
+
+        [Test]
+        public void AMissAtOurDrone_GoesIntoTheSky_NotIntoTheOperatorBehindIt()
+        {
+            // The operator 70 m off the route: no attacker ever sees it, its drones fly straight at them from it.
+            float taken = 0f;
+            int lost = 0;
+            for (int seed = 1; seed <= 20; seed++)
+            {
+                var field = new Field { Name = "t", Width = 120f, Height = 300f };
+                field.Spawns.Add(40f);
+                var table = ObstacleTable.Parse(Data("obstacles.csv"));
+                var b = new Battle(new NavGrid(field, table), UnitTable.Parse(Data("units.csv")), 10000f, new VisionMap(field, table),
+                    ArmourTable.Parse(Data("armour.csv")), 1000f, seed, BattleRules.Parse(Data("battle_rules.csv")));
+                Assert.IsTrue(b.TryPlace("fpv_operator", 110f, 280f, out _, out _));
+                Assert.IsTrue(b.TryPlace("recon_drone", 65f, 100f, out _, out _));
+                b.BeginWave();
+                b.QueueWave("special_forces", 5, 0f, 0.3f);
+                b.StartRound();
+                while (b.Outcome == BattleOutcome.Ongoing && b.RoundTime < 400f) b.Step(0.05f);
+                taken += b.Stats["fpv_operator"].DamageTaken;
+                lost += b.Stats["fpv_operator"].DronesLost;
+            }
+            Assert.Greater(lost, 0, "they did shoot at the drones");
+            Assert.AreEqual(0f, taken, "and never hit the operator");
+        }
+
+        [Test]
+        public void ACarrierThatStoppedToLetItsTroopsOut_IsLeftForTheTroops()
+        {
+            // The FPV's list puts heavy before infantry; once the IFV is hit and stopped, its troops come first.
+            var b = Make(300f);
+            Assert.IsTrue(b.TryPlace("recon_drone", 20f, 60f, out _, out _));
+            Assert.IsTrue(b.TryPlace("fpv_operator", 20f, 290f, out var op, out _));
+            b.QueueWave("ifv", 1, 0f, 1f);
+            b.StartRound();
+            Attacker ifv = null;
+            for (float t = 0f; t < 10f && ifv == null; t += 0.05f)
+            {
+                b.Step(0.05f);
+                foreach (var a in b.Attackers) if (a.Def.Id == "ifv") ifv = a;
+            }
+            Assert.IsNotNull(ifv);
+            ifv.Hp = 15f;   // below dismount_at_hp (0.2 of 100): it stops and the troops get out
+            bool checkedOne = false;
+            float outFor = 0f;
+            for (float t = 0f; t < 30f && !checkedOne && b.Outcome == BattleOutcome.Ongoing; t += 0.05f)
+            {
+                foreach (var a in b.Attackers) if (a.Def.Id == "regular") { outFor += 0.05f; break; }
+                bool troopsOut = outFor > 0.5f;   // seen by the side by now (vision refreshes a few times a second)
+                b.Step(0.05f);
+                foreach (var d in b.Drones)
+                {
+                    if (!d.Alive || d.Target == null || !troopsOut || !ifv.Alive || !ifv.Dismounting) continue;
+                    Assert.AreEqual("regular", d.Target.Def.Id, "a drone in the air goes for the troops, not the stopped IFV");
+                    checkedOne = true;
+                }
+            }
+            Assert.IsTrue(checkedOne, "a drone was up while the IFV was letting its troops out");
+        }
     }
 }

@@ -45,8 +45,9 @@ Six proposal rows with `side = defence`: rifle_squad, machine_gun, sniper, morta
 
 ## Ground vehicles (2026-11-06)
 
-- Carriers (`ifv`, `mrap`, `van`): drive with `carries_count` troops of `carries_unit` inside. When hit points fall to `dismount_at_hp` of the maximum the carrier stops and lets one out every `dismount_interval_s`, then drives on empty. Troops still inside die with the vehicle. Reaching the rear edge loaded, each passenger adds its own `line_damage` (a van with 12 recruits = 2 + 12).
+- Carriers (`ifv`, `mrap`, `van`): drive with `carries_count` troops of `carries_unit` inside. When hit points fall to `dismount_at_hp` of the maximum the carrier stops and lets one out every `dismount_interval_s`, then drives on empty. Troops still inside die with the vehicle: a hit that takes it from above `dismount_at_hp` straight to 0 kills all of them (nobody got out). While a hit carrier stands letting its troops out, defenders and drones turn to the troops; the carrier is shot only when there is nothing else (Yaroslav, 2026-11-16). Reaching the rear edge loaded, each passenger adds its own `line_damage` (a van with 12 recruits = 2 + 12).
 - `blast_radius_m` on a carrier: destroyed while loaded or unloading, it kills attacking troops within that radius (rule `dismount_blast_kills`, a proposal). On explosive weapons it is the radial blast radius (mortars, ATGM, FPV, bomber) with linear damage falloff.
+- Shots at something in the air (aircraft, drones, both sides) can only hit things in the air: a miss goes into the sky, not into the people behind. Shots at the ground pass under anything flying (Yaroslav, 2026-11-16).
 - `wreck_radius_m`: a destroyed vehicle leaves a `wreck` obstacle of that radius: it hides, gives cover and blocks vehicles (infantry 3, from the obstacles table). Routes are rebuilt when it appears.
 - `tree_move_cost`: a vehicle with it uses that cost in groves and forest belts (tanks push through groves, which are closed to other vehicles).
 - Move costs now come from the `obstacles` tab for terrain and objects (rock blocked, wreck 3 / blocked, bush 1.5 / 1, wire 6 / 2, hedgehog 1.5 / blocked).
