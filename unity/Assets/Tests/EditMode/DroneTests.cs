@@ -300,39 +300,5 @@ namespace Treeline.Tests
             Assert.Greater(lost, 0, "they did shoot at the drones");
             Assert.AreEqual(0f, taken, "and never hit the operator");
         }
-
-        [Test]
-        public void ACarrierThatStoppedToLetItsTroopsOut_IsLeftForTheTroops()
-        {
-            // The FPV's list puts heavy before infantry; once the IFV is hit and stopped, its troops come first.
-            var b = Make(300f);
-            Assert.IsTrue(b.TryPlace("recon_drone", 20f, 60f, out _, out _));
-            Assert.IsTrue(b.TryPlace("fpv_operator", 20f, 290f, out var op, out _));
-            b.QueueWave("ifv", 1, 0f, 1f);
-            b.StartRound();
-            Attacker ifv = null;
-            for (float t = 0f; t < 10f && ifv == null; t += 0.05f)
-            {
-                b.Step(0.05f);
-                foreach (var a in b.Attackers) if (a.Def.Id == "ifv") ifv = a;
-            }
-            Assert.IsNotNull(ifv);
-            ifv.Hp = 15f;   // below dismount_at_hp (0.2 of 100): it stops and the troops get out
-            bool checkedOne = false;
-            float outFor = 0f;
-            for (float t = 0f; t < 30f && !checkedOne && b.Outcome == BattleOutcome.Ongoing; t += 0.05f)
-            {
-                foreach (var a in b.Attackers) if (a.Def.Id == "regular") { outFor += 0.05f; break; }
-                bool troopsOut = outFor > 0.5f;   // seen by the side by now (vision refreshes a few times a second)
-                b.Step(0.05f);
-                foreach (var d in b.Drones)
-                {
-                    if (!d.Alive || d.Target == null || !troopsOut || !ifv.Alive || !ifv.Dismounting) continue;
-                    Assert.AreEqual("regular", d.Target.Def.Id, "a drone in the air goes for the troops, not the stopped IFV");
-                    checkedOne = true;
-                }
-            }
-            Assert.IsTrue(checkedOne, "a drone was up while the IFV was letting its troops out");
-        }
     }
 }

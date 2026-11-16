@@ -1028,10 +1028,6 @@ namespace Treeline.Sim
 
         static bool IsInAir(Unit u) => u is Drone || (u is Attacker a && a.InAir);
 
-        /// <summary>A carrier that has been hit and stopped to let its troops out: the defence turns to the troops
-        /// (Yaroslav, 2026-11-16). It is still a target when there is nothing else.</summary>
-        static bool StoppedCarrier(Attacker a) => a != null && a.Dismounting && !a.Airborne && a.Class == UnitClass.Vehicle;
-
         static float HitRadiusOfUnit(Unit u) =>
             u is Drone dr ? (dr.Body != null ? HitRadiusOf(dr.Body) : 0f) : HitRadiusOf(u.Def);
 
@@ -1341,20 +1337,18 @@ namespace Treeline.Sim
                 var target = d.Target as Attacker;
                 float minRange = d.Def.MinRangeM;
                 if (target == null || !target.Alive || AimAt(d, target, own) <= 0f || !InRange(d, target, range) ||
-                    (minRange > 0f && InRange(d, target, minRange)) || StoppedCarrier(target))
+                    (minRange > 0f && InRange(d, target, minRange)))
                 {
                     target = null;
                     float best = float.MaxValue;
-                    bool bestStopped = true;
                     foreach (var a in attackers)
                     {
                         if (!a.Alive || a.SeenChance <= 0f || !CanTarget(d.Def, a.Def)) continue;
                         float dx = a.X - d.X, dy = a.Y - d.Y, dist = dx * dx + dy * dy;
                         if (dist > range * range || dist < minRange * minRange) continue;
-                        bool stopped = StoppedCarrier(a);
-                        if (target != null && (stopped && !bestStopped || stopped == bestStopped && dist >= best)) continue;
+                        if (dist >= best) continue;
                         if (own && AimAt(d, a, true) <= 0f) continue;
-                        best = dist; target = a; bestStopped = stopped;
+                        best = dist; target = a;
                     }
                     d.Target = target;
                 }
@@ -1451,7 +1445,6 @@ namespace Treeline.Sim
                 if (!a.Alive || a.SeenChance <= 0f || !CanTarget(op.Def, a.Def) || !InRange(op, a, range)) continue;
                 int rank = PriorityOf(op.Def, a.Def);
                 if (rank < 0) continue;
-                if (StoppedCarrier(a)) rank += 100;   // after everything else
                 if (single && TargetedByDrone(a)) continue;   // one single-use drone per target at a time
                 if (rank < bestRank || (rank == bestRank && (a.Y > best.Y || (a.Y == best.Y && a.Id < best.Id))))
                 {
@@ -1485,7 +1478,6 @@ namespace Treeline.Sim
                     TargetedByDrone(a)) continue;
                 int candidate = PriorityOf(dr.Def, a.Def);
                 if (candidate < 0) continue;
-                if (StoppedCarrier(a)) candidate += 100;
                 if (candidate < rank || (candidate == rank && (best == null || a.Y > best.Y ||
                     (a.Y == best.Y && a.Id < best.Id))))
                 {
@@ -1584,12 +1576,6 @@ namespace Treeline.Sim
                 {
                     dr.Target = PickDroneTarget(dr.Owner);
                     if (dr.Target == null) { EndDroneFlight(dr); continue; }
-                }
-                if (StoppedCarrier(dr.Target))
-                {
-                    // Its carrier stopped to let the troops out: go for the troops if there are any.
-                    var other = PickNearbyFpvTarget(dr) ?? PickDroneTarget(dr.Owner);
-                    if (other != null && !StoppedCarrier(other)) dr.Target = other;
                 }
 
                 MoveDroneTowards(dr, dr.Target.X, dr.Target.Y, dt);
