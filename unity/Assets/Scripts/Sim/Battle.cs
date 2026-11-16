@@ -317,10 +317,50 @@ namespace Treeline.Sim
 
         public void Remove(int defenderId) => defenders.RemoveAll(e => e.Id == defenderId);
 
+        /// <summary>Defenders may not be placed or moved closer to the enemy edge than this (metres from it). The game
+        /// sets it from battle_rules placement_zone_start; 0 = anywhere.</summary>
+        public float PlacementMinY { get; set; }
+
+        /// <summary>Add money to the defence (wave income, rewards).</summary>
+        public void AddBudget(float amount) { if (amount > 0f) Budget += amount; }
+
+        /// <summary>Take a defender off the field and give back <paramref name="refundShare"/> of its build cost. Its
+        /// drones in the air are lost.</summary>
+        public bool TrySell(int defenderId, float refundShare, out float refund)
+        {
+            refund = 0f;
+            var d = defenders.Find(e => e.Id == defenderId);
+            if (d == null) return false;
+            foreach (var dr in drones) if (dr.Alive && dr.Owner == d) { dr.Alive = false; }
+            drones.RemoveAll(dr => !dr.Alive);
+            defenders.Remove(d);
+            refund = Math.Max(0f, d.Def.BuildCost * refundShare);
+            Budget += refund;
+            return true;
+        }
+
+        /// <summary>After a held wave: back to preparation, so defenders placed or moved now stand there at once
+        /// (no running in). False while the wave is still being fought or the battle is lost.</summary>
+        public bool BackToPreparation()
+        {
+            if (Phase != BattlePhase.Round || Outcome != BattleOutcome.Won || attackers.Count > 0 || Pending > 0) return false;
+            foreach (var dr in drones) dr.Alive = false;   // they come back to their operators
+            drones.Clear();
+            foreach (var d in defenders)
+            {
+                d.ReloadLeft = 0f;
+                d.DroneInFlight = false;
+                if (d.State == DefenderState.Running) { d.X = d.TargetX; d.Y = d.TargetY; d.State = DefenderState.Standing; d.Path = null; }
+            }
+            Phase = BattlePhase.Preparation;
+            return true;
+        }
+
         bool CheckSpot(float x, float y, out FlowField flow, out string why)
         {
             flow = null;
             if (x < 0f || y < 0f || x > grid.Width || y > grid.Height) { why = "Outside the field"; return false; }
+            if (y < PlacementMinY) { why = "Too close to the enemy: place in the lower part of the field"; return false; }
             int cell = grid.CellAt(x, y);
             if (float.IsPositiveInfinity(grid.Cost(UnitClass.Infantry)[cell])) { why = "Cannot stand there"; return false; }
             flow = FlowField.To(grid, UnitClass.Infantry, cell);

@@ -5,6 +5,7 @@ on:
   pull_request:
     paths:
       - 'unity/Assets/Scripts/Sim/**'
+      - 'unity/Assets/Scripts/Game/**'
       - 'unity/Assets/Tests/**'
       - 'unity/Assets/Data/**'
       - 'tools/tests/**'
@@ -18,3 +19,5 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y mono-mcs mono-runtime
       - name: Build Sim and the EditMode tests, run them
         run: tools/tests/run_editmode.sh
+      - name: Compile-check the Game scripts against a UnityEngine stand-in
+        run: tools/tests/check_game.sh

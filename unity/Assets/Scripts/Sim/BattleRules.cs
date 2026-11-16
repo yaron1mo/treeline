@@ -33,6 +33,14 @@ namespace Treeline.Sim
         public float AviationLoiterS = 60f;
         /// <summary>Aircraft weave: a shooter aiming at one is off by about this much (standard deviation).</summary>
         public float AircraftEvasionM = 1f;
+        /// <summary>Budget at the start of a run (playtest economy, 2026-11-16).</summary>
+        public float StartBudget = 800f;
+        /// <summary>Budget added after each wave the defence holds.</summary>
+        public float WaveIncome = 300f;
+        /// <summary>Share of a defender's build_cost given back when it is removed.</summary>
+        public float SellRefund = 0.5f;
+        /// <summary>Defenders may stand only from this share of the field's depth down to our line (0 = anywhere).</summary>
+        public float PlacementZoneStart = 0.35f;
 
         public static BattleRules Parse(string csv)
         {
@@ -58,6 +66,10 @@ namespace Treeline.Sim
             r.BlindAimErrorM = Num(values, "blind_aim_error_m", r.BlindAimErrorM);
             r.AviationLoiterS = Num(values, "aviation_loiter_s", r.AviationLoiterS);
             r.AircraftEvasionM = Num(values, "aircraft_evasion_m", r.AircraftEvasionM);
+            r.StartBudget = Num(values, "start_budget", r.StartBudget);
+            r.WaveIncome = Num(values, "wave_income", r.WaveIncome);
+            r.SellRefund = Num(values, "sell_refund", r.SellRefund);
+            r.PlacementZoneStart = Num(values, "placement_zone_start", r.PlacementZoneStart);
             if (values.TryGetValue("spread_ring_shares", out var rings) && rings.Length > 0)
             {
                 var parts = rings.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);

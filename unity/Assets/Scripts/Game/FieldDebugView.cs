@@ -16,6 +16,7 @@ namespace Treeline.Game
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void Boot()
         {
+            if (PlaytestView.Enabled) return;   // the playtest screen opens instead (2026-11-16)
             if (FindFirstObjectByType<FieldDebugView>() != null) return;
             new GameObject("FieldDebugView").AddComponent<FieldDebugView>();
         }

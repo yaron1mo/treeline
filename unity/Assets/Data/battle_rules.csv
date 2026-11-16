@@ -16,3 +16,7 @@ blind_aim_error_m,4,"Proposal. A target that is only partly seen (seen chance be
 spread_ring_shares,0.4 0.35 0.25,"Proposal (Yaroslav: a 30-40 m zone with rings). Area fire with spread_m (mortar): share of rounds landing in each equally wide ring of the zone, inner to outer; uniform inside a ring."
 aviation_loiter_s,60,Proposal. How long an enemy spotter (recon UAV) stays over its spot (40% down the field) before flying out.
 aircraft_evasion_m,1,"Proposal. Aircraft weave and change speed: anyone shooting at one aims about this far off (standard deviation). With hit_radius_m 0.2 an FPV is then hard to hit with a rifle."
+start_budget,800,"Proposal (playtest, 2026-11-16). Money at the start of a run."
+wave_income,300,"Proposal (playtest, 2026-11-16). Money added after each wave the defence holds."
+sell_refund,0.5,"Proposal (playtest, 2026-11-16). Share of build_cost given back when a defender is removed."
+placement_zone_start,0.35,"Proposal (playtest, 2026-11-16). Defenders stand only from this share of the field's depth (from the enemy edge) down to our line."
