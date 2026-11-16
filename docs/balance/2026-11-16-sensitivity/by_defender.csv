@@ -1,0 +1,433 @@
+unit,variant,defender,line_damage,killed,defender_alive_pct
+mrap,base,rifle_squad,21.0,0.0,100.0
+mrap,base,machine_gun,21.0,0.0,100.0
+mrap,base,sniper,21.0,0.0,100.0
+mrap,base,mortar,21.0,0.0,100.0
+mrap,base,anti_tank,4.58,2.69,23.0
+mrap,base,air_defence,21.0,0.0,100.0
+mrap,base,fpv_operator,18.8,0.34,6.0
+mrap,base,bomber_operator,21.0,0.0,100.0
+mrap,hp 30,rifle_squad,21.0,0.0,100.0
+mrap,hp 30,machine_gun,21.0,0.0,100.0
+mrap,hp 30,sniper,21.0,0.0,100.0
+mrap,hp 30,mortar,21.0,0.0,100.0
+mrap,hp 30,anti_tank,0.74,2.95,87.2
+mrap,hp 30,air_defence,21.0,0.0,100.0
+mrap,hp 30,fpv_operator,16.56,0.69,2.6
+mrap,hp 30,bomber_operator,21.0,0.0,100.0
+mrap,hp 90,rifle_squad,21.0,0.0,100.0
+mrap,hp 90,machine_gun,21.0,0.0,100.0
+mrap,hp 90,sniper,21.0,0.0,100.0
+mrap,hp 90,mortar,21.0,0.0,100.0
+mrap,hp 90,anti_tank,6.42,2.16,80.4
+mrap,hp 90,air_defence,21.0,0.0,100.0
+mrap,hp 90,fpv_operator,20.97,0.01,26.2
+mrap,hp 90,bomber_operator,21.0,0.0,100.0
+mrap,armour medium,rifle_squad,21.0,0.0,100.0
+mrap,armour medium,machine_gun,21.0,0.0,100.0
+mrap,armour medium,sniper,21.0,0.0,100.0
+mrap,armour medium,mortar,21.0,0.0,100.0
+mrap,armour medium,anti_tank,0.67,2.92,94.4
+mrap,armour medium,air_defence,21.0,0.0,100.0
+mrap,armour medium,fpv_operator,8.99,1.72,95.4
+mrap,armour medium,bomber_operator,21.0,0.0,100.0
+mrap,armour low,rifle_squad,21.0,0.0,100.0
+mrap,armour low,machine_gun,14.28,1.0,80.6
+mrap,armour low,sniper,17.78,0.48,27.8
+mrap,armour low,mortar,20.99,0.0,95.2
+mrap,armour low,anti_tank,0.67,2.92,94.4
+mrap,armour low,air_defence,21.0,0.0,100.0
+mrap,armour low,fpv_operator,8.29,1.88,22.0
+mrap,armour low,bomber_operator,20.04,0.16,78.6
+mrap,speed 5.5,rifle_squad,21.0,0.0,100.0
+mrap,speed 5.5,machine_gun,21.0,0.0,100.0
+mrap,speed 5.5,sniper,21.0,0.0,100.0
+mrap,speed 5.5,mortar,21.0,0.0,100.0
+mrap,speed 5.5,anti_tank,2.24,2.82,41.8
+mrap,speed 5.5,air_defence,21.0,0.0,100.0
+mrap,speed 5.5,fpv_operator,19.69,0.2,2.8
+mrap,speed 5.5,bomber_operator,21.0,0.0,100.0
+mrap,speed 16.5,rifle_squad,21.0,0.0,100.0
+mrap,speed 16.5,machine_gun,21.0,0.0,100.0
+mrap,speed 16.5,sniper,21.0,0.0,100.0
+mrap,speed 16.5,mortar,21.0,0.0,100.0
+mrap,speed 16.5,anti_tank,5.97,2.17,93.0
+mrap,speed 16.5,air_defence,21.0,0.0,100.0
+mrap,speed 16.5,fpv_operator,20.99,0.0,18.4
+mrap,speed 16.5,bomber_operator,21.0,0.0,100.0
+mrap,carries 2,rifle_squad,15.0,0.0,100.0
+mrap,carries 2,machine_gun,15.0,0.0,100.0
+mrap,carries 2,sniper,15.0,0.0,100.0
+mrap,carries 2,mortar,15.0,0.0,100.0
+mrap,carries 2,anti_tank,2.24,2.85,23.0
+mrap,carries 2,air_defence,15.0,0.0,100.0
+mrap,carries 2,fpv_operator,13.02,0.42,7.2
+mrap,carries 2,bomber_operator,15.0,0.0,100.0
+mrap,carries 6,rifle_squad,27.0,0.0,100.0
+mrap,carries 6,machine_gun,27.0,0.0,100.0
+mrap,carries 6,sniper,27.0,0.0,100.0
+mrap,carries 6,mortar,27.0,0.0,100.0
+mrap,carries 6,anti_tank,5.89,2.74,23.0
+mrap,carries 6,air_defence,27.0,0.0,100.0
+mrap,carries 6,fpv_operator,25.08,0.22,6.0
+mrap,carries 6,bomber_operator,27.0,0.0,100.0
+mrap,carries regular,rifle_squad,21.0,0.0,100.0
+mrap,carries regular,machine_gun,21.0,0.0,100.0
+mrap,carries regular,sniper,21.0,0.0,100.0
+mrap,carries regular,mortar,21.0,0.0,100.0
+mrap,carries regular,anti_tank,4.5,2.7,23.0
+mrap,carries regular,air_defence,21.0,0.0,100.0
+mrap,carries regular,fpv_operator,18.0,0.48,6.0
+mrap,carries regular,bomber_operator,21.0,0.0,100.0
+mrap,dismount at 0.4,rifle_squad,21.0,0.0,100.0
+mrap,dismount at 0.4,machine_gun,21.0,0.0,100.0
+mrap,dismount at 0.4,sniper,21.0,0.0,100.0
+mrap,dismount at 0.4,mortar,21.0,0.0,100.0
+mrap,dismount at 0.4,anti_tank,4.83,2.67,20.6
+mrap,dismount at 0.4,air_defence,21.0,0.0,100.0
+mrap,dismount at 0.4,fpv_operator,20.52,0.11,3.0
+mrap,dismount at 0.4,bomber_operator,21.0,0.0,100.0
+mrap,dismount at 0.1,rifle_squad,21.0,0.0,100.0
+mrap,dismount at 0.1,machine_gun,21.0,0.0,100.0
+mrap,dismount at 0.1,sniper,21.0,0.0,100.0
+mrap,dismount at 0.1,mortar,21.0,0.0,100.0
+mrap,dismount at 0.1,anti_tank,4.28,2.71,26.4
+mrap,dismount at 0.1,air_defence,21.0,0.0,100.0
+mrap,dismount at 0.1,fpv_operator,18.8,0.34,7.2
+mrap,dismount at 0.1,bomber_operator,21.0,0.0,100.0
+mrap,dismount every 0.35 s,rifle_squad,21.0,0.0,100.0
+mrap,dismount every 0.35 s,machine_gun,21.0,0.0,100.0
+mrap,dismount every 0.35 s,sniper,21.0,0.0,100.0
+mrap,dismount every 0.35 s,mortar,21.0,0.0,100.0
+mrap,dismount every 0.35 s,anti_tank,4.49,2.72,23.0
+mrap,dismount every 0.35 s,air_defence,21.0,0.0,100.0
+mrap,dismount every 0.35 s,fpv_operator,19.02,0.31,6.0
+mrap,dismount every 0.35 s,bomber_operator,21.0,0.0,100.0
+mrap,dismount every 1.4 s,rifle_squad,21.0,0.0,100.0
+mrap,dismount every 1.4 s,machine_gun,21.0,0.0,100.0
+mrap,dismount every 1.4 s,sniper,21.0,0.0,100.0
+mrap,dismount every 1.4 s,mortar,21.0,0.0,100.0
+mrap,dismount every 1.4 s,anti_tank,4.15,2.75,23.0
+mrap,dismount every 1.4 s,air_defence,21.0,0.0,100.0
+mrap,dismount every 1.4 s,fpv_operator,18.95,0.31,6.0
+mrap,dismount every 1.4 s,bomber_operator,21.0,0.0,100.0
+mrap,no gun,rifle_squad,21.0,0.0,100.0
+mrap,no gun,machine_gun,21.0,0.0,100.0
+mrap,no gun,sniper,21.0,0.0,100.0
+mrap,no gun,mortar,21.0,0.0,100.0
+mrap,no gun,anti_tank,4.58,2.68,23.0
+mrap,no gun,air_defence,21.0,0.0,100.0
+mrap,no gun,fpv_operator,19.08,0.3,3.6
+mrap,no gun,bomber_operator,21.0,0.0,100.0
+mrap,gun damage 4,rifle_squad,21.0,0.0,100.0
+mrap,gun damage 4,machine_gun,21.0,0.0,100.0
+mrap,gun damage 4,sniper,21.0,0.0,100.0
+mrap,gun damage 4,mortar,21.0,0.0,100.0
+mrap,gun damage 4,anti_tank,4.58,2.69,23.0
+mrap,gun damage 4,air_defence,21.0,0.0,100.0
+mrap,gun damage 4,fpv_operator,18.8,0.34,6.0
+mrap,gun damage 4,bomber_operator,21.0,0.0,100.0
+mrap,sight 15,rifle_squad,21.0,0.0,100.0
+mrap,sight 15,machine_gun,21.0,0.0,100.0
+mrap,sight 15,sniper,21.0,0.0,100.0
+mrap,sight 15,mortar,21.0,0.0,100.0
+mrap,sight 15,anti_tank,4.09,2.79,23.0
+mrap,sight 15,air_defence,21.0,0.0,100.0
+mrap,sight 15,fpv_operator,18.73,0.35,6.4
+mrap,sight 15,bomber_operator,21.0,0.0,100.0
+mrap,sight 45,rifle_squad,21.0,0.0,100.0
+mrap,sight 45,machine_gun,21.0,0.0,100.0
+mrap,sight 45,sniper,21.0,0.0,100.0
+mrap,sight 45,mortar,21.0,0.0,100.0
+mrap,sight 45,anti_tank,4.99,2.59,22.8
+mrap,sight 45,air_defence,21.0,0.0,100.0
+mrap,sight 45,fpv_operator,19.16,0.29,5.8
+mrap,sight 45,bomber_operator,21.0,0.0,100.0
+mrap,hit radius 1,rifle_squad,21.0,0.0,100.0
+mrap,hit radius 1,machine_gun,21.0,0.0,100.0
+mrap,hit radius 1,sniper,21.0,0.0,100.0
+mrap,hit radius 1,mortar,21.0,0.0,100.0
+mrap,hit radius 1,anti_tank,3.25,2.58,81.0
+mrap,hit radius 1,air_defence,21.0,0.0,100.0
+mrap,hit radius 1,fpv_operator,20.68,0.07,5.2
+mrap,hit radius 1,bomber_operator,21.0,0.0,100.0
+mrap,hit radius 3,rifle_squad,21.0,0.0,100.0
+mrap,hit radius 3,machine_gun,21.0,0.0,100.0
+mrap,hit radius 3,sniper,21.0,0.0,100.0
+mrap,hit radius 3,mortar,21.0,0.0,100.0
+mrap,hit radius 3,anti_tank,0.84,2.91,92.0
+mrap,hit radius 3,air_defence,21.0,0.0,100.0
+mrap,hit radius 3,fpv_operator,20.33,0.14,3.2
+mrap,hit radius 3,bomber_operator,21.0,0.0,100.0
+mrap,blast 0,rifle_squad,21.0,0.0,60.0
+mrap,blast 0,machine_gun,21.0,0.0,80.0
+mrap,blast 0,sniper,21.0,0.0,60.0
+mrap,blast 0,mortar,21.0,0.0,60.2
+mrap,blast 0,anti_tank,4.59,2.68,22.8
+mrap,blast 0,air_defence,21.0,0.0,80.0
+mrap,blast 0,fpv_operator,19.39,0.25,7.8
+mrap,blast 0,bomber_operator,21.0,0.0,60.0
+mrap,blast 12,rifle_squad,21.0,0.0,100.0
+mrap,blast 12,machine_gun,21.0,0.0,100.0
+mrap,blast 12,sniper,21.0,0.0,100.0
+mrap,blast 12,mortar,21.0,0.0,100.0
+mrap,blast 12,anti_tank,4.58,2.69,23.0
+mrap,blast 12,air_defence,21.0,0.0,100.0
+mrap,blast 12,fpv_operator,18.8,0.34,6.0
+mrap,blast 12,bomber_operator,21.0,0.0,100.0
+van,base,rifle_squad,37.4,0.39,98.6
+van,base,machine_gun,29.19,0.92,68.0
+van,base,sniper,33.46,0.64,29.4
+van,base,mortar,38.52,0.26,75.2
+van,base,anti_tank,1.04,2.95,95.6
+van,base,air_defence,42.0,0.0,100.0
+van,base,fpv_operator,1.96,2.86,97.6
+van,base,bomber_operator,33.44,0.69,61.4
+van,hp 25,rifle_squad,35.02,0.51,35.8
+van,hp 25,machine_gun,16.49,1.82,73.2
+van,hp 25,sniper,2.8,2.8,100.0
+van,hp 25,mortar,21.48,1.63,55.4
+van,hp 25,anti_tank,0.89,2.96,96.0
+van,hp 25,air_defence,42.0,0.0,100.0
+van,hp 25,fpv_operator,0.5,2.96,98.8
+van,hp 25,bomber_operator,18.92,1.72,64.4
+van,hp 75,rifle_squad,42.0,0.0,100.0
+van,hp 75,machine_gun,30.25,0.84,81.2
+van,hp 75,sniper,35.68,0.45,41.4
+van,hp 75,mortar,41.86,0.01,95.2
+van,hp 75,anti_tank,13.34,2.45,24.0
+van,hp 75,air_defence,42.0,0.0,100.0
+van,hp 75,fpv_operator,37.7,0.34,1.6
+van,hp 75,bomber_operator,37.42,0.42,94.0
+van,armour low,rifle_squad,42.0,0.0,100.0
+van,armour low,machine_gun,28.3,0.98,93.4
+van,armour low,sniper,35.68,0.45,41.4
+van,armour low,mortar,41.13,0.07,88.0
+van,armour low,anti_tank,1.04,2.95,95.6
+van,armour low,air_defence,42.0,0.0,100.0
+van,armour low,fpv_operator,1.96,2.86,97.6
+van,armour low,bomber_operator,35.57,0.55,78.4
+van,armour medium,rifle_squad,42.0,0.0,100.0
+van,armour medium,machine_gun,42.0,0.0,100.0
+van,armour medium,sniper,42.0,0.0,100.0
+van,armour medium,mortar,42.0,0.0,100.0
+van,armour medium,anti_tank,1.04,2.95,95.6
+van,armour medium,air_defence,42.0,0.0,100.0
+van,armour medium,fpv_operator,37.7,0.34,1.6
+van,armour medium,bomber_operator,42.0,0.0,100.0
+van,speed 5.5,rifle_squad,38.67,0.26,10.2
+van,speed 5.5,machine_gun,25.14,1.23,42.2
+van,speed 5.5,sniper,26.76,1.19,29.8
+van,speed 5.5,mortar,18.34,2.02,39.6
+van,speed 5.5,anti_tank,0.36,3.0,96.4
+van,speed 5.5,air_defence,42.0,0.0,100.0
+van,speed 5.5,fpv_operator,13.85,2.02,41.0
+van,speed 5.5,bomber_operator,23.71,1.47,22.0
+van,speed 16.5,rifle_squad,42.0,0.0,100.0
+van,speed 16.5,machine_gun,28.0,1.0,100.0
+van,speed 16.5,sniper,35.57,0.46,42.8
+van,speed 16.5,mortar,41.5,0.04,92.0
+van,speed 16.5,anti_tank,16.43,2.05,26.4
+van,speed 16.5,air_defence,42.0,0.0,100.0
+van,speed 16.5,fpv_operator,16.58,1.82,98.0
+van,speed 16.5,bomber_operator,42.0,0.0,100.0
+van,carries 6,rifle_squad,21.8,0.39,98.6
+van,carries 6,machine_gun,16.69,0.92,68.0
+van,carries 6,sniper,19.28,0.64,29.4
+van,carries 6,mortar,22.08,0.29,75.0
+van,carries 6,anti_tank,0.6,2.94,95.6
+van,carries 6,air_defence,24.0,0.0,100.0
+van,carries 6,fpv_operator,0.99,2.88,97.6
+van,carries 6,bomber_operator,20.13,0.55,61.2
+van,carries 18,rifle_squad,53.08,0.39,98.6
+van,carries 18,machine_gun,41.69,0.92,68.0
+van,carries 18,sniper,47.65,0.64,29.4
+van,carries 18,mortar,54.74,0.29,75.2
+van,carries 18,anti_tank,1.41,2.95,95.6
+van,carries 18,air_defence,60.0,0.0,100.0
+van,carries 18,fpv_operator,2.8,2.86,97.6
+van,carries 18,bomber_operator,46.85,0.74,61.4
+van,carries regular,rifle_squad,37.49,0.38,97.8
+van,carries regular,machine_gun,30.25,0.84,66.4
+van,carries regular,sniper,34.21,0.58,15.4
+van,carries regular,mortar,38.71,0.26,74.0
+van,carries regular,anti_tank,1.11,2.95,95.6
+van,carries regular,air_defence,42.0,0.0,100.0
+van,carries regular,fpv_operator,1.95,2.86,97.6
+van,carries regular,bomber_operator,33.47,0.69,61.2
+van,dismount at 0.4,rifle_squad,40.3,0.14,11.8
+van,dismount at 0.4,machine_gun,35.0,0.51,42.8
+van,dismount at 0.4,sniper,36.06,0.48,20.0
+van,dismount at 0.4,mortar,37.18,0.35,48.2
+van,dismount at 0.4,anti_tank,2.05,2.92,90.0
+van,dismount at 0.4,air_defence,42.0,0.0,100.0
+van,dismount at 0.4,fpv_operator,8.72,2.39,60.0
+van,dismount at 0.4,bomber_operator,36.16,0.54,35.0
+van,dismount at 0.1,rifle_squad,42.0,0.0,100.0
+van,dismount at 0.1,machine_gun,21.37,1.47,89.0
+van,dismount at 0.1,sniper,33.46,0.64,29.4
+van,dismount at 0.1,mortar,38.9,0.23,86.8
+van,dismount at 0.1,anti_tank,0.71,2.96,97.6
+van,dismount at 0.1,air_defence,42.0,0.0,100.0
+van,dismount at 0.1,fpv_operator,1.62,2.88,98.8
+van,dismount at 0.1,bomber_operator,30.28,0.88,80.0
+van,dismount every 0.3 s,rifle_squad,38.06,0.36,96.4
+van,dismount every 0.3 s,machine_gun,32.02,0.72,51.4
+van,dismount every 0.3 s,sniper,34.97,0.52,25.6
+van,dismount every 0.3 s,mortar,38.88,0.3,74.8
+van,dismount every 0.3 s,anti_tank,1.12,2.94,95.6
+van,dismount every 0.3 s,air_defence,42.0,0.0,100.0
+van,dismount every 0.3 s,fpv_operator,1.96,2.86,97.6
+van,dismount every 0.3 s,bomber_operator,35.3,0.6,61.2
+van,dismount every 1.2 s,rifle_squad,36.84,0.4,100.0
+van,dismount every 1.2 s,machine_gun,24.82,1.24,77.0
+van,dismount every 1.2 s,sniper,31.5,0.78,32.8
+van,dismount every 1.2 s,mortar,38.18,0.29,75.6
+van,dismount every 1.2 s,anti_tank,0.93,2.96,95.6
+van,dismount every 1.2 s,air_defence,42.0,0.0,100.0
+van,dismount every 1.2 s,fpv_operator,1.84,2.87,97.6
+van,dismount every 1.2 s,bomber_operator,32.38,0.76,61.4
+van,hit radius 1,rifle_squad,30.74,0.94,93.8
+van,hit radius 1,machine_gun,19.82,1.58,87.6
+van,hit radius 1,sniper,32.03,0.73,31.6
+van,hit radius 1,mortar,41.03,0.08,85.2
+van,hit radius 1,anti_tank,6.2,2.78,62.8
+van,hit radius 1,air_defence,42.0,0.0,100.0
+van,hit radius 1,fpv_operator,7.17,2.49,98.0
+van,hit radius 1,bomber_operator,37.94,0.34,89.6
+van,hit radius 3,rifle_squad,39.6,0.2,100.0
+van,hit radius 3,machine_gun,29.81,0.87,67.4
+van,hit radius 3,sniper,33.1,0.67,30.2
+van,hit radius 3,mortar,34.87,0.57,61.8
+van,hit radius 3,anti_tank,1.08,2.96,94.8
+van,hit radius 3,air_defence,42.0,0.0,100.0
+van,hit radius 3,fpv_operator,0.84,2.94,97.6
+van,hit radius 3,bomber_operator,26.81,1.2,52.0
+van,blast 0,rifle_squad,38.2,0.39,98.6
+van,blast 0,machine_gun,32.36,0.72,49.8
+van,blast 0,sniper,35.17,0.58,20.0
+van,blast 0,mortar,38.91,0.26,74.2
+van,blast 0,anti_tank,1.04,2.95,95.6
+van,blast 0,air_defence,42.0,0.0,100.0
+van,blast 0,fpv_operator,1.96,2.86,97.6
+van,blast 0,bomber_operator,33.86,0.69,61.2
+van,blast 12,rifle_squad,36.63,0.39,98.6
+van,blast 12,machine_gun,24.7,1.24,71.8
+van,blast 12,sniper,29.87,0.87,54.8
+van,blast 12,mortar,38.29,0.26,77.8
+van,blast 12,anti_tank,1.04,2.95,95.6
+van,blast 12,air_defence,42.0,0.0,100.0
+van,blast 12,fpv_operator,1.96,2.86,97.6
+van,blast 12,bomber_operator,32.92,0.69,61.8
+buggy,base,rifle_squad,2.0,1.0,100.0
+buggy,base,machine_gun,0.4,2.6,100.0
+buggy,base,sniper,0.2,2.8,100.0
+buggy,base,mortar,1.6,1.4,100.0
+buggy,base,anti_tank,0.01,2.99,100.0
+buggy,base,air_defence,3.0,0.0,100.0
+buggy,base,fpv_operator,0.03,2.97,100.0
+buggy,base,bomber_operator,1.21,1.79,100.0
+buggy,hp 38,rifle_squad,2.0,1.0,100.0
+buggy,hp 38,machine_gun,1.2,1.8,100.0
+buggy,hp 38,sniper,0.8,2.2,100.0
+buggy,hp 38,mortar,2.48,0.52,100.0
+buggy,hp 38,anti_tank,0.02,2.98,100.0
+buggy,hp 38,air_defence,3.0,0.0,100.0
+buggy,hp 38,fpv_operator,0.1,2.9,100.0
+buggy,hp 38,bomber_operator,1.87,1.13,100.0
+buggy,hp 50,rifle_squad,3.0,0.0,100.0
+buggy,hp 50,machine_gun,1.21,1.79,100.0
+buggy,hp 50,sniper,1.44,1.56,100.0
+buggy,hp 50,mortar,2.86,0.14,100.0
+buggy,hp 50,anti_tank,0.04,2.96,100.0
+buggy,hp 50,air_defence,3.0,0.0,100.0
+buggy,hp 50,fpv_operator,0.36,2.64,100.0
+buggy,hp 50,bomber_operator,2.34,0.66,100.0
+buggy,speed 7,rifle_squad,1.2,1.8,100.0
+buggy,speed 7,machine_gun,0.0,3.0,100.0
+buggy,speed 7,sniper,0.0,3.0,100.0
+buggy,speed 7,mortar,0.64,2.36,100.0
+buggy,speed 7,anti_tank,0.0,3.0,100.0
+buggy,speed 7,air_defence,3.0,0.0,100.0
+buggy,speed 7,fpv_operator,0.0,3.0,100.0
+buggy,speed 7,bomber_operator,0.42,2.58,100.0
+buggy,speed 15,rifle_squad,2.0,1.0,100.0
+buggy,speed 15,machine_gun,0.8,2.2,100.0
+buggy,speed 15,sniper,0.6,2.4,100.0
+buggy,speed 15,mortar,2.24,0.76,100.0
+buggy,speed 15,anti_tank,0.14,2.86,100.0
+buggy,speed 15,air_defence,3.0,0.0,100.0
+buggy,speed 15,fpv_operator,0.75,2.25,100.0
+buggy,speed 15,bomber_operator,3.0,0.0,100.0
+buggy,armour low,rifle_squad,2.0,1.0,100.0
+buggy,armour low,machine_gun,0.6,2.4,100.0
+buggy,armour low,sniper,0.8,2.2,100.0
+buggy,armour low,mortar,2.08,0.92,100.0
+buggy,armour low,anti_tank,0.01,2.99,100.0
+buggy,armour low,air_defence,3.0,0.0,100.0
+buggy,armour low,fpv_operator,0.03,2.97,100.0
+buggy,armour low,bomber_operator,1.6,1.4,100.0
+buggy,hit radius 1,rifle_squad,2.0,1.0,100.0
+buggy,hit radius 1,machine_gun,0.4,2.6,100.0
+buggy,hit radius 1,sniper,0.2,2.8,100.0
+buggy,hit radius 1,mortar,1.84,1.16,100.0
+buggy,hit radius 1,anti_tank,0.02,2.98,100.0
+buggy,hit radius 1,air_defence,3.0,0.0,100.0
+buggy,hit radius 1,fpv_operator,0.15,2.85,100.0
+buggy,hit radius 1,bomber_operator,1.68,1.32,100.0
+motorbike,base,rifle_squad,1.2,1.8,100.0
+motorbike,base,machine_gun,0.0,3.0,100.0
+motorbike,base,sniper,0.0,3.0,100.0
+motorbike,base,mortar,1.01,1.99,100.0
+motorbike,base,anti_tank,0.02,2.98,100.0
+motorbike,base,air_defence,3.0,0.0,100.0
+motorbike,base,fpv_operator,0.03,2.97,100.0
+motorbike,base,bomber_operator,1.08,1.92,100.0
+motorbike,hp 23,rifle_squad,2.0,1.0,100.0
+motorbike,hp 23,machine_gun,0.0,3.0,100.0
+motorbike,hp 23,sniper,0.2,2.8,100.0
+motorbike,hp 23,mortar,1.66,1.34,100.0
+motorbike,hp 23,anti_tank,0.02,2.98,100.0
+motorbike,hp 23,air_defence,3.0,0.0,100.0
+motorbike,hp 23,fpv_operator,0.15,2.85,100.0
+motorbike,hp 23,bomber_operator,1.55,1.45,100.0
+motorbike,hp 30,rifle_squad,2.0,1.0,100.0
+motorbike,hp 30,machine_gun,0.4,2.6,100.0
+motorbike,hp 30,sniper,0.2,2.8,100.0
+motorbike,hp 30,mortar,2.22,0.78,100.0
+motorbike,hp 30,anti_tank,0.03,2.97,100.0
+motorbike,hp 30,air_defence,3.0,0.0,100.0
+motorbike,hp 30,fpv_operator,0.37,2.63,100.0
+motorbike,hp 30,bomber_operator,1.93,1.07,100.0
+motorbike,speed 7,rifle_squad,0.6,2.4,100.0
+motorbike,speed 7,machine_gun,0.0,3.0,100.0
+motorbike,speed 7,sniper,0.0,3.0,100.0
+motorbike,speed 7,mortar,0.32,2.68,100.0
+motorbike,speed 7,anti_tank,0.0,3.0,100.0
+motorbike,speed 7,air_defence,3.0,0.0,100.0
+motorbike,speed 7,fpv_operator,0.0,3.0,100.0
+motorbike,speed 7,bomber_operator,0.37,2.63,100.0
+motorbike,speed 15,rifle_squad,1.8,1.2,100.0
+motorbike,speed 15,machine_gun,0.0,3.0,100.0
+motorbike,speed 15,sniper,0.0,3.0,100.0
+motorbike,speed 15,mortar,1.59,1.41,100.0
+motorbike,speed 15,anti_tank,0.14,2.86,100.0
+motorbike,speed 15,air_defence,3.0,0.0,100.0
+motorbike,speed 15,fpv_operator,0.76,2.24,100.0
+motorbike,speed 15,bomber_operator,3.0,0.0,100.0
+motorbike,armour low,rifle_squad,1.2,1.8,100.0
+motorbike,armour low,machine_gun,0.0,3.0,100.0
+motorbike,armour low,sniper,0.2,2.8,100.0
+motorbike,armour low,mortar,1.3,1.7,100.0
+motorbike,armour low,anti_tank,0.02,2.98,100.0
+motorbike,armour low,air_defence,3.0,0.0,100.0
+motorbike,armour low,fpv_operator,0.03,2.97,100.0
+motorbike,armour low,bomber_operator,1.31,1.69,100.0
+motorbike,hit radius 0.5,rifle_squad,1.2,1.8,100.0
+motorbike,hit radius 0.5,machine_gun,0.0,3.0,100.0
+motorbike,hit radius 0.5,sniper,0.0,3.0,100.0
+motorbike,hit radius 0.5,mortar,1.2,1.8,100.0
+motorbike,hit radius 0.5,anti_tank,0.02,2.98,100.0
+motorbike,hit radius 0.5,air_defence,3.0,0.0,100.0
+motorbike,hit radius 0.5,fpv_operator,0.16,2.84,100.0
+motorbike,hit radius 0.5,bomber_operator,1.5,1.5,100.0
