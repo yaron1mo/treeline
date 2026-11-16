@@ -54,8 +54,8 @@ static class FpvWaypointSmoke
         Check(units.Get("ifv").Hp == 100f, "IFV HP");
         Check(units.Get("fpv_operator").Damage == 70f, "FPV damage");
         Check(Math.Abs(units.Get("fpv_operator").AttackSpeed - (1f/3f)) < 0.00001f, "3-second FPV cooldown");
-        Check(units.Get("fpv_operator").BlastRadiusM == 7f, "FPV blast radius");
-        Check(units.Get("fpv_operator").DroneSpeedMps == 35f, "FPV air speed");
+        Check(units.Get("fpv_operator").BlastRadiusM == 3f, "FPV blast radius (Yaroslav 2026-11-16)");
+        Check(units.Get("fpv_operator").DroneSpeedMps == 20f, "FPV air speed (Yaroslav 2026-11-16)");
         Check(units.Get("mortar").BlastRadiusM == 10f, "Mortar blast");
         Check(units.Get("anti_tank").BlastRadiusM == 5f, "ATGM blast");
         Check(Math.Abs(1f / units.Get("anti_tank").AttackSpeed - 7f) < 0.0001f, "ATGM 7-second interval");
@@ -127,8 +127,10 @@ static class FpvWaypointSmoke
         Check(other.DroneState==DroneWeaponState.Reloading,"still reloading before 3 sec");
         for(int i=0;i<10;i++) interception.Step(0.05f);
         Check(other.DroneState==DroneWeaponState.InFlight,"new drone ready and launched after reload");
-        CheckExplosiveSplash(dir, "mortar", 5f, 12f, 6f);
-        CheckExplosiveSplash(dir, "anti_tank", 2.5f, 80f, 40f);
-        Console.WriteLine("PASS: 35m/s, 70 damage, 3s post-loss reload, 5m/7m/10m blast radii (ATGM/FPV/mortar) and linear falloff.");
+        // Mortar: not here any more. Since 2026-11-15 it has a 55 m minimum range and a 35 m ring zone instead of aimed
+        // shots (BallisticsTests cover both). ATGM: blasts are measured to the victim's edge (old tank hit radius 3 m),
+        // so a tank 6 m from the impact is 3 m inside a 5 m blast: 1 - 3/5 = 40% of 80.
+        CheckExplosiveSplash(dir, "anti_tank", 6f, 80f, 32f);
+        Console.WriteLine("PASS: 20 m/s, 70 damage, 3 s post-loss reload, 5 m / 3 m blast radii (ATGM / FPV), mortar 10 m, linear falloff to the victim's edge.");
     }
 }
