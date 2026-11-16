@@ -67,7 +67,7 @@ static class Matchups
         var armour = ArmourTable.Parse(File.ReadAllText(Path.Combine(data, "armour.csv")));
         var rules = BattleRules.Parse(File.ReadAllText(Path.Combine(data, "battle_rules.csv")));
 
-        var csv = new StringBuilder("defender,vehicle,count,position,recon,seed,killed,defender_alive,line_damage,seconds\n");
+        var csv = new StringBuilder("defender,vehicle,count,position,recon,seed,killed,defender_alive,line_damage,seconds,defender_hp_pct\n");
         var only = Environment.GetEnvironmentVariable("MATCHUPS_DEFENDERS");   // e.g. "air_defence" to rerun one
         foreach (var def in Defenders)
         if (string.IsNullOrEmpty(only) || Array.IndexOf(only.Split(','), def) >= 0)
@@ -90,7 +90,8 @@ static class Matchups
             b.Stats.TryGetValue(veh, out var vs);
             csv.Append(def).Append(',').Append(veh).Append(',').Append(count).Append(',').Append(pos).Append(',').Append(recon ? 1 : 0).Append(',')
                .Append(seed).Append(',').Append(vs != null ? vs.Killed : 0).Append(',').Append(d.Alive ? 1 : 0).Append(',')
-               .Append(b.LineDamage.ToString("0.#", Inv)).Append(',').Append(b.RoundTime.ToString("0.#", Inv)).Append('\n');
+               .Append(b.LineDamage.ToString("0.#", Inv)).Append(',').Append(b.RoundTime.ToString("0.#", Inv)).Append(',')
+               .Append((100f * Math.Max(0f, d.Hp) / units.Get(def).Hp).ToString("0", Inv)).Append('\n');
         }
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(outPath)));
         File.WriteAllText(outPath, csv.ToString());

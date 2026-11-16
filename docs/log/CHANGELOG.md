@@ -1,5 +1,6 @@
 # Change log
 
+- 2026-11-16 — [claude] data — Synced from the Sheet (Yaroslav): rifle squad damage 8 → 7, same as the regular soldier. Sight left as is (rifle 40, regular 30).
 - 2026-11-15 — [claude] balance — Matrix rerun with group attacks (0.3 s apart) and the new sights: `docs/balance/2026-11-15-matrix-groups/`, Sheet tab `balance_1v1` replaced. New `tools/balance/summarize_matchups.py` makes the summary and the Sheet grid.
 - 2026-11-15 — [claude] data/balance — Yaroslav: special forces sight 40 → 50, sniper sight 70 → 65 (Sheet and CSV); machine gunner HP stays 20; no aim jitter. `Matchups.cs` default gap between attackers 2 s → 0.3 s (attacks arrive as a group).
 - 2026-11-15 — [claude] tools — `Matchups.cs`: environment overrides `MATCHUPS_GAP` (seconds between attackers) and `MATCHUPS_ATTACKERS` (subset), for quick checks (groups 0.3 s apart; FPV reload/damage variants). No data changed.
