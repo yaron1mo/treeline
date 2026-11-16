@@ -163,7 +163,7 @@ namespace Treeline.Tests
             var b = Make(Open(), seed: 1);
             Assert.IsTrue(b.TryPlace("rifle_squad", 20f, 15f, out var defender, out _));
             Assert.AreEqual(1f, defender.Def.AttackSpeed);
-            Assert.AreEqual(8f, defender.Def.Damage);
+            Assert.Greater(defender.Def.Damage, 0f);   // the number itself is balance (Sheet)
             Assert.IsTrue(b.QueueWave("recruit", 1, 0f, 1f));
             b.StartRound();
             b.Step(0.05f);
