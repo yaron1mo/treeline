@@ -40,7 +40,7 @@ namespace Treeline.Tests
             s.Battle.QueueWave("van", 1, 0f, 1f);
             s.Battle.StartRound();
             Run(s.Battle, 60f);
-            Assert.AreEqual(2f + 12f, s.Battle.LineDamage, 1e-4f, "van 2 + 12 recruits x 1");
+            Assert.AreEqual(2f + 7f, s.Battle.LineDamage, 1e-4f, "van 2 + 7 recruits x 1 (carries_count 7 since 2026-11-16)");
         }
 
         [Test]
@@ -62,7 +62,7 @@ namespace Treeline.Tests
             }
             Assert.IsTrue(sawDismounting, "the van stopped to unload");
             Assert.IsTrue(sawRecruit, "troops got out");
-            Assert.AreEqual(12, s.Battle.Stats["recruit"].Spawned, "every passenger is counted, out or dead inside");
+            Assert.AreEqual(7, s.Battle.Stats["recruit"].Spawned, "every passenger is counted, out or dead inside");
             // Whether the van also dies is balance (since 2026-11-12 the unloaded recruits can kill the gunner first).
         }
 
