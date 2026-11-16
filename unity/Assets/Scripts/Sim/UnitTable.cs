@@ -47,6 +47,9 @@ namespace Treeline.Sim
         /// <summary>Attackers: what it costs the cheapest fitting defence to stop one (rifle squad = 100), measured by
         /// tools/balance; kill rewards are a share of it (Yaroslav, 2026-11-16).</summary>
         public float ThreatValue;
+        /// <summary>Attackers: what killing one is worth for the kill reward; empty = threat_value. An enemy FPV is a
+        /// round, worth nothing by itself; its spotter (recon UAV) is what is worth shooting down (Yaroslav, 2026-11-16).</summary>
+        public float RewardValue;
 
         public bool IsDefence => Side == "defence";
     }
@@ -114,6 +117,7 @@ namespace Treeline.Sim
                     TargetOrder = Cell(col, r, "target_order"),
                     DroneUnit = Cell(col, r, "drone_unit"),
                     ThreatValue = Num(col, r, "threat_value"),
+                    RewardValue = NumOr(col, r, "reward_value", float.NaN),
                     Hp = Num(col, r, "hp"),
                     SpeedMps = Num(col, r, "speed_mps"),
                     SightRangeM = Num(col, r, "sight_range_m"),

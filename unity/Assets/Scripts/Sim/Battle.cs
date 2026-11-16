@@ -1689,7 +1689,7 @@ namespace Treeline.Sim
         void Destroyed(Attacker a)
         {
             StatsFor(a.Def).Killed++;
-            Rewards += a.Def.ThreatValue * rules.KillRewardShare;
+            Rewards += (float.IsNaN(a.Def.RewardValue) ? a.Def.ThreatValue : a.Def.RewardValue) * rules.KillRewardShare;
             bool loaded = a.Passengers > 0;
             bool dismounting = a.Dismounting;
 
