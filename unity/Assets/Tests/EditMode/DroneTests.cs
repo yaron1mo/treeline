@@ -224,8 +224,55 @@ namespace Treeline.Tests
             Assert.IsTrue(b.TrySetDroneWaypoint(op.Id, 20f, 170f, out _));
             b.QueueWave("motorbike", 1, 0f, 1f);
             b.StartRound();
-            for (float t = 0f; t < 6f && b.Outcome == BattleOutcome.Ongoing; t += 0.05f) b.Step(0.05f);
+            for (float t = 0f; t < 10f && b.Outcome == BattleOutcome.Ongoing; t += 0.05f) b.Step(0.05f);
             Assert.AreEqual(1, b.Stats["motorbike"].Killed, "killed well before it reached the waypoint");
+        }
+
+        // Attackers shoot our drones by the same rules we shoot theirs: the fpv row's targetable_by (Yaroslav, 2026-11-16).
+        static int DronesLostAgainst(string attacker, int count)
+        {
+            int lost = 0;
+            for (int seed = 1; seed <= 20; seed++)
+            {
+                var field = new Field { Name = "t", Width = 40f, Height = 300f };
+                var table = ObstacleTable.Parse(Data("obstacles.csv"));
+                var b = new Battle(new NavGrid(field, table), UnitTable.Parse(Data("units.csv")), 5000f, new VisionMap(field, table),
+                    ArmourTable.Parse(Data("armour.csv")), 1000f, seed, BattleRules.Parse(Data("battle_rules.csv")));
+                Assert.IsTrue(b.TryPlace("recon_drone", 20f, 60f, out _, out _));
+                Assert.IsTrue(b.TryPlace("fpv_operator", 20f, 290f, out _, out _));
+                b.QueueWave(attacker, count, 0f, 0.3f);
+                b.StartRound();
+                for (float t = 0f; t < 60f && b.Outcome == BattleOutcome.Ongoing; t += 0.05f) b.Step(0.05f);
+                lost += b.Stats["fpv_operator"].DronesLost;
+            }
+            return lost;
+        }
+
+        [Test]
+        public void TheirInfantry_CanShootDownOurFpv()
+        {
+            Assert.AreEqual("fpv", UnitTable.Parse(Data("units.csv")).Get("fpv_operator").DroneUnit);
+            Assert.Greater(DronesLostAgainst("special_forces", 5), 0, "five special forces bring down at least one FPV in 20 runs");
+        }
+
+        [Test]
+        public void ATank_CannotShootDownOurFpv()
+        {
+            Assert.AreEqual(0, DronesLostAgainst("modern_tank", 1), "explosive is not in the fpv row's targetable_by");
+        }
+
+        [Test]
+        public void AShotDownDrone_StartsTheOperatorsReload()
+        {
+            var b = Make();
+            var op = Setup(b, "fpv_operator");
+            b.QueueWave("regular", 1, 0f, 1f);
+            b.StartRound();
+            for (float t = 0f; t < 10f && b.Drones.Count == 0; t += 0.05f) b.Step(0.05f);
+            Assert.AreEqual(1, b.Drones.Count, "a drone is up");
+            Assert.IsTrue(b.TryDestroyDrone(b.Drones[0].Id));
+            Assert.IsFalse(op.DroneInFlight);
+            Assert.AreEqual(3f, op.ReloadLeft, 0.01f, "next launch 1/attack_speed after it is lost");
         }
     }
 }
