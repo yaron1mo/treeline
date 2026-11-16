@@ -26,14 +26,15 @@ using Treeline.Sim;
 static class Matchups
 {
     const float Dt = 0.05f;
-    const int Seeds = 50;
+    static readonly int Seeds = string.IsNullOrEmpty(Environment.GetEnvironmentVariable("MATCHUPS_SEEDS")) ? 50 : int.Parse(Environment.GetEnvironmentVariable("MATCHUPS_SEEDS"));
     static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
     static readonly string[] Defenders = { "rifle_squad", "machine_gun", "sniper", "mortar", "anti_tank", "air_defence", "fpv_operator", "bomber_operator" };
     static readonly string[] Vehicles = { "recruit", "regular", "special_forces", "old_tank", "modern_tank", "ifv", "mrap",
         "buggy", "motorbike", "van", "fpv", "helicopter" };
     static readonly string[] Positions = string.IsNullOrEmpty(Environment.GetEnvironmentVariable("MATCHUPS_POSITIONS"))
         ? new[] { "open", "trench_belt" } : Environment.GetEnvironmentVariable("MATCHUPS_POSITIONS").Split(',');
-    static readonly int[] Counts = { 1, 2, 3, 4, 5 };
+    static readonly int[] Counts = string.IsNullOrEmpty(Environment.GetEnvironmentVariable("MATCHUPS_COUNTS"))
+        ? new[] { 1, 2, 3, 4, 5 } : Array.ConvertAll(Environment.GetEnvironmentVariable("MATCHUPS_COUNTS").Split(','), int.Parse);
     static readonly float GapS = string.IsNullOrEmpty(Environment.GetEnvironmentVariable("MATCHUPS_GAP")) ? 0.3f : float.Parse(Environment.GetEnvironmentVariable("MATCHUPS_GAP"), CultureInfo.InvariantCulture);
     static bool NeedsRecon(string d) => d == "mortar" || d == "anti_tank" || d == "air_defence" || d == "fpv_operator" || d == "bomber_operator";
 

@@ -44,6 +44,9 @@ namespace Treeline.Sim
         /// <summary>Drone operators: the unit row of the drone they launch (its hp, hit radius, targetable_by), so the
         /// enemy can shoot it down by the same rules we shoot theirs (Yaroslav, 2026-11-16).</summary>
         public string DroneUnit = "";
+        /// <summary>Attackers: what it costs the cheapest fitting defence to stop one (rifle squad = 100), measured by
+        /// tools/balance; kill rewards are a share of it (Yaroslav, 2026-11-16).</summary>
+        public float ThreatValue;
 
         public bool IsDefence => Side == "defence";
     }
@@ -110,6 +113,7 @@ namespace Treeline.Sim
                     TargetClass = Cell(col, r, "target_class"),
                     TargetOrder = Cell(col, r, "target_order"),
                     DroneUnit = Cell(col, r, "drone_unit"),
+                    ThreatValue = Num(col, r, "threat_value"),
                     Hp = Num(col, r, "hp"),
                     SpeedMps = Num(col, r, "speed_mps"),
                     SightRangeM = Num(col, r, "sight_range_m"),

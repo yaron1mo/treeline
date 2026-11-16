@@ -321,6 +321,18 @@ namespace Treeline.Sim
         /// sets it from battle_rules placement_zone_start; 0 = anywhere.</summary>
         public float PlacementMinY { get; set; }
 
+        /// <summary>Kill rewards earned and not yet paid (battle_rules kill_reward_share × threat_value).</summary>
+        public float Rewards { get; private set; }
+
+        /// <summary>Pay the earned kill rewards into the budget (the game does it when a wave is held). Returns them.</summary>
+        public float CollectRewards()
+        {
+            float r = Rewards;
+            Budget += r;
+            Rewards = 0f;
+            return r;
+        }
+
         /// <summary>Add money to the defence (wave income, rewards).</summary>
         public void AddBudget(float amount) { if (amount > 0f) Budget += amount; }
 
@@ -1677,6 +1689,7 @@ namespace Treeline.Sim
         void Destroyed(Attacker a)
         {
             StatsFor(a.Def).Killed++;
+            Rewards += a.Def.ThreatValue * rules.KillRewardShare;
             bool loaded = a.Passengers > 0;
             bool dismounting = a.Dismounting;
 
@@ -1685,7 +1698,7 @@ namespace Treeline.Sim
             {
                 var ps = StatsFor(p);
                 ps.Spawned += a.Passengers;
-                ps.Killed += a.Passengers;
+                ps.Killed += a.Passengers;   // no reward of their own: the carrier's threat_value counts them
             }
             a.Passengers = 0;
 

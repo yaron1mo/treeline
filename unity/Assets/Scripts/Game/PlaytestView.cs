@@ -175,9 +175,10 @@ namespace Treeline.Game
                     }
                     else
                     {
+                        float reward = battle.CollectRewards();
                         battle.AddBudget(rules.WaveIncome);
                         battle.BackToPreparation();
-                        Say($"Wave {wavesHeld} held. +{rules.WaveIncome:0} money. Get ready for wave {wavesHeld + 1}.", 6f);
+                        Say($"Wave {wavesHeld} held. +{rules.WaveIncome + reward:0} money ({reward:0} for kills). Get ready for wave {wavesHeld + 1}.", 6f);
                     }
                 }
             }
@@ -477,6 +478,7 @@ namespace Treeline.Game
             int shownWave = battle.Phase == BattlePhase.Round ? battle.WaveNumber : battle.WaveNumber + 1;
             GUILayout.Label($"Wave {Mathf.Min(shownWave, plan.WaveCount)} / {plan.WaveCount}     Money {battle.Budget:0}", label);
             GUILayout.Label($"Line {battle.LineDamage:0.#} / {battle.LineHealth:0}     Enemies killed {Kills()}", label);
+            if (battle.Rewards > 0f) GUILayout.Label($"Kill rewards this wave: {battle.Rewards:0} (paid when the wave is held)", small);
             if (battle.Phase == BattlePhase.Round && !runOver)
                 GUILayout.Label($"On the field {battle.Attackers.Count}, still coming {battle.Pending}", small);
 

@@ -83,5 +83,29 @@ namespace Treeline.Tests
             Assert.IsTrue(b.TryPlace("rifle_squad", 30f, 200f, out _, out _));
             Assert.AreEqual(0.35f, BattleRules.Parse(Data("battle_rules.csv")).PlacementZoneStart, 1e-4f);
         }
+
+        [Test]
+        public void KillRewards_AreAShareOfThreatValue_AndArePaidWhenCollected()
+        {
+            var rules = BattleRules.Parse(Data("battle_rules.csv") + "kill_reward_share,0.5,test\n");
+            var field = new Field { Name = "t", Width = 60f, Height = 300f };
+            var obstacles = ObstacleTable.Parse(Data("obstacles.csv"));
+            var units = UnitTable.Parse(Data("units.csv"));
+            var b = new Battle(new NavGrid(field, obstacles), units, 1000f, new VisionMap(field, obstacles),
+                ArmourTable.Parse(Data("armour.csv")), 1000f, 1, rules);
+            Assert.IsTrue(b.TryPlace("machine_gun", 30f, 280f, out _, out _));
+            b.QueueWave("recruit", 3, 0f, 1f);
+            b.StartRound();
+            for (float t = 0f; t < 120f && b.Outcome == BattleOutcome.Ongoing; t += 0.05f) b.Step(0.05f);
+            Assert.AreEqual(BattleOutcome.Won, b.Outcome);
+            int killed = b.Stats["recruit"].Killed;
+            Assert.Greater(killed, 0);
+            float expected = killed * units.Get("recruit").ThreatValue * 0.5f;
+            Assert.AreEqual(expected, b.Rewards, 0.01f, "earned, not yet paid");
+            float budget = b.Budget;
+            Assert.AreEqual(expected, b.CollectRewards(), 0.01f);
+            Assert.AreEqual(budget + expected, b.Budget, 0.01f);
+            Assert.AreEqual(0f, b.Rewards);
+        }
     }
 }

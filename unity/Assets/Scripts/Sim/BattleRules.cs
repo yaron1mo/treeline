@@ -39,6 +39,8 @@ namespace Treeline.Sim
         public float WaveIncome = 300f;
         /// <summary>Share of a defender's build_cost given back when it is removed.</summary>
         public float SellRefund = 0.5f;
+        /// <summary>Share of an attacker's threat_value paid for killing it; paid out when the wave is held.</summary>
+        public float KillRewardShare = 0f;
         /// <summary>Defenders may stand only from this share of the field's depth down to our line (0 = anywhere).</summary>
         public float PlacementZoneStart = 0.35f;
 
@@ -69,6 +71,7 @@ namespace Treeline.Sim
             r.StartBudget = Num(values, "start_budget", r.StartBudget);
             r.WaveIncome = Num(values, "wave_income", r.WaveIncome);
             r.SellRefund = Num(values, "sell_refund", r.SellRefund);
+            r.KillRewardShare = Num(values, "kill_reward_share", r.KillRewardShare);
             r.PlacementZoneStart = Num(values, "placement_zone_start", r.PlacementZoneStart);
             if (values.TryGetValue("spread_ring_shares", out var rings) && rings.Length > 0)
             {
