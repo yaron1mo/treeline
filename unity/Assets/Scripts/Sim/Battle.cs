@@ -134,6 +134,11 @@ namespace Treeline.Sim
         internal float AirTimer;
         internal Defender AirTarget;
         public bool Airborne => Def != null && Def.Type == "aviation";
+        /// <summary>A helicopter sitting on the ground letting its troops out (Yaroslav, 2026-11-16): for shooting it is a
+        /// ground target then, not something in the air.</summary>
+        public bool Landed => Airborne && Def.Behaviour == "air_assault" && AirPhase == 1;
+        /// <summary>In the air for shooting: aviation that is not landed.</summary>
+        public bool InAir => Airborne && !Landed;
         internal float[] MoveCost;
     }
 
@@ -1021,7 +1026,7 @@ namespace Treeline.Sim
             }
         }
 
-        static bool IsInAir(Unit u) => u is Drone || (u is Attacker a && a.Airborne);
+        static bool IsInAir(Unit u) => u is Drone || (u is Attacker a && a.InAir);
 
         /// <summary>A carrier that has been hit and stopped to let its troops out: the defence turns to the troops
         /// (Yaroslav, 2026-11-16). It is still a target when there is nothing else.</summary>
@@ -1069,7 +1074,7 @@ namespace Treeline.Sim
             float dist = (float)Math.Sqrt((target.X - s.X) * (target.X - s.X) + (target.Y - s.Y) * (target.Y - s.Y));
             Lead(target, dist / speed, out float px, out float py);
             BlindAim(aimSeen, ref px, ref py);
-            if ((target is Attacker air && air.Airborne) || target is Drone)
+            if ((target is Attacker air && air.InAir) || target is Drone)
             {
                 // Aircraft weave and change speed: the shooter's aim point is off by about aircraft_evasion_m.
                 px += (float)Gauss() * rules.AircraftEvasionM;
@@ -1089,7 +1094,7 @@ namespace Treeline.Sim
             {
                 foreach (var a in attackers)
                 {
-                    if (!a.Alive || a.Airborne != atAir || !CanTarget(w, a.Def)) continue;
+                    if (!a.Alive || a.InAir != atAir || !CanTarget(w, a.Def)) continue;
                     float along = AlongIfHit(s.X, s.Y, ux, uy, speed, range, a);
                     if (along >= 0f && along < best) { best = along; victim = a; }
                 }

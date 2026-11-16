@@ -97,5 +97,27 @@ namespace Treeline.Tests
             Run(b, 60f);
             Assert.AreEqual(10f, b.LineDamage, 1e-3f);
         }
+
+        [Test]
+        public void AHelicopter_IsInTheAir_ExceptWhileItSitsLettingItsTroopsOut()
+        {
+            // Two states (Yaroslav, 2026-11-16): flying, misses go into the sky; on the ground, it is a ground target.
+            var b = Make();
+            b.QueueWave("helicopter", 1, 0f, 1f);
+            b.StartRound();
+            bool flew = false, landed = false, flewAfter = false;
+            for (float t = 0f; t < 60f && b.Outcome == BattleOutcome.Ongoing; t += 0.05f)
+            {
+                b.Step(0.05f);
+                foreach (var a in b.Attackers)
+                {
+                    if (a.Def.Id != "helicopter") continue;
+                    if (a.Landed) { landed = true; Assert.IsFalse(a.InAir); Assert.IsTrue(a.Dismounting); }
+                    else if (!landed) { flew = true; Assert.IsTrue(a.InAir); }
+                    else { flewAfter = true; Assert.IsTrue(a.InAir); }
+                }
+            }
+            Assert.IsTrue(flew && landed && flewAfter, "flies in, lands, flies out");
+        }
     }
 }
