@@ -119,6 +119,8 @@ namespace Treeline.Render
                     PaintPolygon(Points(f, "poly"), pixels, c, tone, angle, crops);
                 }
 
+            ScatterFieldDetail(pixels, crops);
+
             foreach (var f in entries)
             {
                 string type = Kind(f);
@@ -186,13 +188,39 @@ namespace Treeline.Render
             }
         }
 
+        void ScatterFieldDetail(Color32[] pixels, byte[] crops)
+        {
+            // Individual stalks would be wasteful; a few low-resolution marks imply crop texture.
+            // These are baked once and will be covered by roads, water, tracks and later objects.
+            for (int y = 2; y < pixelHeight - 2; y += 7)
+                for (int x = 2; x < pixelWidth - 2; x += 7)
+                {
+                    int cell = Idx(x, y);
+                    float n = Hash(x / 7, y / 7, 42);
+                    float wx = x / (float)PixelsPerMetre;
+                    float wy = y / (float)PixelsPerMetre;
+                    if (crops[cell] == 2 && n > 0.32f)
+                    {
+                        Blob(pixels, wx, wy, 0.55f, 0.65f,
+                            new Color32(66, 99, 45, 255), 178);
+                        if (n > 0.70f)
+                            Blob(pixels, wx - 0.16f, wy - 0.25f, 0.27f, 0.28f,
+                                new Color32(212, 184, 93, 255), 195);
+                    }
+                    else if (crops[cell] == 1 && n > 0.69f)
+                        Blob(pixels, wx, wy, 0.4f, 0.5f,
+                            new Color32(230, 199, 125, 255), 180);
+                }
+        }
+
         void PaintPolygon(Vector2[] poly, Color32[] pixels, Color32 color,
             string tone, int angle, byte[] crops)
         {
             if (poly.Length < 3) return;
             Bounds(poly, out int left, out int top, out int right, out int bottom);
             // These are visual-only fringes; the actual map polygon and movement mask stay unchanged.
-            int fringe = 7 * PixelsPerMetre;
+            bool naturalField = tone == "plowed" || tone == "stubble" || tone == "sunflower";
+            int fringe = naturalField ? 7 * PixelsPerMetre : 0;
             left = Mathf.Max(0, left - fringe);
             top = Mathf.Max(0, top - fringe);
             right = Mathf.Min(pixelWidth - 1, right + fringe);
@@ -205,15 +233,19 @@ namespace Treeline.Render
                     float wx = (x + 0.5f) / PixelsPerMetre;
                     float wy = (y + 0.5f) / PixelsPerMetre;
                     bool inside = Inside(poly, wx, wy);
-                    float distance = EdgeDistance(poly, wx, wy);
-                    if (!inside && distance > 7f) continue;
-
-                    // Irregular, feathered strips break straight borders without changing field geometry.
-                    float irregular = (Hash(x / 13, y / 13, 71) - 0.5f) * 3f +
-                        (Hash(x / 31, y / 31, 37) - 0.5f) * 3.6f;
-                    float signed = (inside ? distance : -distance) + irregular;
-                    float blend = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((signed + 4.3f) / 8.6f));
-                    if (blend < 0.01f) continue;
+                    if (!inside && !naturalField) continue;
+                    float blend = 1f;
+                    if (naturalField)
+                    {
+                        float distance = EdgeDistance(poly, wx, wy);
+                        if (!inside && distance > 7f) continue;
+                        // Irregular, feathered strips break straight field borders only.
+                        float irregular = (Hash(x / 13, y / 13, 71) - 0.5f) * 3f +
+                            (Hash(x / 31, y / 31, 37) - 0.5f) * 3.6f;
+                        float signed = (inside ? distance : -distance) + irregular;
+                        blend = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((signed + 4.3f) / 8.6f));
+                        if (blend < 0.01f) continue;
+                    }
 
                     float line = Mathf.Sin((wx * dx + wy * dy) *
                         (tone == "plowed" ? 2.5f : tone == "sunflower" ? 3.1f : 3.4f));
