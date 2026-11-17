@@ -101,6 +101,7 @@ namespace UnityEngine
         public static float Distance(Vector2 a, Vector2 b) => 0f;
         public static Vector2 Lerp(Vector2 a, Vector2 b, float t) => a;
         public static Vector2 operator -(Vector2 a, Vector2 b) => a;
+        public static Vector2 operator -(Vector2 a) => a;
         public static Vector2 operator +(Vector2 a, Vector2 b) => a;
         public static Vector2 operator *(Vector2 a, float d) => a;
         public static Vector2 operator *(float d, Vector2 a) => a;
