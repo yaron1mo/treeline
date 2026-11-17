@@ -53,7 +53,12 @@ namespace Treeline.Sim
         /// <summary>Optional point for the next FPV launch to search; no prior enemy spotting is required.</summary>
         public bool HasDroneWaypoint;
         public float DroneWaypointX, DroneWaypointY;
+        /// <summary>What was paid for it (prices can rise with each purchase); selling gives back a share of this.</summary>
+        public float PaidCost;
     }
+
+    /// <summary>A trench the player dug: a firing position, cover for whoever stands in it (both sides).</summary>
+    public struct DugTrench { public float X, Y, RadiusM; }
 
     /// <summary>A drone in the air: flies from its operator to an attacker, then strikes (FPV) or drops grenades (bomber).
     /// Def is the operator's row (damage, speed, ammo); Body is the drone's own row (hp, hit radius, who can shoot it),
@@ -124,9 +129,26 @@ namespace Treeline.Sim
     }
 
     /// <summary>An attacker walking or driving to the rear edge.</summary>
+    /// <summary>How a ground attacker moves (Yaroslav, 2026-11-17).</summary>
+    public enum Formation
+    {
+        /// <summary>One behind the other along the route: fast; only the front ones can shoot (the rest are blocked by
+        /// their own), and a blast or a burst along the column hits several. Used while they know of no defence on the
+        /// way, or know how to go round it.</summary>
+        Column,
+        /// <summary>Spread sideways across the route (assault line, broad front): slower, everyone can shoot, a blast
+        /// hits one or two. Used when every way crosses a known defence.</summary>
+        Line,
+    }
+
     public sealed class Attacker : Unit
     {
         public UnitClass Class;
+        public Formation Formation;
+        /// <summary>Where it wants to be beside the route, metres (+ = to its right).</summary>
+        public float Offset;
+        /// <summary>Where it is beside the route now, metres; it moves towards <see cref="Offset"/>.</summary>
+        public float CurrentOffset;
         /// <summary>The wave it came with (1 = first).</summary>
         public int Wave;
         public RouteMode Mode;
@@ -263,12 +285,59 @@ namespace Treeline.Sim
             this.rules = rules ?? new BattleRules();
             LineHealth = lineHealth > 0f ? lineHealth : this.rules.LineHealth;
             rng = new Random(seed);
+            formationRng = new Random(unchecked(seed * 7919 + 17));   // apart from combat rolls
             Budget = budget;
             if (this.rules.EdgeMarginM > 0f && grid.EdgeMarginM <= 0f) grid.BlockEdges(this.rules.EdgeMarginM);
             routesVersion = grid.Version;
             RunSpeedMps = units.TryGet(RunBaseUnitId, out var baseUnit) && baseUnit.SpeedMps > 0f
                 ? baseUnit.SpeedMps * this.rules.RunSpeedMultiplier
                 : 18f;
+        }
+
+        readonly Random formationRng;
+
+        /// <summary>Formation from the route: column while the way is free or can go round known defence, assault
+        /// line when every way crosses it. Sets the place beside the route.</summary>
+        void SetFormation(Attacker a)
+        {
+            var f = a.Mode == RouteMode.Safest ? Formation.Line : Formation.Column;
+            if (f == a.Formation && (a.Offset != 0f || a.CurrentOffset != 0f)) return;
+            a.Formation = f;
+            bool vehicle = a.Class == UnitClass.Vehicle;
+            float half = f == Formation.Line
+                ? (vehicle ? rules.LineWidthVehicleM : rules.LineWidthM) / 2f
+                : (vehicle ? 0f : rules.ColumnJitterM);
+            a.Offset = half > 0f ? (float)(formationRng.NextDouble() * 2.0 - 1.0) * half : 0f;
+        }
+
+        /// <summary>After moving along the route: step sideways towards its place in the formation, as far as the
+        /// ground lets it (never onto a cell it cannot walk).</summary>
+        void PlaceBesideRoute(Attacker a, float dt)
+        {
+            if (a.Path == null || a.Path.Count < 2) return;
+            int i = Math.Min(a.PathIndex, a.Path.Count - 2);
+            float ax = grid.CenterX(a.Path[i]), ay = grid.CenterY(a.Path[i]);
+            float bx = grid.CenterX(a.Path[i + 1]), by = grid.CenterY(a.Path[i + 1]);
+            float dx = bx - ax, dy = by - ay, len = (float)Math.Sqrt(dx * dx + dy * dy);
+            if (len < 1e-3f) return;
+            float px = -dy / len, py = dx / len;   // to the right of the way it goes
+            float step = Math.Max(0.5f, a.Def.SpeedMps * 0.5f) * dt;
+            float want = a.CurrentOffset + Math.Max(-step, Math.Min(step, a.Offset - a.CurrentOffset));
+            float cx = a.X, cy = a.Y;
+            // The ground decides how far out it can stand: halve the offset until the cell is walkable.
+            for (int k = 0; k < 4; k++)
+            {
+                float x = cx + px * want, y = cy + py * want;
+                if (x >= 0f && y >= 0f && x <= grid.Width && y <= grid.Height &&
+                    !float.IsPositiveInfinity(a.MoveCost != null ? a.MoveCost[grid.CellAt(x, y)] : 1f))
+                {
+                    a.X = x; a.Y = y;
+                    a.CurrentOffset = want;
+                    return;
+                }
+                want *= 0.5f;
+            }
+            a.CurrentOffset = 0f;
         }
 
         UnitStats StatsFor(UnitDef d)
@@ -288,15 +357,56 @@ namespace Treeline.Sim
             placed = null;
             if (!units.TryGet(unitId, out var def)) { why = "No such unit"; return false; }
             if (!def.IsDefence) { why = "Not a defender"; return false; }
-            if (def.BuildCost > Budget) { why = "Not enough budget"; return false; }
+            float cost = CostOf(unitId);
+            if (cost > Budget) { why = "Not enough budget"; return false; }
             if (!CheckSpot(x, y, out var flow, out why)) return false;
 
-            Budget -= def.BuildCost;
-            var d = new Defender { Id = nextId++, Def = def, Hp = def.Hp };
+            Budget -= cost;
+            bought.TryGetValue(unitId, out int n);
+            bought[unitId] = n + 1;
+            var d = new Defender { Id = nextId++, Def = def, Hp = def.Hp, PaidCost = cost };
             defenders.Add(d);
             StatsFor(def).Spawned++;
             Send(d, flow, x, y);
             placed = d;
+            return true;
+        }
+
+        readonly Dictionary<string, int> bought = new Dictionary<string, int>();
+
+        /// <summary>The price of the next unit of this type: build_cost, raised by cost_increase for every one bought
+        /// before in this battle (sold or lost ones still count).</summary>
+        public float CostOf(string unitId)
+        {
+            if (!units.TryGet(unitId, out var def)) return float.PositiveInfinity;
+            bought.TryGetValue(unitId, out int n);
+            return def.CostAfter(n);
+        }
+
+        readonly List<DugTrench> trenches = new List<DugTrench>();
+        public IReadOnlyList<DugTrench> Trenches => trenches;
+
+        /// <summary>The price of a trench (obstacles.csv trench build_cost), or infinity when it cannot be dug.</summary>
+        public float TrenchCost =>
+            vision != null && vision.Table.TryGet("trench", out var t) && t.Buildable ? t.BuildCost : float.PositiveInfinity;
+
+        /// <summary>Dig a trench here (Yaroslav 2026-11-17): a round firing position trench_radius_m across that gives
+        /// trench cover to whoever stands in it. It does not change how anyone moves. Stays for the whole run.</summary>
+        public bool TryDig(float x, float y, out string why)
+        {
+            float cost = TrenchCost;
+            if (float.IsPositiveInfinity(cost)) { why = "No trench in the obstacle table"; return false; }
+            if (cost > Budget) { why = "Not enough budget"; return false; }
+            if (x < 0f || y < 0f || x > grid.Width || y > grid.Height) { why = "Outside the field"; return false; }
+            if (y < PlacementMinY) { why = "Too close to the enemy: dig in the lower part of the field"; return false; }
+            int cell = grid.CellAt(x, y);
+            if (float.IsPositiveInfinity(grid.Cost(UnitClass.Infantry)[cell])) { why = "Cannot dig there"; return false; }
+            vision.Table.TryGet("trench", out var t);
+            float r = rules.TrenchRadiusM;
+            vision.PlaceObject(t, x, y, r);
+            trenches.Add(new DugTrench { X = x, Y = y, RadiusM = r });
+            Budget -= cost;
+            why = "";
             return true;
         }
 
@@ -363,7 +473,7 @@ namespace Treeline.Sim
             foreach (var dr in drones) if (dr.Alive && dr.Owner == d) { dr.Alive = false; }
             drones.RemoveAll(dr => !dr.Alive);
             defenders.Remove(d);
-            refund = Math.Max(0f, d.Def.BuildCost * refundShare);
+            refund = Math.Max(0f, d.PaidCost * refundShare);
             Budget += refund;
             return true;
         }
@@ -570,7 +680,10 @@ namespace Treeline.Sim
                 }
 
                 if (a.Stuck || a.Def.SpeedMps <= 0f) continue;
-                if (Walk(a, a.MoveCost, a.Def.SpeedMps, dt))
+                float speed = a.Def.SpeedMps * (a.Formation == Formation.Line ? rules.LineSpeedMult : 1f);
+                bool crossed = Walk(a, a.MoveCost, speed, dt);
+                if (!crossed) PlaceBesideRoute(a, dt);
+                if (crossed)
                 {
                     float dmg = a.Def.LineDamage;
                     if (a.Passengers > 0 && units.TryGet(a.Def.CarriesUnit, out var p)) dmg += a.Passengers * p.LineDamage;
@@ -747,6 +860,7 @@ namespace Treeline.Sim
                 a.Path = route.Flow.Trace(start);
                 a.X = grid.CenterX(start);
                 a.Y = grid.CenterY(start);
+                SetFormation(a);
                 attackers.Add(a);
                 StatsFor(def).Spawned++;
             }
@@ -766,6 +880,8 @@ namespace Treeline.Sim
             a.Path = a.Stuck ? null : flow.Trace(cell);
             a.PathIndex = 0;
             a.SegmentDone = 0f;
+            SetFormation(a);
+            a.CurrentOffset = 0f;   // the new route starts where it stands
         }
 
         int NearestReachable(FlowField flow, int cell)
@@ -1354,6 +1470,41 @@ namespace Treeline.Sim
             return c;
         }
 
+        /// <summary>
+        /// One of the shooter's own side stands in its line of fire (within friendly_block_m of the line, between the
+        /// two), so it holds fire (Yaroslav, 2026-11-17: a column cannot shoot over its own men's backs). Indirect fire
+        /// and shots at aircraft and drones go over everyone.
+        /// </summary>
+        bool FriendBlocks(Unit shooter, Unit target)
+        {
+            float w = rules.FriendlyBlockM;
+            if (w <= 0f || shooter.Def.IndirectFire || IsInAir(target)) return false;
+            float dx = target.X - shooter.X, dy = target.Y - shooter.Y;
+            float dist = (float)Math.Sqrt(dx * dx + dy * dy);
+            if (dist < 2f) return false;
+            float ux = dx / dist, uy = dy / dist;
+            if (shooter is Attacker)
+            {
+                foreach (var o in attackers)
+                    if (o != shooter && o.Alive && !o.InAir && Between(o, shooter, ux, uy, dist, w)) return true;
+            }
+            else
+            {
+                foreach (var o in defenders)
+                    if (o != shooter && o.Alive && o.Def.Type != "aviation" && Between(o, shooter, ux, uy, dist, w)) return true;
+            }
+            return false;
+        }
+
+        static bool Between(Unit o, Unit s, float ux, float uy, float dist, float w)
+        {
+            float ox = o.X - s.X, oy = o.Y - s.Y;
+            float along = ox * ux + oy * uy;
+            if (along < 1f || along > dist - 1f) return false;
+            float side = Math.Abs(ox * uy - oy * ux);
+            return side < w;
+        }
+
         static bool InRange(Unit a, Unit b, float range)
         {
             float dx = a.X - b.X, dy = a.Y - b.Y;
@@ -1447,6 +1598,7 @@ namespace Treeline.Sim
                 }
                 if (target == null) continue;
                 Record(d);
+                if (FriendBlocks(d, target)) continue;   // one of ours in the way: hold fire, stay ready
                 BeginShot(d);
                 float aim = AimAt(d, target, own);
                 if (d.Def.IndirectFire) FireShell(d, target, aim);
@@ -1492,7 +1644,7 @@ namespace Treeline.Sim
                     }
                     a.Target = target;
                 }
-                if (target != null)
+                if (target != null && !FriendBlocks(a, target))
                 {
                     BeginShot(a);
                     FireLine(a, target, AimAt(a, target, own), moving);

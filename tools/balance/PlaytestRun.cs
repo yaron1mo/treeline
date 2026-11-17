@@ -198,7 +198,8 @@ static class PlaytestRun
     static float Place(Battle b, UnitTable units, string id, Field f, float? lane, Random rng)
     {
         var def = units.Get(id);
-        if (b.Budget < def.BuildCost) return 0f;
+        float cost = b.CostOf(id);
+        if (b.Budget < cost) return 0f;
         for (int tries = 0; tries < 20; tries++)
         {
             float x;
@@ -208,7 +209,7 @@ static class PlaytestRun
             x += (float)(rng.NextDouble() * 2 - 1) * 30f;
             x = Math.Max(4f, Math.Min(f.Width - 4f, x));
             float y = f.Height * (0.55f + 0.35f * (float)rng.NextDouble());
-            if (b.TryPlace(id, x, y, out _, out _)) return def.BuildCost;
+            if (b.TryPlace(id, x, y, out _, out _)) return cost;
         }
         return 0f;
     }
