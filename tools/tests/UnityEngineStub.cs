@@ -34,13 +34,16 @@ namespace UnityEngine
     public class Transform : Component
     {
         public Vector3 position, localPosition, localScale;
+        public Quaternion rotation;
         public void SetParent(Transform p, bool worldPositionStays) { }
     }
-    public sealed class SpriteRenderer : Component { public Sprite sprite; public Color color; public int sortingOrder; }
+    public sealed class SpriteRenderer : Component { public Sprite sprite; public Color color; public int sortingOrder; public bool enabled; }
     public sealed class Sprite : Object
     {
         public static Sprite Create(Texture2D t, Rect r, Vector2 pivot, float pixelsPerUnit) => null;
+        public static Sprite Create(Texture2D t, Rect r, Vector2 pivot, float pixelsPerUnit, uint extrude, SpriteMeshType meshType) => null;
     }
+    public enum SpriteMeshType { Tight, FullRect }
     public class Texture : Object { public FilterMode filterMode; public int width => 0; public int height => 0; }
     public sealed class Texture2D : Texture
     {
@@ -90,7 +93,11 @@ namespace UnityEngine
         public float x, y;
         public Vector2(float x, float y) { this.x = x; this.y = y; }
         public Vector2 normalized => this;
+        public static Vector2 zero => default(Vector2);
+        public static Vector2 right => new Vector2(1f, 0f);
         public float magnitude => 0f;
+        public float sqrMagnitude => 0f;
+        public static float Dot(Vector2 a, Vector2 b) => 0f;
         public static float Distance(Vector2 a, Vector2 b) => 0f;
         public static Vector2 Lerp(Vector2 a, Vector2 b, float t) => a;
         public static Vector2 operator -(Vector2 a, Vector2 b) => a;
@@ -103,6 +110,12 @@ namespace UnityEngine
         public float x, y, z;
         public Vector3(float x, float y, float z) { this.x = x; this.y = y; this.z = z; }
         public static Vector3 zero => default(Vector3);
+        public static Vector3 one => new Vector3(1f, 1f, 1f);
+        public static Vector3 operator *(Vector3 a, float b) => a;
+    }
+    public struct Quaternion
+    {
+        public static Quaternion Euler(float x, float y, float z) => default(Quaternion);
     }
     public struct Rect { public float x, y, width, height; public Rect(float x, float y, float w, float h) { this.x = x; this.y = y; width = w; height = h; } }
     public struct Matrix4x4 { public static Matrix4x4 Scale(Vector3 v) => default(Matrix4x4); public static Matrix4x4 identity => default(Matrix4x4); }
@@ -122,6 +135,10 @@ namespace UnityEngine
     {
         public const float PI = 3.14159265f;
         public const float Deg2Rad = PI / 180f;
+        public const float Rad2Deg = 180f / PI;
+        public static float SmoothStep(float a, float b, float t) => t;
+        public static float Pow(float a, float p) => a;
+        public static float Atan2(float a, float b) => a;
         public static float Repeat(float t, float length) => t;
         public static float Abs(float v) => v;
         public static float Lerp(float a, float b, float t) => a;
