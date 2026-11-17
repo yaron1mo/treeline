@@ -16,7 +16,9 @@ namespace Treeline.Render
         const float WindFrameSeconds = 0.23f;
         static readonly string[] MapFiles = { "forest-belts", "balka-and-railway", "river-crossing" };
 
-        SpriteRenderer ground, wind, cloud;
+        SpriteRenderer ground, wind, cloud, cloudTwo, cloudThree;
+        BattlefieldEffects effects;
+        bool demoEffects;
         Texture2D groundTexture, cloudTexture;
         Sprite[] windFrames;
         Texture2D[] windTextures;
@@ -44,6 +46,11 @@ namespace Treeline.Render
             ground = Layer("Terrain", -100);
             wind = Layer("Moving crops", -98);
             cloud = Layer("Cloud shadow", -95);
+            cloudTwo = Layer("Cloud shadow 2", -94);
+            cloudThree = Layer("Cloud shadow 3", -93);
+            var fxObject = new GameObject("Pooled battlefield FX");
+            fxObject.transform.SetParent(transform, false);
+            effects = fxObject.AddComponent<BattlefieldEffects>();
             LoadMap(0);
         }
 
@@ -81,6 +88,7 @@ namespace Treeline.Render
             var crops = new byte[terrain.Length];
             DrawBase(terrain);
             DrawFeatures(features, terrain, crops);
+            PaintAtmosphereDecor(terrain);
             MarkWater(terrain, crops);
 
             groundTexture = Texture(terrain);
@@ -88,6 +96,8 @@ namespace Treeline.Render
             ground.transform.position = Vector3.zero;
             MakeWind(crops);
             MakeCloud();
+            effects.Initialize(width, height);
+            effects.SetDemo(demoEffects);
             FitCamera(width, height);
         }
 
@@ -156,11 +166,7 @@ namespace Treeline.Render
 
             foreach (var f in entries)
                 if (Kind(f) == "tracks")
-                {
-                    var line = Points(f, "line");
-                    PaintPath(line, 1.8f, pixels, new Color32(115, 88, 59, 255));
-                    PaintPath(line, 0.8f, pixels, new Color32(199, 167, 109, 255));
-                }
+                    DrawTractorTracks(Points(f, "line"), pixels);
 
             foreach (var f in entries)
                 if (Kind(f) == "craters" && f.TryGetValue("points", out var value) && value is List<object> spots)
@@ -169,11 +175,7 @@ namespace Treeline.Render
                         var coords = (List<object>)point;
                         float x = Convert.ToSingle(coords[0]), y = Convert.ToSingle(coords[1]);
                         float r = coords.Count > 2 ? Convert.ToSingle(coords[2]) : 1f;
-                        Blob(pixels, x - 0.45f, y - 0.35f, r * 1.55f, r * 1.2f,
-                            new Color32(224, 185, 123, 255), 185);
-                        Blob(pixels, x, y, r * 1.15f, r, new Color32(65, 54, 43, 255), 235);
-                        Blob(pixels, x + 0.20f, y + 0.25f, r * 0.7f, r * 0.65f,
-                            new Color32(39, 38, 32, 255), 220);
+                        DrawCrater(pixels, x, y, r);
                     }
 
             // Decorative, deliberately broken bridge approaches; they do not alter the navigation grid.
@@ -247,14 +249,21 @@ namespace Treeline.Render
                         if (blend < 0.01f) continue;
                     }
 
-                    float line = Mathf.Sin((wx * dx + wy * dy) *
-                        (tone == "plowed" ? 2.5f : tone == "sunflower" ? 3.1f : 3.4f));
-                    float grain = Hash(x / 3, y / 3, 7) * 0.12f +
-                        Hash(x, y, 19) * 0.05f + Hash(x / 32, y / 32, 24) * 0.13f;
-                    float stripe = tone == "river" || tone == "pond" ?
-                        line * 0.045f : line * 0.055f;
+                    // Broad field patches and actual crop/furrow ROWS instead of uniform noise.
+                    float across = wx * dx + wy * dy;
+                    float spacing = tone == "plowed" ? 4.7f : tone == "sunflower" ? 3.6f : 5.2f;
+                    float row = Mathf.Repeat(across, spacing) / spacing;
+                    float ridge = tone == "plowed"
+                        ? (row < 0.22f ? -0.23f : row > 0.80f ? 0.14f : -0.015f)
+                        : tone == "sunflower"
+                            ? (row < 0.26f ? -0.18f : 0.07f)
+                            : (row < 0.12f ? -0.12f : 0.02f);
+                    float patch = Hash(x / 45, y / 43, 24) * 0.14f +
+                        Hash(x / 19, y / 23, 66) * 0.07f;
+                    float grain = Hash(x / 3, y / 3, 7) * 0.07f +
+                        Hash(x, y, 19) * 0.04f;
                     int i = Idx(x, y);
-                    Color32 target = Tint(color, grain + stripe);
+                    Color32 target = Tint(color, patch + grain + ridge);
                     pixels[i] = Mix(pixels[i], target, blend);
                     if (crops != null && inside && blend > 0.58f)
                         crops[i] = tone == "sunflower" ? (byte)2 :
@@ -522,7 +531,7 @@ namespace Treeline.Render
                             pixels[i] = new Color32(196, 219, 197, (byte)(glint * 36f));
                             continue;
                         }
-                        byte alpha = (byte)((crops[i] == 2 ? 39 : 18) * strength *
+                        byte alpha = (byte)((crops[i] == 2 ? 91 : 54) * strength *
                             (0.7f + 0.3f * (0.5f + 0.5f * ripple)));
                         pixels[i] = new Color32(237, 218, 138, alpha);
                     }
@@ -544,7 +553,7 @@ namespace Treeline.Render
                     float dx = (x - 64f) / 60f, dy = (y - 36f) / 32f;
                     float body = Mathf.Clamp01(1f - dx * dx - dy * dy);
                     float rough = 0.5f + Hash(x / 6, y / 6, 59) * 0.5f;
-                    pixels[y * w + x] = new Color32(23, 37, 27, (byte)(body * body * rough * 53));
+                    pixels[y * w + x] = new Color32(22, 31, 24, (byte)(body * body * rough * 96));
                 }
             cloudTexture = new Texture2D(w, h, TextureFormat.RGBA32, false);
             cloudTexture.filterMode = FilterMode.Bilinear;
@@ -553,8 +562,12 @@ namespace Treeline.Render
             cloudSprite = Sprite.Create(cloudTexture, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 0.9f);
             spritesToDestroy.Add(cloudSprite);
             cloud.sprite = cloudSprite;
+            cloudTwo.sprite = cloudSprite;
+            cloudThree.sprite = cloudSprite;
+            cloudTwo.transform.localScale = new Vector3(1.4f, 1.1f, 1f);
+            cloudThree.transform.localScale = new Vector3(0.85f, 1.25f, 1f);
             cloudClock = 0f;
-            cloud.transform.position = new Vector3(-60f, 95f, 0f);
+            cloud.transform.localPosition = new Vector3(-70f, 95f, 0f);
         }
 
         Texture2D Texture(Color32[] pixels)
@@ -606,9 +619,14 @@ namespace Treeline.Render
                 windFrame = (windFrame + 1) % windFrames.Length;
                 wind.sprite = windFrames[windFrame];
             }
-            cloudClock += Time.unscaledDeltaTime * 0.6f;
-            cloud.transform.position = new Vector3(-65f + Mathf.Repeat(cloudClock, 340f) - 100f,
-                95f - Mathf.Sin(cloudClock * 0.025f) * 25f, 0);
+            cloudClock += Time.unscaledDeltaTime * 2.3f;
+            float drift = Mathf.Repeat(cloudClock, 460f);
+            cloud.transform.localPosition = new Vector3(-220f + drift,
+                90f - Mathf.Sin(cloudClock * 0.026f) * 14f, 0f);
+            cloudTwo.transform.localPosition = new Vector3(-320f + Mathf.Repeat(drift + 190f, 470f),
+                -17f - Mathf.Sin(cloudClock * 0.018f) * 21f, 0f);
+            cloudThree.transform.localPosition = new Vector3(-230f + Mathf.Repeat(drift + 320f, 470f),
+                -142f + Mathf.Cos(cloudClock * 0.029f) * 17f, 0f);
         }
 
         void OnGUI()
@@ -616,14 +634,21 @@ namespace Treeline.Render
             // Temporary preview controls, not the final battle HUD.
             float s = Mathf.Max(1f, Screen.width / 520f);
             GUI.matrix = Matrix4x4.Scale(new Vector3(s, s, 1f));
-            GUILayout.BeginArea(new Rect(8, 8, Screen.width / s - 16, 112));
+            GUILayout.BeginArea(new Rect(8, 8, Screen.width / s - 16, 172));
             GUILayout.BeginVertical(GUI.skin.box);
             GUILayout.Label("TREELINE  /  STEPPE PATCH  /  " + mapTitle);
+            GUILayout.Label("Visual test: wind, sunlight, birds, crop rows and pooled FX");
             GUILayout.BeginHorizontal();
             for (int i = 0; i < MapFiles.Length; i++)
                 if (GUILayout.Button((i + 1).ToString() + " · " + (i == 0 ? "Forest" : i == 1 ? "Balka" : "River"),
                     GUILayout.Height(34))) { if (i != mapIndex) LoadMap(i); }
             GUILayout.EndHorizontal();
+            if (GUILayout.Button(demoEffects ? "FX DEMO: ON (not Sim)" : "FX DEMO: OFF",
+                GUILayout.Height(30)))
+            {
+                demoEffects = !demoEffects;
+                if (effects != null) effects.SetDemo(demoEffects);
+            }
             GUILayout.EndVertical();
             GUILayout.EndArea();
             GUI.matrix = Matrix4x4.identity;
@@ -634,6 +659,8 @@ namespace Treeline.Render
             if (ground != null) ground.sprite = null;
             if (wind != null) wind.sprite = null;
             if (cloud != null) cloud.sprite = null;
+            if (cloudTwo != null) cloudTwo.sprite = null;
+            if (cloudThree != null) cloudThree.sprite = null;
             foreach (var sprite in spritesToDestroy) if (sprite != null) Destroy(sprite);
             spritesToDestroy.Clear();
             if (groundTexture != null) Destroy(groundTexture);
