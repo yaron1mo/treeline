@@ -24,7 +24,7 @@ namespace Treeline.Render
         Texture2D[] windTextures;
         Sprite cloudSprite;
         int mapIndex, pixelWidth, pixelHeight, windFrame;
-        float windClock, cloudClock;
+        float windClock, cloudClock, ambientSmokeClock;
         string mapTitle = "";
         readonly List<Sprite> spritesToDestroy = new List<Sprite>();
 
@@ -98,6 +98,8 @@ namespace Treeline.Render
             MakeCloud();
             effects.Initialize(width, height);
             effects.SetDemo(demoEffects);
+            ambientSmokeClock = 0f;
+            SeedAmbientSmoke();
             FitCamera(width, height);
         }
 
@@ -765,6 +767,15 @@ namespace Treeline.Render
             cam.backgroundColor = new Color(0.12f, 0.17f, 0.12f);
         }
 
+        void SeedAmbientSmoke()
+        {
+            // Wrecks are graphic-only scale cues; the smoke is purely decorative.
+            Vector2 wreck = mapIndex == 0 ? new Vector2(112, 222)
+                : mapIndex == 1 ? new Vector2(110, 228)
+                : new Vector2(159, 274);
+            effects.WreckSmoke(wreck);
+        }
+
         void Update()
         {
             if (Input.GetKeyDown(KeyCode.Alpha1)) LoadMap(0);
@@ -778,6 +789,12 @@ namespace Treeline.Render
                 windClock -= WindFrameSeconds;
                 windFrame = (windFrame + 1) % windFrames.Length;
                 wind.sprite = windFrames[windFrame];
+            }
+            ambientSmokeClock += Time.unscaledDeltaTime;
+            if (ambientSmokeClock > 15f)
+            {
+                ambientSmokeClock = 0f;
+                SeedAmbientSmoke();
             }
             cloudClock += Time.unscaledDeltaTime * 2.3f;
             float drift = Mathf.Repeat(cloudClock, 460f);
