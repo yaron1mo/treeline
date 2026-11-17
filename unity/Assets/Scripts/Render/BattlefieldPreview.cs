@@ -13,7 +13,7 @@ namespace Treeline.Render
     public sealed class BattlefieldPreview : MonoBehaviour
     {
         const int PixelsPerMetre = 2;
-        const float WindFrameSeconds = 0.20f;
+        const float WindFrameSeconds = 0.23f;
         static readonly string[] MapFiles = { "forest-belts", "balka-and-railway", "river-crossing" };
 
         SpriteRenderer ground, wind, cloud;
@@ -122,13 +122,15 @@ namespace Treeline.Render
             {
                 string type = Kind(f);
                 if (type == "field" || type == "tracks" || type == "craters" ||
-                    type == "grove" || type == "belt") continue;
+                    type == "grove" || type == "belt" || type == "bridge_ruins") continue;
 
                 Color32 tint;
                 switch (type)
                 {
                     case "pond": tint = new Color32(64, 111, 117, 255); break;
-                    case "river": tint = new Color32(70, 119, 129, 255); break;
+                    case "river":
+                        DrawRiver(Points(f, "line"), Num(f, "width", 16f), pixels);
+                        continue;
                     case "ford": tint = new Color32(122, 147, 130, 255); break;
                     case "hill": tint = new Color32(144, 143, 91, 255); break;
                     case "heap": tint = new Color32(103, 90, 72, 255); break;
@@ -171,6 +173,11 @@ namespace Treeline.Render
                             new Color32(39, 38, 32, 255), 220);
                     }
 
+            // Decorative, deliberately broken bridge approaches; they do not alter the navigation grid.
+            foreach (var f in entries)
+                if (Kind(f) == "bridge_ruins")
+                    DrawBridgeRuins(Points(f, "line"), Num(f, "width", 7f), pixels);
+
             foreach (var f in entries)
             {
                 if (Kind(f) == "belt") DrawBelt(Points(f, "line"), Num(f, "width", 14f), pixels);
@@ -183,6 +190,12 @@ namespace Treeline.Render
         {
             if (poly.Length < 3) return;
             Bounds(poly, out int left, out int top, out int right, out int bottom);
+            // These are visual-only fringes; the actual map polygon and movement mask stay unchanged.
+            int fringe = 7 * PixelsPerMetre;
+            left = Mathf.Max(0, left - fringe);
+            top = Mathf.Max(0, top - fringe);
+            right = Mathf.Min(pixelWidth - 1, right + fringe);
+            bottom = Mathf.Min(pixelHeight - 1, bottom + fringe);
             float degrees = angle * Mathf.Deg2Rad;
             float dx = Mathf.Cos(degrees), dy = Mathf.Sin(degrees);
             for (int y = top; y <= bottom; y++)
@@ -190,15 +203,138 @@ namespace Treeline.Render
                 {
                     float wx = (x + 0.5f) / PixelsPerMetre;
                     float wy = (y + 0.5f) / PixelsPerMetre;
-                    if (!Inside(poly, wx, wy)) continue;
-                    float line = Mathf.Sin((wx * dx + wy * dy) * (tone == "plowed" ? 2.5f : 3.4f));
-                    float grain = Hash(x / 3, y / 3, 7) * 0.17f + Hash(x, y, 19) * 0.06f;
-                    float stripe = tone == "river" || tone == "pond" ? line * 0.045f : line * 0.075f;
+                    bool inside = Inside(poly, wx, wy);
+                    float distance = EdgeDistance(poly, wx, wy);
+                    if (!inside && distance > 7f) continue;
+
+                    // Irregular, feathered strips break straight borders without changing field geometry.
+                    float irregular = (Hash(x / 13, y / 13, 71) - 0.5f) * 3f +
+                        (Hash(x / 31, y / 31, 37) - 0.5f) * 3.6f;
+                    float signed = (inside ? distance : -distance) + irregular;
+                    float blend = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((signed + 4.3f) / 8.6f));
+                    if (blend < 0.01f) continue;
+
+                    float line = Mathf.Sin((wx * dx + wy * dy) *
+                        (tone == "plowed" ? 2.5f : tone == "sunflower" ? 3.1f : 3.4f));
+                    float grain = Hash(x / 3, y / 3, 7) * 0.12f +
+                        Hash(x, y, 19) * 0.05f + Hash(x / 32, y / 32, 24) * 0.13f;
+                    float stripe = tone == "river" || tone == "pond" ?
+                        line * 0.045f : line * 0.055f;
                     int i = Idx(x, y);
-                    pixels[i] = Tint(color, grain + stripe);
-                    if (crops != null)
-                        crops[i] = tone == "sunflower" ? (byte)2 : tone == "stubble" ? (byte)1 : (byte)0;
+                    Color32 target = Tint(color, grain + stripe);
+                    pixels[i] = Mix(pixels[i], target, blend);
+                    if (crops != null && inside && blend > 0.58f)
+                        crops[i] = tone == "sunflower" ? (byte)2 :
+                            tone == "stubble" ? (byte)1 : (byte)0;
                 }
+        }
+
+        static Color32 Mix(Color32 a, Color32 b, float t)
+        {
+            t = Mathf.Clamp01(t);
+            return new Color32(
+                (byte)(a.r + (b.r - a.r) * t),
+                (byte)(a.g + (b.g - a.g) * t),
+                (byte)(a.b + (b.b - a.b) * t), 255);
+        }
+
+        float EdgeDistance(Vector2[] poly, float x, float y)
+        {
+            float best = 1e6f;
+            float boundX = pixelWidth / (float)PixelsPerMetre;
+            float boundY = pixelHeight / (float)PixelsPerMetre;
+            for (int i = 0; i < poly.Length; i++)
+            {
+                Vector2 a = poly[i], b = poly[(i + 1) % poly.Length];
+                // Do not fade the outer bounds of the map, only real field transitions.
+                if ((a.x <= 0f && b.x <= 0f) ||
+                    (a.x >= boundX && b.x >= boundX) ||
+                    (a.y <= 0f && b.y <= 0f) ||
+                    (a.y >= boundY && b.y >= boundY)) continue;
+                Vector2 ab = b - a;
+                float projection = Mathf.Clamp01(Vector2.Dot(new Vector2(x, y) - a, ab) /
+                    Mathf.Max(0.00001f, ab.sqrMagnitude));
+                float d = Vector2.Distance(new Vector2(x, y), a + projection * ab);
+                if (d < best) best = d;
+            }
+            return best;
+        }
+
+        void DrawRiver(Vector2[] centreline, float width, Color32[] pixels)
+        {
+            if (centreline.Length < 2) return;
+            // Subtle curvature and bands of wet earth make the riverbanks look natural.
+            Vector2[] smooth = SmoothLine(centreline);
+            PaintPath(smooth, width + 8.5f, pixels, new Color32(118, 130, 82, 255));
+            PaintPath(smooth, width + 4.0f, pixels, new Color32(166, 148, 104, 255));
+            PaintPath(smooth, width + 1.0f, pixels, new Color32(47, 91, 100, 255));
+            PaintPath(smooth, width - 1.2f, pixels, new Color32(77, 131, 144, 255));
+        }
+
+        static Vector2[] SmoothLine(Vector2[] points)
+        {
+            var output = new List<Vector2>();
+            for (int i = 0; i < points.Length - 1; i++)
+            {
+                Vector2 p0 = points[Mathf.Max(0, i - 1)];
+                Vector2 p1 = points[i];
+                Vector2 p2 = points[i + 1];
+                Vector2 p3 = points[Mathf.Min(points.Length - 1, i + 2)];
+                int parts = Mathf.Max(2, Mathf.CeilToInt(Vector2.Distance(p1, p2) / 2f));
+                for (int j = 0; j < parts; j++)
+                {
+                    float t = j / (float)parts;
+                    float t2 = t * t, t3 = t2 * t;
+                    // Catmull-Rom: keeps the original anchor points and smooths only the visual edge.
+                    output.Add(0.5f * ((2f * p1) + (-p0 + p2) * t +
+                        (2f * p0 - 5f * p1 + 4f * p2 - p3) * t2 +
+                        (-p0 + 3f * p1 - 3f * p2 + p3) * t3));
+                }
+            }
+            output.Add(points[points.Length - 1]);
+            return output.ToArray();
+        }
+
+        void DrawBridgeRuins(Vector2[] line, float width, Color32[] pixels)
+        {
+            if (line.Length < 2) return;
+            Vector2 a = line[0], b = line[line.Length - 1];
+            Vector2 across = (b - a).normalized;
+            Vector2 sideways = new Vector2(-across.y, across.x);
+            // Two disconnected stubs, with a visible missing span above the river.
+            for (int side = 0; side < 2; side++)
+            {
+                float from = side == 0 ? 0f : 0.71f;
+                float to = side == 0 ? 0.29f : 1f;
+                Vector2 start = Vector2.Lerp(a, b, from);
+                Vector2 finish = Vector2.Lerp(a, b, to);
+                Vector2[] segment = { start, finish };
+                PaintPath(segment, width + 2.4f, pixels, new Color32(48, 50, 43, 255));
+                PaintPath(segment, width, pixels, new Color32(116, 100, 75, 255));
+                PaintPath(segment, width - 1.7f, pixels, new Color32(165, 145, 108, 255));
+                float length = Vector2.Distance(start, finish);
+                for (float dist = 1.1f; dist < length; dist += 2.2f)
+                {
+                    Vector2 c = start + across * dist;
+                    Vector2[] plank = {
+                        c - sideways * width * 0.43f,
+                        c + sideways * width * 0.43f
+                    };
+                    PaintPath(plank, 0.6f, pixels, new Color32(69, 62, 50, 255));
+                }
+                // Exposed deck edge at the break.
+                Vector2 broken = side == 0 ? finish : start;
+                Blob(pixels, broken.x, broken.y, width * 0.55f, 1.3f,
+                    new Color32(50, 49, 44, 255), 255);
+            }
+            Vector2 water = Vector2.Lerp(a, b, 0.5f);
+            for (int i = 0; i < 5; i++)
+            {
+                float x = water.x + (Hash(i, 13, 8) - 0.5f) * 13f;
+                float y = water.y + (Hash(i, 9, 4) - 0.5f) * 10f;
+                Blob(pixels, x, y, 0.8f + Hash(i, 15, 5) * 0.7f, 0.7f,
+                    new Color32(72, 70, 59, 255), 205);
+            }
         }
 
         void PaintPath(Vector2[] points, float width, Color32[] pixels, Color32 color)
@@ -230,8 +366,10 @@ namespace Treeline.Render
                     for (int side = -1; side <= 1; side++)
                     {
                         float variation = Hash(j, i, side + 52);
-                        Vector2 t = p + normal * (side * width * 0.26f + (variation - 0.5f) * 2f);
-                        Tree(pixels, t.x, t.y, 2.5f + variation * 1.6f, j + i * 19 + side);
+                        float along = (Hash(j, i, side + 91) - 0.5f) * 2.6f;
+                        Vector2 t = p + (b - a).normalized * along + normal *
+                            (side * width * 0.25f + (variation - 0.5f) * 4.6f);
+                        Tree(pixels, t.x, t.y, 2.3f + variation * 2f, j + i * 19 + side);
                     }
                 }
             }
@@ -259,12 +397,14 @@ namespace Treeline.Render
         void Tree(Color32[] pixels, float x, float y, float radius, int seed)
         {
             float v = Hash(Mathf.RoundToInt(x), Mathf.RoundToInt(y), seed);
-            Blob(pixels, x + 1.6f, y + 2.0f, radius * 1.05f, radius * 0.8f,
-                new Color32(20, 34, 27, 255), 153);
+            Blob(pixels, x + 1.7f, y + 2.1f, radius * 1.24f, radius * 0.85f,
+                new Color32(20, 34, 27, 255), 134);
             Blob(pixels, x, y, radius, radius * 0.9f,
                 new Color32(31, 65, 36, 255), 255);
             Blob(pixels, x - 0.2f, y - 0.3f, radius * 0.82f, radius * 0.7f,
                 v > 0.5f ? new Color32(66, 111, 52, 255) : new Color32(76, 115, 58, 255), 255);
+            Blob(pixels, x + radius * 0.32f, y + radius * 0.12f,
+                radius * 0.45f, radius * 0.32f, new Color32(35, 76, 37, 255), 165);
             Blob(pixels, x - radius * 0.28f, y - radius * 0.35f,
                 radius * 0.48f, radius * 0.32f, new Color32(136, 154, 76, 255), 153);
         }
@@ -296,8 +436,8 @@ namespace Treeline.Render
 
         void MakeWind(byte[] crops)
         {
-            windFrames = new Sprite[4];
-            windTextures = new Texture2D[4];
+            windFrames = new Sprite[6];
+            windTextures = new Texture2D[6];
             for (int frame = 0; frame < windFrames.Length; frame++)
             {
                 var pixels = new Color32[crops.Length];
@@ -306,10 +446,12 @@ namespace Treeline.Render
                     {
                         int i = Idx(x, y);
                         if (crops[i] == 0) continue;
-                        float phase = x * 0.078f + y * 0.033f + frame * Mathf.PI * 0.5f;
+                        float phase = x * 0.077f + y * 0.024f + frame * Mathf.PI / 3f;
                         float strength = Mathf.Sin(phase) * 0.5f + 0.5f;
-                        byte alpha = (byte)((crops[i] == 2 ? 22 : 10) * strength);
-                        pixels[i] = new Color32(235, 223, 141, alpha);
+                        float ripple = Mathf.Sin(y * 0.25f + x * 0.11f - frame * Mathf.PI / 3f);
+                        byte alpha = (byte)((crops[i] == 2 ? 39 : 18) * strength *
+                            (0.7f + 0.3f * (0.5f + 0.5f * ripple)));
+                        pixels[i] = new Color32(237, 218, 138, alpha);
                     }
                 windTextures[frame] = Texture(pixels);
                 windFrames[frame] = MakeSprite(windTextures[frame]);
