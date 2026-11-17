@@ -1,6 +1,7 @@
 # Change log
 
 Newest on top. Format: `YYYY-MM-DD — [agent] area — what changed and why`. Do not edit old entries.
+- 2026-11-17 — [codex] render/map — Steppe Patch v0.2: feathered irregular field borders, smoother riverbanks, six-frame crop wind plus water shimmer, less regular tree crowns, deeper shadows; added decorative broken bridge ruins to River Crossing at its existing severed-road gap (ford remains the only crossing, no nav/Sim or balance changes).
 - 2026-11-16 — [codex] render — Steppe Patch v0.1 experimental BattlefieldPreview for all three existing JSON test maps (Forest Belts, Balka and Railway, River Crossing): bright 2D procedural terrain, tree crowns and shadows, subtle precomputed wind over crops, drifting cloud shadow; Editor-only preview controls. No Sim, unit balance or map geometry changes.
 
 - 2026-11-12 — [claude] data — Google Sheet fix: the 2026-11-06 drone update overwrote the `air_defence` row on 'units' and left a stray 500 in an empty row, and left the old `direct_fire_needs_own_sight` row duplicated on 'battle_rules'. Restored from `units.csv` / removed the duplicate; the CSV files were right and are unchanged.
