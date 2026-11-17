@@ -27,6 +27,12 @@ namespace Treeline.Render
 
         UnitSpriteAtlas sprites;
         Battle battle;
+        BattlefieldEffects effects;
+        readonly Dictionary<int, float> previousShotTimes = new Dictionary<int, float>();
+        readonly Dictionary<int, Projectile> priorProjectiles = new Dictionary<int, Projectile>();
+        readonly Dictionary<int, Attacker> priorAttackers = new Dictionary<int, Attacker>();
+        readonly List<int> gone = new List<int>();
+        float dustClock;
         float widthMetres = 200f, heightMetres = 400f;
         bool showCatalog = true;
         bool ready;
@@ -49,8 +55,16 @@ namespace Treeline.Render
         /// Hook for a future Game bridge. Reads battle state only; never calls Sim commands.
         /// If bound, the catalog is hidden automatically and actual combat units are shown.
         /// </summary>
+        public void BindEffects(BattlefieldEffects value) { effects = value; }
+
         public void BindBattle(Battle current)
         {
+            if (battle == current) return;
+            ClearVisuals();
+            previousShotTimes.Clear();
+            priorProjectiles.Clear();
+            priorAttackers.Clear();
+            dustClock = 0f;
             battle = current;
             ShowPreview(current == null && showCatalog);
         }
@@ -88,6 +102,9 @@ namespace Treeline.Render
             var root = new GameObject("Unit " + unitId + (key > 0 ? " #" + key : ""));
             root.transform.SetParent(transform, false);
             root.transform.localPosition = World(location);
+            // Avoid oversized 12m infantry icons: keep approximate real silhouettes.
+            float scale = DisplayScale(unitId);
+            root.transform.localScale = Vector3.one * scale;
 
             var silhouette = new GameObject("Shadow");
             silhouette.transform.SetParent(root.transform, false);
@@ -113,6 +130,18 @@ namespace Treeline.Render
             };
         }
 
+        static float DisplayScale(string id)
+        {
+            if (id == "old_tank" || id == "modern_tank") return 0.86f;
+            if (id == "helicopter" || id == "one_way_drone") return 1.0f;
+            if (id == "ifv" || id == "mrap" || id == "van") return 0.72f;
+            if (id == "buggy" || id == "motorbike") return 0.55f;
+            if (id == "air_defence") return 0.68f;
+            if (id == "fpv" || id == "recon_uav" || id == "recon_drone") return 0.39f;
+            if (id == "mortar" || id == "anti_tank") return 0.45f;
+            return 0.40f;
+        }
+
         Vector3 World(Vector2 loc) => new Vector3(
             loc.x - widthMetres * 0.5f, heightMetres * 0.5f - loc.y, 0f);
 
@@ -129,9 +158,12 @@ namespace Treeline.Render
                 Sync(d.Id, d.Def.Id, new Vector2(d.X, d.Y), false);
             foreach (var drone in battle.Drones)
             {
-                string id = drone.Def.WeaponClass == "fpv" ? "fpv" : "recon_drone";
+                // The Body ID identifies the flying object; the operator's Def is not the sprite.
+                string id = drone.Body != null && drone.Body.Id == "fpv" ? "fpv" : "recon_drone";
                 Sync(drone.Id, id, new Vector2(drone.X, drone.Y), false);
             }
+
+            UpdateCombatVisuals();
 
             // These keys are no longer alive. Remove their sprites without touching Sim.
             foreach (int key in missing)
@@ -140,6 +172,67 @@ namespace Treeline.Render
                     Destroy(visual.Root);
                     live.Remove(key);
                 }
+        }
+
+        void UpdateCombatVisuals()
+        {
+            if (effects == null) return;
+
+            // Traces are owned by Sim and last 1.5s. Trigger each muzzle flash once only.
+            foreach (var trace in battle.ShotTraces)
+            {
+                if (previousShotTimes.TryGetValue(trace.ShooterId, out float fired) &&
+                    fired >= trace.FiredAt - 0.0001f) continue;
+                previousShotTimes[trace.ShooterId] = trace.FiredAt;
+                effects.MuzzleFlash(new Vector2(trace.FromX, trace.FromY));
+            }
+
+            // Shells/missiles are live projectile objects. They disappear on impact.
+            gone.Clear();
+            foreach (var pair in priorProjectiles) gone.Add(pair.Key);
+            foreach (var projectile in battle.Projectiles)
+            {
+                priorProjectiles[projectile.Id] = projectile;
+                gone.Remove(projectile.Id);
+            }
+            foreach (int key in gone)
+            {
+                Projectile impact = priorProjectiles[key];
+                float radius = impact.Weapon == null ? 5f :
+                    Mathf.Clamp(impact.Weapon.BlastRadiusM, 3f, 16f);
+                effects.Explosion(new Vector2(impact.X, impact.Y), radius);
+                priorProjectiles.Remove(key);
+            }
+
+            // A removed vehicle only gets a wreck cloud when Sim has marked it dead.
+            gone.Clear();
+            foreach (var pair in priorAttackers) gone.Add(pair.Key);
+            dustClock += Time.deltaTime;
+            int dustCount = 0;
+            foreach (var attacker in battle.Attackers)
+            {
+                priorAttackers[attacker.Id] = attacker;
+                gone.Remove(attacker.Id);
+                if (dustClock >= 0.32f && dustCount < 8 &&
+                    attacker.Class == UnitClass.Vehicle &&
+                    (attacker.VX * attacker.VX + attacker.VY * attacker.VY) > 0.2f)
+                {
+                    effects.VehicleDust(new Vector2(attacker.X, attacker.Y));
+                    dustCount++;
+                }
+            }
+            if (dustClock >= 0.32f) dustClock = 0f;
+            foreach (int key in gone)
+            {
+                Attacker former = priorAttackers[key];
+                if (!former.Alive && former.Class == UnitClass.Vehicle)
+                {
+                    Vector2 point = new Vector2(former.X, former.Y);
+                    effects.Explosion(point, 4f);
+                    effects.WreckSmoke(point);
+                }
+                priorAttackers.Remove(key);
+            }
         }
 
         void Sync(int key, string type, Vector2 pos, bool attacking)
