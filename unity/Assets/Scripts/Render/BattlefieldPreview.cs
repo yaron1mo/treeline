@@ -300,42 +300,63 @@ namespace Treeline.Render
         {
             if (line.Length < 2) return;
             Vector2 a = line[0], b = line[line.Length - 1];
-            Vector2 across = (b - a).normalized;
-            Vector2 sideways = new Vector2(-across.y, across.x);
-            // Two disconnected stubs, with a visible missing span above the river.
+            Vector2 along = (b - a).normalized;
+            Vector2 sideways = new Vector2(-along.y, along.x);
+            // A broken causeway, not two boats: straight-sided dark abutments and wooden decking.
+            // Both ends visibly stop before the water; the gap is intentionally not passable.
             for (int side = 0; side < 2; side++)
             {
-                float from = side == 0 ? 0f : 0.71f;
-                float to = side == 0 ? 0.29f : 1f;
+                float from = side == 0 ? 0f : 0.70f;
+                float to = side == 0 ? 0.30f : 1f;
                 Vector2 start = Vector2.Lerp(a, b, from);
                 Vector2 finish = Vector2.Lerp(a, b, to);
-                Vector2[] segment = { start, finish };
-                PaintPath(segment, width + 2.4f, pixels, new Color32(48, 50, 43, 255));
-                PaintPath(segment, width, pixels, new Color32(116, 100, 75, 255));
-                PaintPath(segment, width - 1.7f, pixels, new Color32(165, 145, 108, 255));
+                FillBridgeQuad(pixels, start + new Vector2(1.2f, 1f),
+                    finish + new Vector2(1.2f, 1f), width + 2f,
+                    new Color32(34, 42, 37, 255));
+                FillBridgeQuad(pixels, start, finish, width + 1.2f,
+                    new Color32(51, 53, 48, 255));
+                FillBridgeQuad(pixels, start, finish, width - 0.5f,
+                    new Color32(161, 140, 108, 255));
                 float length = Vector2.Distance(start, finish);
-                for (float dist = 1.1f; dist < length; dist += 2.2f)
+                for (float dist = 1.1f; dist < length; dist += 2f)
                 {
-                    Vector2 c = start + across * dist;
+                    Vector2 c = start + along * dist;
                     Vector2[] plank = {
                         c - sideways * width * 0.43f,
                         c + sideways * width * 0.43f
                     };
-                    PaintPath(plank, 0.6f, pixels, new Color32(69, 62, 50, 255));
+                    PaintPath(plank, 0.5f, pixels, new Color32(82, 74, 60, 255));
                 }
-                // Exposed deck edge at the break.
-                Vector2 broken = side == 0 ? finish : start;
-                Blob(pixels, broken.x, broken.y, width * 0.55f, 1.3f,
-                    new Color32(50, 49, 44, 255), 255);
+                Vector2 severed = side == 0 ? finish : start;
+                Vector2[] brokenRim = {
+                    severed - sideways * (width * 0.5f),
+                    severed + sideways * (width * 0.5f)
+                };
+                PaintPath(brokenRim, 1.4f, pixels, new Color32(44, 44, 40, 255));
             }
             Vector2 water = Vector2.Lerp(a, b, 0.5f);
-            for (int i = 0; i < 5; i++)
+            // Short broken beams and scattered fragments inside the missing span.
+            for (int i = 0; i < 6; i++)
             {
-                float x = water.x + (Hash(i, 13, 8) - 0.5f) * 13f;
+                float x = water.x + (Hash(i, 13, 8) - 0.5f) * 12f;
                 float y = water.y + (Hash(i, 9, 4) - 0.5f) * 10f;
-                Blob(pixels, x, y, 0.8f + Hash(i, 15, 5) * 0.7f, 0.7f,
-                    new Color32(72, 70, 59, 255), 205);
+                Blob(pixels, x, y, 0.6f + Hash(i, 15, 5), 0.75f,
+                    new Color32(83, 78, 64, 255), 218);
             }
+        }
+
+        void FillBridgeQuad(Color32[] pixels, Vector2 a, Vector2 b,
+            float width, Color32 color)
+        {
+            Vector2 tangent = (b - a).normalized;
+            Vector2 normal = new Vector2(-tangent.y, tangent.x) * (width * 0.5f);
+            Vector2[] corners = { a + normal, b + normal, b - normal, a - normal };
+            Bounds(corners, out int l, out int t, out int r, out int bottom);
+            for (int y = t; y <= bottom; y++)
+                for (int x = l; x <= r; x++)
+                    if (Inside(corners, (x + 0.5f) / PixelsPerMetre,
+                        (y + 0.5f) / PixelsPerMetre))
+                        pixels[Idx(x, y)] = color;
         }
 
         void PaintPath(Vector2[] points, float width, Color32[] pixels, Color32 color)
