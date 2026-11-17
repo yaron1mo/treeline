@@ -13,6 +13,8 @@ namespace Treeline.Game
     /// Treeline.Render and Treeline.UI. Press Play in any scene; it creates itself. Set <see cref="Enabled"/> to false
     /// to get the old debug view back.
     /// Every wave is also written to playtest-log.csv in Application.persistentDataPath for the balance work.
+    /// The run is a <see cref="Run"/>: fixed steps and a record of the player's actions, so "Back to wave N" replays it
+    /// to the start of an earlier wave (2026-11-17).
     /// </summary>
     public sealed class PlaytestView : MonoBehaviour
     {
@@ -48,9 +50,12 @@ namespace Treeline.Game
         // Run
         NavGrid grid;
         VisionMap vision;
-        Battle battle;
-        int wavesHeld;        // waves the defence has held
-        bool runOver;
+        Run run;              // the run: fixed steps, recorded actions, rewind (Treeline.Sim.Run)
+        Battle battle => run?.Battle;
+        int wavesHeld => run != null ? run.WavesHeld : 0;
+        bool runOver => run != null && run.Over;
+        int rewindTo = 1;     // wave chosen for "Back to wave"
+        float stepClock;      // real time not yet simulated
         string message = "";
         float messageUntil;
         int simSpeed = 1;
@@ -123,12 +128,20 @@ namespace Treeline.Game
         void NewRun()
         {
             var field = fields[current];
-            grid = new NavGrid(field, obstacles);
-            vision = obstacles != null ? new VisionMap(field, obstacles) : null;
-            battle = new Battle(grid, units, rules.StartBudget, vision, armour, -1f, System.Environment.TickCount, rules);
-            battle.PlacementMinY = rules.PlacementZoneStart * field.Height;
-            wavesHeld = 0;
-            runOver = false;
+            int seed = System.Environment.TickCount;
+            float minY = rules.PlacementZoneStart * field.Height;
+            // Every rewind builds the battle again from the same field, data and seed (a fresh grid: wrecks go).
+            run = new Run(() =>
+            {
+                grid = new NavGrid(field, obstacles);
+                vision = obstacles != null ? new VisionMap(field, obstacles) : null;
+                var b = new Battle(grid, units, rules.StartBudget, vision, armour, -1f, seed, rules);
+                b.PlacementMinY = minY;
+                return b;
+            }, plan, rules);
+            run.WaveEnded += OnWaveEnded;
+            rewindTo = 1;
+            stepClock = 0f;
             placing = null;
             selected = null;
             mode = ClickMode.Normal;
@@ -177,49 +190,52 @@ namespace Treeline.Game
             }
             if (pendingClick.HasValue) { var c = pendingClick.Value; pendingClick = null; OnMapClick(c.x, c.y); }
 
-            if (battle.Phase == BattlePhase.Round && battle.Outcome == BattleOutcome.Ongoing && !paused)
+            if (battle.Phase == BattlePhase.Round && !runOver && !paused)
             {
-                // Fixed small steps so fast-forward gives the same result as real time.
-                float dt = Mathf.Min(Time.deltaTime, 0.05f);
-                int steps = simSpeed * 3;
-                for (int i = 0; i < steps; i++) battle.Step(dt / 3f);
-            }
-
-            if (!runOver && battle.Phase == BattlePhase.Round)
-            {
-                if (battle.Outcome == BattleOutcome.Lost)
+                // Fixed steps (Run.Dt), so a rewind replays exactly what happened; fast-forward runs more of them.
+                stepClock = Mathf.Min(stepClock + Time.deltaTime * simSpeed, 0.25f * simSpeed);
+                while (stepClock >= Run.Dt && battle.Phase == BattlePhase.Round && !runOver)
                 {
-                    runOver = true;
-                    LogWave("lost");
-                    Say($"The line is broken on wave {battle.WaveNumber}. Restart to try again.", 999f);
-                }
-                else if (battle.Outcome == BattleOutcome.Won && battle.Attackers.Count == 0 && battle.Pending == 0)
-                {
-                    wavesHeld = battle.WaveNumber;
-                    LogWave("held");
-                    if (wavesHeld >= plan.WaveCount)
-                    {
-                        runOver = true;
-                        Say($"Victory: all {plan.WaveCount} waves held, line {battle.LineDamage:0.#} / {battle.LineHealth:0}.", 999f);
-                    }
-                    else
-                    {
-                        float reward = battle.CollectRewards();
-                        battle.AddBudget(rules.WaveIncome);
-                        battle.BackToPreparation();
-                        Say($"Wave {wavesHeld} held. +{rules.WaveIncome + reward:0} money ({reward:0} for kills). Get ready for wave {wavesHeld + 1}.", 6f);
-                    }
+                    run.Tick();
+                    stepClock -= Run.Dt;
                 }
             }
+            else stepClock = 0f;
             Draw();
+        }
+
+        void OnWaveEnded(int wave, string result)
+        {
+            if (run.Replaying) return;
+            LogWave(result);
+            if (result == "lost")
+                Say($"The line is broken on wave {wave}. Go back to an earlier wave or restart.", 999f);
+            else if (run.Won)
+                Say($"Victory: all {plan.WaveCount} waves held, line {battle.LineDamage:0.#} / {battle.LineHealth:0}.", 999f);
+            else
+                Say($"Wave {wave} held. +{rules.WaveIncome + run.LastReward:0} money ({run.LastReward:0} for kills). Get ready for wave {wave + 1}.", 6f);
+            rewindTo = wave;   // "Back to wave" offers this wave again by default (retry it)
+        }
+
+        void Rewind(int wave)
+        {
+            if (!run.RewindTo(wave)) { Say($"Cannot go back to wave {wave}.", 3f); return; }
+            selected = null;
+            placing = null;
+            mode = ClickMode.Normal;
+            paused = false;
+            stepClock = 0f;
+            spritesBound = false;   // a new Battle instance needs a new visual binding
+            ShowArt();
+            BuildTerrain();
+            Say($"Back before wave {wave}: money {battle.Budget:0}, {battle.Defenders.Count} defenders, as they were.", 6f);
         }
 
         void StartNextWave()
         {
             int next = battle.WaveNumber + 1;
             if (next > plan.WaveCount || runOver) return;
-            plan.Queue(battle, next);
-            battle.StartRound();
+            run.StartNextWave();
             waveStartLine = battle.LineDamage;
             waveStartKills = Kills();
             placing = null;
@@ -272,7 +288,7 @@ namespace Treeline.Game
 
             if (placing != null)
             {
-                if (battle.TryPlace(placing, x, y, out var d, out string why))
+                if (run.Place(placing, x, y, out var d, out string why))
                 {
                     selected = d;
                     if (!units.TryGet(placing, out var def) || battle.Budget < def.BuildCost) placing = null;
@@ -282,13 +298,13 @@ namespace Treeline.Game
             }
             if (selected != null && mode == ClickMode.Move)
             {
-                if (!battle.TryMove(selected.Id, x, y, out string why)) Say(why + ".", 3f);
+                if (!run.Move(selected.Id, x, y, out string why)) Say(why + ".", 3f);
                 mode = ClickMode.Normal;
                 return;
             }
             if (selected != null && mode == ClickMode.Waypoint)
             {
-                if (!battle.TrySetDroneWaypoint(selected.Id, x, y, out string why)) Say(why + ".", 3f);
+                if (!run.SetWaypoint(selected.Id, x, y, out string why)) Say(why + ".", 3f);
                 mode = ClickMode.Normal;
                 return;
             }
@@ -592,6 +608,17 @@ namespace Treeline.Game
                     GUILayout.EndHorizontal();
                 }
             }
+            // Back to the start of an earlier wave (or retry the one lost): the run is played again from its record.
+            int maxBack = Mathf.Min(wavesHeld + 1, plan.WaveCount);
+            if (maxBack >= 1 && (wavesHeld >= 1 || runOver))
+            {
+                rewindTo = Mathf.Clamp(rewindTo, 1, maxBack);
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("<", GUILayout.Width(26), GUILayout.Height(26))) rewindTo = Mathf.Max(1, rewindTo - 1);
+                if (GUILayout.Button($"Back to wave {rewindTo}", GUILayout.Height(26))) Rewind(rewindTo);
+                if (GUILayout.Button(">", GUILayout.Width(26), GUILayout.Height(26))) rewindTo = Mathf.Min(maxBack, rewindTo + 1);
+                GUILayout.EndHorizontal();
+            }
             if (GUILayout.Button("Restart", GUILayout.Height(26))) NewRun();
 
             // Build menu.
@@ -622,7 +649,7 @@ namespace Treeline.Game
                 float refund = d.BuildCost * rules.SellRefund;
                 if (GUILayout.Button($"Sell +{refund:0}"))
                 {
-                    battle.TrySell(selected.Id, rules.SellRefund, out _);
+                    run.Sell(selected.Id, out _);
                     selected = null;
                     mode = ClickMode.Normal;
                 }
