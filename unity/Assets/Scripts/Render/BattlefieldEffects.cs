@@ -218,8 +218,17 @@ namespace Treeline.Render
         public void WreckSmoke(Vector2 at)
         {
             int index = 0;
-            for (int i = 1; i < smokeLeft.Length; i++)
-                if (smokeLeft[i] < smokeLeft[index]) index = i;
+            for (int i = 0; i < smokeLeft.Length; i++)
+                if (smokeLeft[i] > 0f &&
+                    (longSmoke[i] - at).sqrMagnitude < 5f * 5f)
+                {
+                    index = i;
+                    break;
+                }
+            if (smokeLeft[index] <= 0f ||
+                (longSmoke[index] - at).sqrMagnitude >= 5f * 5f)
+                for (int i = 1; i < smokeLeft.Length; i++)
+                    if (smokeLeft[i] < smokeLeft[index]) index = i;
             longSmoke[index] = at;
             smokeLeft[index] = 20f;
             smokeTime[index] = 0f;
@@ -230,6 +239,7 @@ namespace Treeline.Render
             for (int i = 0; i < birds.Length; i++)
             {
                 Vector2 direction = birds[i].Position - at;
+                if (direction.sqrMagnitude > 120f * 120f) continue;
                 direction = direction.sqrMagnitude > 0.1f ? direction.normalized : Vector2.right;
                 birds[i].Velocity = direction * (7f + i * 0.9f) + new Vector2(1f, -3f);
                 birds[i].Alert = true;
