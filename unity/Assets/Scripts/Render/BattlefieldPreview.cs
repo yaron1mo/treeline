@@ -81,6 +81,7 @@ namespace Treeline.Render
             var crops = new byte[terrain.Length];
             DrawBase(terrain);
             DrawFeatures(features, terrain, crops);
+            MarkWater(terrain, crops);
 
             groundTexture = Texture(terrain);
             ground.sprite = MakeSprite(groundTexture);
@@ -434,6 +435,17 @@ namespace Treeline.Render
                 }
         }
 
+        void MarkWater(Color32[] pixels, byte[] crops)
+        {
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                Color32 c = pixels[i];
+                // Only final blue/teal water surfaces; ford, roads, and plants remain distinct.
+                if (c.b > c.r + 18 && c.g > c.r + 16 && c.b >= 104)
+                    crops[i] = 3;
+            }
+        }
+
         void MakeWind(byte[] crops)
         {
             windFrames = new Sprite[6];
@@ -449,6 +461,14 @@ namespace Treeline.Render
                         float phase = x * 0.077f + y * 0.024f + frame * Mathf.PI / 3f;
                         float strength = Mathf.Sin(phase) * 0.5f + 0.5f;
                         float ripple = Mathf.Sin(y * 0.25f + x * 0.11f - frame * Mathf.PI / 3f);
+                        if (crops[i] == 3)
+                        {
+                            // Fine water reflections move with the same wind phase, no particles needed.
+                            float glint = Mathf.Pow(Mathf.Max(0f,
+                                Mathf.Sin(x * 0.18f + y * 0.07f + frame * Mathf.PI / 3f)), 6f);
+                            pixels[i] = new Color32(196, 219, 197, (byte)(glint * 36f));
+                            continue;
+                        }
                         byte alpha = (byte)((crops[i] == 2 ? 39 : 18) * strength *
                             (0.7f + 0.3f * (0.5f + 0.5f * ripple)));
                         pixels[i] = new Color32(237, 218, 138, alpha);
