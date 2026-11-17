@@ -9,7 +9,11 @@
 - Draws each file's polygon fields, tracks, craters, roads, water, ravines, hills, embankments, groves and forest belts in 2D.
 - Bright earthy Steppe Patch palette with subtle point-filtered pixels (2 source pixels per metre).
 - Reuses small procedural tree shapes; bakes shadows and terrain details into one texture per map.
-- Three precomputed crop-wind overlay frames + one soft drifting cloud shadow, rather than hundreds of animated GameObjects.
+- Six precomputed crop-wind overlay frames + one soft drifting cloud shadow, rather than hundreds of animated GameObjects.
+- Water has lightweight moving shimmer highlights using the same six-frame overlay.
+- Field edges are irregular and feathered on screen (the JSON polygon outlines and physics do not change).
+- River banks get damp-earth strips and visual smoothing of the original centreline.
+- `bridge_ruins` is a **decorative-only** feature on River Crossing: two broken deck stubs with a gap over the river. Navigation still uses the existing ford; the broken bridge does not add a path or change movement rules.
 - Keeps 90° orthographic camera and the original aspect ratio; no perspective, parallax or 3D models.
 - Everything is generated locally from simple code; no paid assets, external textures or asset licences.
 
@@ -24,8 +28,8 @@ This is intentionally separate from `Treeline.Sim` and `Treeline.Game`. The orig
 ## Limits / next iteration
 
 - Built for comparing landscape art, not for final mobile performance profiling; runtime drawing is done once when a map is loaded (CPU textures), not every frame.
-- Wind moves over sunflowers/stubble using four tiny-alpha frames; it is a stylistic approximation, not physical plant bending.
-- Shadows under tree crowns are baked (do not sway yet); cloud shadow moves slowly.
+- Wind moves over sunflowers/stubble using six tiny-alpha frames; it is a stylistic approximation, not physical plant bending.
+- Shadows under tree crowns are baked (do not sway yet); cloud shadow moves slowly; water glints animate with wind.
 - No unit/FX/HUD integration in this branch, and no screenshots are claimed from an actual Unity execution.
 - Visual coordinates use map +X to the right, map +Y downward; render texture origin in Unity is centered, so later unit layers must convert to `(x - width/2, height/2 - y)`.
 - Open questions for art review: field hue/contrast, crown density, amount of pixel character, cloud shadow opacity and wind pace.
