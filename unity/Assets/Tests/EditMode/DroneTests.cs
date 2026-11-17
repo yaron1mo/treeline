@@ -18,10 +18,11 @@ namespace Treeline.Tests
                 ArmourTable.Parse(Data("armour.csv")), 100f, 1, BattleRules.Parse(Data("battle_rules.csv")));
         }
 
-        // Places the operator at the rear and a recon drone in the middle, so the attackers are seen from the start.
+        // Places the operator at the rear and a recon drone near the enemy edge, so the attackers are seen from the
+        // start (recon sight 40 m since 2026-11-17).
         static Defender Setup(Battle b, string operatorId)
         {
-            Assert.IsTrue(b.TryPlace("recon_drone", 20f, 60f, out _, out _));
+            Assert.IsTrue(b.TryPlace("recon_drone", 20f, 30f, out _, out _));
             Assert.IsTrue(b.TryPlace(operatorId, 20f, 150f, out var op, out _));
             return op;
         }
@@ -47,7 +48,7 @@ namespace Treeline.Tests
             Assert.AreEqual("aviation fast heavy infantry", units.Get("fpv_operator").TargetOrder);
             Assert.AreEqual(1, units.Get("fpv_operator").DroneAmmo);
             Assert.AreEqual(6, units.Get("bomber_operator").DroneAmmo);
-            Assert.AreEqual(120f, units.Get("recon_drone").SightRangeM);
+            Assert.AreEqual(40f, units.Get("recon_drone").SightRangeM);   // 120 until 2026-11-17 (Yaroslav: a third)
             Assert.AreEqual("fast", units.Get("motorbike").TargetClass);
             Assert.AreEqual("heavy", units.Get("old_tank").TargetClass);
         }
@@ -170,11 +171,11 @@ namespace Treeline.Tests
         {
             // A long field with the operator far back: the tank must not reach and shoot it before all six grenades.
             var b = Make(400f);
-            Assert.IsTrue(b.TryPlace("recon_drone", 20f, 60f, out _, out _));
+            Assert.IsTrue(b.TryPlace("recon_drone", 20f, 190f, out _, out _));   // within the bomber's 133 m reach
             Assert.IsTrue(b.TryPlace("bomber_operator", 20f, 330f, out _, out _));
             b.QueueWave("old_tank", 1, 0f, 1f);
             b.StartRound();
-            Run(b, 60f);
+            Run(b, 100f);   // the bomber reaches 133 m since 2026-11-17: the tank needs ~45 s to come into it
             // Six grenades of 25 x 0.2 (explosive vs medium armour) = at most 5 each; they land with a spread, so
             // most but not all hit the hull in full. A scratch, as intended (2026-11-15).
             float took = b.Stats["old_tank"].DamageTaken;
@@ -192,9 +193,9 @@ namespace Treeline.Tests
             for (float t = 0f; t < 25f; t += 0.05f)
             {
                 b.Step(0.05f);
-                foreach (var a in b.Attackers) if (a.SeenChance > 0f && a.Y < 40f) seenFar = true;
+                foreach (var a in b.Attackers) if (a.SeenChance > 0f && a.Y < 70f) seenFar = true;
             }
-            Assert.IsTrue(seenFar, "seen from 60+ m away");
+            Assert.IsTrue(seenFar, "seen from 30+ m away (recon sight 40 m)");
             Assert.IsTrue(b.Defenders.Count == 1 && b.Defenders[0].Hp == 8f, "the recon drone is untouched");
         }
 
@@ -288,7 +289,7 @@ namespace Treeline.Tests
                 var table = ObstacleTable.Parse(Data("obstacles.csv"));
                 var b = new Battle(new NavGrid(field, table), UnitTable.Parse(Data("units.csv")), 10000f, new VisionMap(field, table),
                     ArmourTable.Parse(Data("armour.csv")), 1000f, seed, BattleRules.Parse(Data("battle_rules.csv")));
-                Assert.IsTrue(b.TryPlace("fpv_operator", 110f, 280f, out _, out _));
+                Assert.IsTrue(b.TryPlace("fpv_operator", 105f, 280f, out _, out _));   // just inside the 10 m side strip
                 Assert.IsTrue(b.TryPlace("recon_drone", 65f, 100f, out _, out _));
                 b.BeginWave();
                 b.QueueWave("special_forces", 5, 0f, 0.3f);

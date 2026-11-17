@@ -121,13 +121,15 @@ namespace Treeline.Tests
         [Test]
         public void Mortar_HitsEveryoneAroundTheAimingPoint()
         {
-            var s = Make(new Field { Name = "t", Width = 40f, Height = 100f });
-            Assert.IsTrue(s.Battle.TryPlace("rifle_squad", 20f, 60f, out _, out _));   // spotter
-            Assert.IsTrue(s.Battle.TryPlace("mortar", 20f, 95f, out _, out _));
+            // Since 2026-11-17 the mortar fires every 4 s and its shell flies 40 m/s: a recon drone spots (it does not
+            // shoot the recruits first) and the field is long enough for several rounds beyond the 55 m minimum range.
+            var s = Make(new Field { Name = "t", Width = 40f, Height = 200f });
+            Assert.IsTrue(s.Battle.TryPlace("recon_drone", 20f, 100f, out _, out _));   // spotter
+            Assert.IsTrue(s.Battle.TryPlace("mortar", 20f, 195f, out _, out _));
             s.Battle.QueueWave("recruit", 6, 0f, 0.1f);
             s.Battle.StartRound();
             Run(s.Battle, 60f);
-            Assert.Greater(s.Battle.Stats["mortar"].DamageDealt, 0f, "the mortar fired at what the rifle squad saw");
+            Assert.Greater(s.Battle.Stats["mortar"].DamageDealt, 0f, "the mortar fired at what the recon drone saw");
         }
     }
 }

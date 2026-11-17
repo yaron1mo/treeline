@@ -5,7 +5,7 @@ Each attacker has a threat_value (units.csv: what it costs the cheapest fitting 
 Wave w gets a budget first * growth^(w-1). A unit that unlocks in a wave is featured (about 35% of the budget), the rest
 goes to two or three other unlocked types, newer ones more often, and infantry fills what is left.
 
-Usage: make_waves.py <units.csv> <out waves.csv> [waves=20] [first=50] [growth=1.22] [seed=7]
+Usage: make_waves.py <units.csv> <out waves.csv> [waves=20] [first=50] [growth=1.22] [seed=7] [exclude=a,b]
 """
 import csv
 import random
@@ -16,6 +16,7 @@ N = int(sys.argv[3]) if len(sys.argv) > 3 else 20
 FIRST = float(sys.argv[4]) if len(sys.argv) > 4 else 50
 GROWTH = float(sys.argv[5]) if len(sys.argv) > 5 else 1.22
 rng = random.Random(int(sys.argv[6]) if len(sys.argv) > 6 else 7)
+EXCLUDE = set(sys.argv[7].split(",")) if len(sys.argv) > 7 and sys.argv[7] else set()
 
 units = {r["id"]: r for r in csv.DictReader(open(units_path, newline="", encoding="utf-8"))}
 tv = {k: float(r["threat_value"]) for k, r in units.items() if r["side"] == "attack" and r.get("threat_value")}
@@ -23,6 +24,7 @@ tv = {k: float(r["threat_value"]) for k, r in units.items() if r["side"] == "att
 UNLOCK = [(1, "recruit"), (2, "regular"), (3, "motorbike"), (4, "buggy"), (5, "van"), (6, "special_forces"),
           (7, "old_tank"), (8, "ifv"), (9, "mrap"), (10, "fpv"), (12, "modern_tank"), (14, "helicopter"),
           (16, "one_way_drone")]
+UNLOCK = [(k, u) for (k, u) in UNLOCK if u not in EXCLUDE]
 INFANTRY = ["recruit", "regular", "special_forces"]
 
 

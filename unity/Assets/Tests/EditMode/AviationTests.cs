@@ -67,7 +67,7 @@ namespace Treeline.Tests
             for (int seed = 1; seed <= 10; seed++)
             {
                 var b = Make(seed);
-                Assert.IsTrue(b.TryPlace("recon_drone", 30f, 100f, out _, out _));
+                Assert.IsTrue(b.TryPlace("recon_drone", 30f, 160f, out _, out _));
                 Assert.IsTrue(b.TryPlace("air_defence", 30f, 290f, out _, out _));
                 b.QueueWave("helicopter", 1, 0f, 1f);
                 b.StartRound();

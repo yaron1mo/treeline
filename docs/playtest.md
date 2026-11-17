@@ -6,7 +6,7 @@ A whole run on one field, played with the mouse in the Unity editor. Flat colour
 
 1. Open the project in Unity 6.3, open any scene (SampleScene), press **Play**. The playtest screen opens by itself.
 2. Pick a field with `<` `>` (only before wave 1).
-3. Click a defender on the left, then click the map to place it. Only the lit lower part of the field takes defenders. Right click stops placing.
+3. Click a defender on the left, then click the map to place it. Defenders stand anywhere except the dark strips along the sides (closed to everyone). Right click stops placing.
 4. Click a placed defender to see its range (white ring) and sight (green ring), to **Move** it or **Sell** it (half the price back). An FPV operator can get a **search point**.
 5. **Start wave** (20 waves, `waves.csv`). During a wave: pause, speed x1 / x2 / x4. You can still place; new defenders run in from our line.
 6. A held wave pays the kill rewards of that wave (a quarter of each enemy's value) plus `wave_income` (100). Lose when the line takes `line_health` (60) damage; win after wave 20.

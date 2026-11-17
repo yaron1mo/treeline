@@ -99,6 +99,17 @@ namespace Treeline.Sim
         public float FromX, FromY, ToX, ToY;
         public float FiredAt, ArrivesAt;
         public bool Hit;
+        /// <summary>Fired by the enemy (for drawing their shots in another colour, 2026-11-17).</summary>
+        public bool ByAttacker;
+    }
+
+    /// <summary>One of our defenders killed: by whom and from where (so the player can see what killed it).</summary>
+    public struct Loss
+    {
+        public float Time;
+        public int Wave;
+        public string VictimId, KillerId;
+        public float X, Y, KillerX, KillerY;
     }
 
     /// <summary>How an attacker chose its route (rules/attackers.json, pathfinding).</summary>
@@ -253,6 +264,7 @@ namespace Treeline.Sim
             LineHealth = lineHealth > 0f ? lineHealth : this.rules.LineHealth;
             rng = new Random(seed);
             Budget = budget;
+            if (this.rules.EdgeMarginM > 0f && grid.EdgeMarginM <= 0f) grid.BlockEdges(this.rules.EdgeMarginM);
             routesVersion = grid.Version;
             RunSpeedMps = units.TryGet(RunBaseUnitId, out var baseUnit) && baseUnit.SpeedMps > 0f
                 ? baseUnit.SpeedMps * this.rules.RunSpeedMultiplier
@@ -320,6 +332,11 @@ namespace Treeline.Sim
         /// <summary>Defenders may not be placed or moved closer to the enemy edge than this (metres from it). The game
         /// sets it from battle_rules placement_zone_start; 0 = anywhere.</summary>
         public float PlacementMinY { get; set; }
+
+        readonly List<Loss> losses = new List<Loss>();
+
+        /// <summary>Our defenders killed so far in this battle, oldest first.</summary>
+        public IReadOnlyList<Loss> Losses => losses;
 
         /// <summary>Kill rewards earned and not yet paid (battle_rules kill_reward_share × threat_value).</summary>
         public float Rewards { get; private set; }
@@ -1128,7 +1145,9 @@ namespace Treeline.Sim
                 px += (float)Gauss() * rules.AircraftEvasionM;
                 py += (float)Gauss() * rules.AircraftEvasionM;
             }
-            float sigma = Ballistics.AngularSpread(w.Accuracy, w.RangeM);
+            // Accuracy is quoted at accuracy_ref_m (half the range before ranges were cut by 3, 2026-11-17), so cutting the
+            // range does not make the weapon itself less accurate.
+            float sigma = Ballistics.AngularSpread(w.Accuracy, w.AccuracyRefM > 0f ? 2f * w.AccuracyRefM : w.RangeM);
             if (moving && w.MoveAccuracyMult > 0f) sigma /= w.MoveAccuracyMult;
             double ang = Math.Atan2(py - s.Y, px - s.X) + Gauss() * sigma;
             float ux = (float)Math.Cos(ang), uy = (float)Math.Sin(ang);
@@ -1185,7 +1204,7 @@ namespace Treeline.Sim
             traces.Add(new ShotTrace
             {
                 ShooterId = s.Id, FromX = s.X, FromY = s.Y, ToX = s.X + ux * endAlong, ToY = s.Y + uy * endAlong,
-                FiredAt = RoundTime, ArrivesAt = arrives, Hit = victim != null
+                FiredAt = RoundTime, ArrivesAt = arrives, Hit = victim != null, ByAttacker = s is Attacker
             });
             if (w.BlastRadiusM > 0f)
             {
@@ -1319,8 +1338,21 @@ namespace Treeline.Sim
         // Direct fire with the own-sight rule needs the shooter's own view; indirect fire always uses shared vision.
         bool OwnSightOnly(UnitDef d) => rules.DirectFireNeedsOwnSight && d.Behaviour != "indirect_fire";
 
-        float AimAt(Unit shooter, Unit target, bool ownSight) =>
-            ownSight ? Seen(shooter.X, shooter.Y, SightOf(shooter.Def), target.X, target.Y) : target.SeenChance;
+        /// <summary>
+        /// How well the shooter can aim at the target: with the own-sight rule, its own view; otherwise what its side
+        /// sees (shared vision). With direct_fire_needs_line_of_sight (Yaroslav, 2026-11-17) direct fire also needs a clear
+        /// line from the shooter to the target: a target the recon drone sees behind a forest belt cannot be shot until
+        /// the shooter itself has it in view (any distance within range). Indirect fire (mortar) and shots at aircraft
+        /// and drones (above the trees) do not need it.
+        /// </summary>
+        float AimAt(Unit shooter, Unit target, bool ownSight)
+        {
+            if (ownSight) return Seen(shooter.X, shooter.Y, SightOf(shooter.Def), target.X, target.Y);
+            float c = target.SeenChance;
+            if (c > 0f && rules.DirectFireNeedsLineOfSight && !shooter.Def.IndirectFire && !IsInAir(target))
+                c = Math.Min(c, Seen(shooter.X, shooter.Y, RangeOf(shooter) + 1f, target.X, target.Y));
+            return c;
+        }
 
         static bool InRange(Unit a, Unit b, float range)
         {
@@ -1342,7 +1374,16 @@ namespace Treeline.Sim
             }
             StatsFor(target.Def).DamageTaken += done;
             target.Hp -= dmg;
-            if (target.Hp <= 0f) target.Alive = false;
+            if (target.Hp <= 0f)
+            {
+                target.Alive = false;
+                if (target is Defender)
+                    losses.Add(new Loss
+                    {
+                        Time = RoundTime, Wave = WaveNumber, VictimId = target.Def.Id, KillerId = shooter.Def.Id,
+                        X = target.X, Y = target.Y, KillerX = shooter.X, KillerY = shooter.Y,
+                    });
+            }
         }
 
         // Radial linear falloff: at impact centre 100% damage, at radius 0%.
@@ -1399,7 +1440,7 @@ namespace Treeline.Sim
                         float dx = a.X - d.X, dy = a.Y - d.Y, dist = dx * dx + dy * dy;
                         if (dist > range * range || dist < minRange * minRange) continue;
                         if (dist >= best) continue;
-                        if (own && AimAt(d, a, true) <= 0f) continue;
+                        if (AimAt(d, a, own) <= 0f) continue;
                         best = dist; target = a;
                     }
                     d.Target = target;
@@ -1435,7 +1476,7 @@ namespace Treeline.Sim
                         if (!CanShootDrone(a.Def, dr) || dr.SeenChance <= 0f) continue;
                         float dx = a.X - dr.X, dy = a.Y - dr.Y, dist = dx * dx + dy * dy;
                         if (dist > range * range || dist >= best) continue;
-                        if (own && AimAt(a, dr, true) <= 0f) continue;
+                        if (AimAt(a, dr, own) <= 0f) continue;
                         best = dist; target = dr;
                     }
                     if (target == null)
@@ -1445,7 +1486,7 @@ namespace Treeline.Sim
                             if (!d.Alive || d.SeenChance <= 0f || d.Def.Type == "aviation") continue;   // recon drones: not targetable yet
                             float dx = a.X - d.X, dy = a.Y - d.Y, dist = dx * dx + dy * dy;
                             if (dist > range * range || dist >= best) continue;
-                            if (own && AimAt(a, d, true) <= 0f) continue;
+                            if (AimAt(a, d, own) <= 0f) continue;
                             best = dist; target = d;
                         }
                     }

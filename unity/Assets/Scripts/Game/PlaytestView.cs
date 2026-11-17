@@ -137,7 +137,7 @@ namespace Treeline.Game
             ShowArt();
             BuildTerrain();
             FitCamera();
-            Say($"{field.Name}: place defenders in the lit part of the field, then start wave 1.", 8f);
+            Say($"{field.Name}: place defenders anywhere outside the dark side strips, then start wave 1.", 8f);
         }
 
         // The Steppe Patch ground (Codex, Treeline.Render) under our flat layer. Found by name: Render already depends on
@@ -331,6 +331,7 @@ namespace Treeline.Game
                         Color32 o = new Color32(0, 0, 0, 0);
                         var wreck = vision != null ? vision.ObstacleInCell(cell) : null;
                         if (wreck != null && wreck.Id == "wreck") o = new Color32(70, 50, 40, 255);
+                        else if (grid.IsEdge(cell)) o = new Color32(0, 0, 0, 120);   // closed side strips
                         else if (y < zone) o = new Color32(0, 0, 0, 90);
                         terrain[Index(x, y)] = o;
                         continue;
@@ -366,8 +367,19 @@ namespace Treeline.Game
             {
                 float span = tr.ArrivesAt - tr.FiredAt;
                 float f = span > 0f ? Mathf.Clamp01((battle.RoundTime - tr.FiredAt) / span) : 1f;
-                Line(tr.FromX, tr.FromY, tr.FromX + (tr.ToX - tr.FromX) * f, tr.FromY + (tr.ToY - tr.FromY) * f,
-                    tr.Hit ? new Color32(255, 190, 90, 255) : new Color32(150, 150, 150, 255));
+                // Ours orange (hit) / grey (miss); theirs red (hit) / dark red (miss).
+                var col = tr.ByAttacker
+                    ? (tr.Hit ? new Color32(255, 50, 50, 255) : new Color32(150, 40, 40, 255))
+                    : (tr.Hit ? new Color32(255, 190, 90, 255) : new Color32(150, 150, 150, 255));
+                Line(tr.FromX, tr.FromY, tr.FromX + (tr.ToX - tr.FromX) * f, tr.FromY + (tr.ToY - tr.FromY) * f, col);
+            }
+            // Our losses: a red cross where the defender fell, and for a few seconds a line to whoever killed it.
+            foreach (var l in battle.Losses)
+            {
+                float age = battle.RoundTime - l.Time;
+                if (age < 0f || age > 10f) continue;
+                if (age < 4f) Dashed(l.KillerX, l.KillerY, l.X, l.Y, new Color32(255, 60, 60, 255));
+                XMark(l.X, l.Y, 3, new Color32(255, 40, 40, 255));
             }
             if (!spritesBound)
             {
@@ -432,6 +444,27 @@ namespace Treeline.Game
             {
                 float t = (float)i / steps, x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t;
                 if (x >= 0 && y >= 0 && x < W && y < H) pixels[Index(x, y)] = c;
+            }
+        }
+
+        void Dashed(float x0, float y0, float x1, float y1, Color32 c)
+        {
+            float len = Mathf.Sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0));
+            int steps = Mathf.Max(1, Mathf.CeilToInt(len));
+            for (int i = 0; i <= steps; i++)
+            {
+                if ((i / 3) % 2 == 1) continue;
+                float t = (float)i / steps, x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t;
+                if (x >= 0 && y >= 0 && x < W && y < H) pixels[Index(x, y)] = c;
+            }
+        }
+
+        void XMark(float x, float y, int r, Color32 c)
+        {
+            for (int k = -r; k <= r; k++)
+            {
+                if (x + k >= 0 && x + k < W && y + k >= 0 && y + k < H) pixels[Index(x + k, y + k)] = c;
+                if (x + k >= 0 && x + k < W && y - k >= 0 && y - k < H) pixels[Index(x + k, y - k)] = c;
             }
         }
 
@@ -527,6 +560,19 @@ namespace Treeline.Game
 
             if (Time.time < messageUntil || runOver) GUILayout.Label(message, label);
 
+            // Who killed our defenders (newest first, last six).
+            if (battle.Losses.Count > 0)
+            {
+                GUILayout.Space(4);
+                GUILayout.Label($"Losses: {battle.Losses.Count}", label);
+                for (int i = battle.Losses.Count - 1; i >= 0 && i >= battle.Losses.Count - 6; i--)
+                {
+                    var l = battle.Losses[i];
+                    float dist = Mathf.Sqrt((l.X - l.KillerX) * (l.X - l.KillerX) + (l.Y - l.KillerY) * (l.Y - l.KillerY));
+                    GUILayout.Label($"w{l.Wave}: {NameOf(l.VictimId)} killed by {NameOf(l.KillerId)} from {dist:0} m", small);
+                }
+            }
+
             GUILayout.Space(6);
             if (!runOver)
             {
@@ -590,15 +636,20 @@ namespace Treeline.Game
             GUILayout.Space(8);
             if (spritesBound)
                 GUILayout.Label("STEPPE PATCH: actual units use natural camouflage; small armbands mark sides. " +
-                    "Click a defender to view range; orange/grey lines are live shots. Dark field: no placing. " +
+                    "Click a defender to view range; lines are live shots: ours orange (hit) / grey (miss), theirs red / dark red. " +
+                    "Red cross: one of ours fell, dashed line: from whom. Dark side strips: closed to everyone. " +
                     "Explosions, smoke and dust follow real battle state.", small);
             else
-                GUILayout.Label("Debug marks: blue defenders, red infantry, orange vehicles, pink aviation; " +
-                    "orange/grey shot traces; dark top: no placing.", small);
+                GUILayout.Label("Blue: ours (light blue: running in, white: selected). Red dots: infantry. Orange: vehicles " +
+                    "(yellow: letting troops out). Pink: aircraft, purple: enemy FPV. White dots: our drones. Lines: our shots " +
+                    "orange (hit) / grey (miss), theirs red / dark red. Red cross: one of ours fell, dashed line: from whom. " +
+                    "Dark red cross: where a shell lands. Dark side strips: closed to everyone. Blue-grey: impassable.", small);
             GUILayout.Label("Log: " + logPath, small);
             GUILayout.EndScrollView();
             GUILayout.EndArea();
         }
+
+        string NameOf(string id) => units != null && units.TryGet(id, out var d) ? d.Name : id;
 
         static string Short(string id)
         {

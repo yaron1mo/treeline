@@ -56,7 +56,7 @@ static class Matchups
                 f.Features.Add(new Feature { Type = "trench", Poly = Box(62f, 198f, 68f, 202f) });
                 break;
             case "far_aside":   // 70 m off the route near the rear: no attacker sees it (Yaroslav, 2026-11-16)
-                dx = 110f; dy = 280f;
+                dx = 105f; dy = 280f;   // 105: the 10 m side strip is closed (2026-11-17)
                 break;
             case "rock": f.Features.Add(new Feature { Type = "rock", Poly = Box(62f, 194f, 68f, 197f) }); dy = 199f; break;
         }

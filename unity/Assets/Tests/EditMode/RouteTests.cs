@@ -43,7 +43,12 @@ namespace Treeline.Tests
             Assert.AreEqual(RouteMode.Fastest, first.Mode, "wave 1 knows nothing");
             for (float t = 0f; t < 120f && b.Outcome == BattleOutcome.Ongoing; t += 0.05f) b.Step(0.05f);
 
-            var second = FirstOf(b, "special_forces");   // lag 1: knows wave 1
+            // Special forces lag 2 waves (Yaroslav raised every lag by 1 on 2026-11-17): wave 2 still knows nothing,
+            // wave 3 knows what wave 1 saw.
+            var still = FirstOf(b, "special_forces");
+            Assert.AreEqual(RouteMode.Fastest, still.Mode, "wave 2: the lesson of wave 1 has not reached them yet");
+            for (float t = 0f; t < 120f && b.Outcome == BattleOutcome.Ongoing; t += 0.05f) b.Step(0.05f);
+            var second = FirstOf(b, "special_forces");
             Assert.AreEqual(RouteMode.Evade, second.Mode);
             foreach (int cell in second.PathCells)
             {
@@ -58,7 +63,7 @@ namespace Treeline.Tests
             var b = Make(new Field { Name = "t", Width = 120f, Height = 160f });
             Assert.IsTrue(b.TryPlace("machine_gun", 60f, 90f, out _, out _));
             RunWave(b, "regular", 3);                                   // wave 1: the gunner is seen
-            Assert.AreEqual(RouteMode.Fastest, FirstOf(b, "regular").Mode, "regulars lag 2 waves: wave 2 still knows nothing");
+            Assert.AreEqual(RouteMode.Fastest, FirstOf(b, "regular").Mode, "regulars lag 3 waves: wave 2 still knows nothing");
         }
 
         [Test]
@@ -67,6 +72,7 @@ namespace Treeline.Tests
             var b = Make(new Field { Name = "t", Width = 40f, Height = 160f });
             Assert.IsTrue(b.TryPlace("machine_gun", 20f, 90f, out _, out _));   // its sight covers the whole width
             RunWave(b, "special_forces", 2);
+            RunWave(b, "special_forces", 2);   // lag 2 since 2026-11-17
             Assert.AreEqual(RouteMode.Safest, FirstOf(b, "special_forces").Mode);
         }
 
@@ -76,7 +82,8 @@ namespace Treeline.Tests
             var b = Make(new Field { Name = "t", Width = 120f, Height = 160f });
             Assert.IsTrue(b.TryPlace("rifle_squad", 60f, 90f, out _, out _));
             RunWave(b, "special_forces", 2);                             // the rifle squad is seen in wave 1
-            Assert.AreEqual(RouteMode.Fastest, FirstOf(b, "mrap").Mode, "rifles do nothing to high armour, so no threat for an MRAP");
+            RunWave(b, "special_forces", 2);                             // MRAP lags 2 waves: wave 3 knows wave 1
+            Assert.AreEqual(RouteMode.Fastest, FirstOf(b, "mrap").Mode, "rifles do nothing to medium armour, so no threat for an MRAP");
         }
     }
 }
