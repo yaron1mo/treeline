@@ -19,6 +19,7 @@ aircraft_evasion_m,1,"Proposal. Aircraft weave and change speed: anyone shooting
 start_budget,250,"Yaroslav 2026-11-16: rifle squad = 100, two of them at the start."
 wave_income,100,"Proposal (economy test, 2026-11-16). Money added after each wave the defence holds, on top of kill rewards."
 sell_refund,0.5,"Proposal (playtest, 2026-11-16). Share of build_cost given back when a defender is removed."
-placement_zone_start,0.35,"Proposal (playtest, 2026-11-16). Defenders stand only from this share of the field's depth (from the enemy edge) down to our line."
+placement_zone_start,0,"Yaroslav 2026-11-17: defenders can stand anywhere on the field (was 0.35: only from 35% of the depth down)."
 kill_reward_share,0.25,"Yaroslav 2026-11-16 (economy test, variant B): share of an attacker's reward_value (or threat_value) paid for killing it, when the wave is held."
 direct_fire_needs_line_of_sight,TRUE,"Yaroslav 2026-11-17: a shooter fires at what its side sees only with a clear line to the target; behind a forest belt the recon drone's spotting is not enough. Mortar (indirect) and shots at aircraft and drones are exempt."
+edge_margin_m,10,"Yaroslav 2026-11-17: closed strips this wide along the left and right edges; nobody walks, drives or stands there, so units do not hug the edge of the screen."

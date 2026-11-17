@@ -206,6 +206,7 @@ namespace Treeline.Sim
 
         void SetObject(int i, Obstacle o)
         {
+            if (edge != null && edge[i]) return;   // the side strips stay closed
             hasObject[i] = true;
             if (o.MoveCostInfantry.HasValue) raw[0][i] = o.MoveCostInfantry.Value;
             if (o.MoveCostVehicle.HasValue) raw[1][i] = o.MoveCostVehicle.Value;
@@ -226,6 +227,37 @@ namespace Treeline.Sim
                 {
                     float dx = (c + 0.5f) * CellSize - x, dy = (r + 0.5f) * CellSize - y;
                     if (dx * dx + dy * dy <= radius * radius) SetObject(r * Cols + c, o);
+                }
+            Rebuild();
+            Version++;
+        }
+
+        bool[] edge;
+
+        /// <summary>Width of the closed strips along the left and right edges (battle_rules edge_margin_m).</summary>
+        public float EdgeMarginM { get; private set; }
+
+        /// <summary>True for a cell in a closed side strip.</summary>
+        public bool IsEdge(int cell) => edge != null && edge[cell];
+
+        /// <summary>
+        /// Close a strip of <paramref name="marginM"/> metres along the left and right edges: nobody walks, drives or
+        /// stands there, so units do not hug the edge of the screen (Yaroslav, 2026-11-17).
+        /// </summary>
+        public void BlockEdges(float marginM)
+        {
+            if (marginM <= 0f) return;
+            EdgeMarginM = marginM;
+            edge = new bool[Cells.Length];
+            for (int r = 0; r < Rows; r++)
+                for (int c = 0; c < Cols; c++)
+                {
+                    float x = (c + 0.5f) * CellSize;
+                    if (x >= marginM && x <= Width - marginM) continue;
+                    int i = r * Cols + c;
+                    edge[i] = true;
+                    raw[0][i] = float.PositiveInfinity;
+                    raw[1][i] = float.PositiveInfinity;
                 }
             Rebuild();
             Version++;

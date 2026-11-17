@@ -81,7 +81,8 @@ namespace Treeline.Tests
             Assert.IsFalse(b.TryPlace("rifle_squad", 30f, 50f, out _, out var why));
             StringAssert.Contains("enemy", why);
             Assert.IsTrue(b.TryPlace("rifle_squad", 30f, 200f, out _, out _));
-            Assert.AreEqual(0.35f, BattleRules.Parse(Data("battle_rules.csv")).PlacementZoneStart, 1e-4f);
+            // Yaroslav 2026-11-17: in the data the zone is off, defenders stand anywhere (the mechanism stays).
+            Assert.AreEqual(0f, BattleRules.Parse(Data("battle_rules.csv")).PlacementZoneStart, 1e-4f);
         }
 
         [Test]
@@ -106,6 +107,25 @@ namespace Treeline.Tests
             Assert.AreEqual(expected, b.CollectRewards(), 0.01f);
             Assert.AreEqual(budget + expected, b.Budget, 0.01f);
             Assert.AreEqual(0f, b.Rewards);
+        }
+
+        [Test]
+        public void TheSideStrips_AreClosed_NobodyWalksOrStandsThere()
+        {
+            Assert.AreEqual(10f, BattleRules.Parse(Data("battle_rules.csv")).EdgeMarginM, 1e-4f);
+            var b = Make();   // 60 m wide: open from x 10 to 50
+            Assert.IsFalse(b.TryPlace("rifle_squad", 4f, 200f, out _, out _), "not in the left strip");
+            Assert.IsFalse(b.TryPlace("rifle_squad", 57f, 200f, out _, out _), "not in the right strip");
+            Assert.IsTrue(b.TryPlace("rifle_squad", 30f, 200f, out _, out _));
+            b.QueueWave("recruit", 10, 0f, 0.5f);
+            b.QueueWave("buggy", 3, 2f, 1f);
+            b.StartRound();
+            for (float t = 0f; t < 120f && b.Outcome == BattleOutcome.Ongoing; t += 0.05f)
+            {
+                b.Step(0.05f);
+                foreach (var a in b.Attackers)
+                    Assert.IsTrue(a.X >= 9f && a.X <= 51f, a.Def.Id + " at x " + a.X);
+            }
         }
     }
 }

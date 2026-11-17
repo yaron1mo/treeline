@@ -289,7 +289,7 @@ namespace Treeline.Tests
                 var table = ObstacleTable.Parse(Data("obstacles.csv"));
                 var b = new Battle(new NavGrid(field, table), UnitTable.Parse(Data("units.csv")), 10000f, new VisionMap(field, table),
                     ArmourTable.Parse(Data("armour.csv")), 1000f, seed, BattleRules.Parse(Data("battle_rules.csv")));
-                Assert.IsTrue(b.TryPlace("fpv_operator", 110f, 280f, out _, out _));
+                Assert.IsTrue(b.TryPlace("fpv_operator", 105f, 280f, out _, out _));   // just inside the 10 m side strip
                 Assert.IsTrue(b.TryPlace("recon_drone", 65f, 100f, out _, out _));
                 b.BeginWave();
                 b.QueueWave("special_forces", 5, 0f, 0.3f);

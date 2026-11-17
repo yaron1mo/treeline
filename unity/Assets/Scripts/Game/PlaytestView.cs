@@ -135,7 +135,7 @@ namespace Treeline.Game
             ShowArt();
             BuildTerrain();
             FitCamera();
-            Say($"{field.Name}: place defenders in the lit part of the field, then start wave 1.", 8f);
+            Say($"{field.Name}: place defenders anywhere outside the dark side strips, then start wave 1.", 8f);
         }
 
         // The Steppe Patch ground (Codex, Treeline.Render) under our flat layer. Found by name: Render already depends on
@@ -318,6 +318,7 @@ namespace Treeline.Game
                         Color32 o = new Color32(0, 0, 0, 0);
                         var wreck = vision != null ? vision.ObstacleInCell(cell) : null;
                         if (wreck != null && wreck.Id == "wreck") o = new Color32(70, 50, 40, 255);
+                        else if (grid.IsEdge(cell)) o = new Color32(0, 0, 0, 120);   // closed side strips
                         else if (y < zone) o = new Color32(0, 0, 0, 90);
                         terrain[Index(x, y)] = o;
                         continue;
@@ -573,7 +574,7 @@ namespace Treeline.Game
             GUILayout.Space(8);
             GUILayout.Label("Blue: ours (light blue: running in, white: selected). Red dots: infantry. Orange: vehicles " +
                 "(yellow: letting troops out). Pink: aircraft, purple: enemy FPV. White dots: our drones. Lines: shots " +
-                "(orange hit, grey miss). Dark red cross: where a shell lands. Dark top: no placing. Blue-grey: impassable.", small);
+                "(orange hit, grey miss). Dark red cross: where a shell lands. Dark side strips: closed to everyone. Blue-grey: impassable.", small);
             GUILayout.Label("Log: " + logPath, small);
             GUILayout.EndScrollView();
             GUILayout.EndArea();

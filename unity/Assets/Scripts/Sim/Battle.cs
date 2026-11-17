@@ -253,6 +253,7 @@ namespace Treeline.Sim
             LineHealth = lineHealth > 0f ? lineHealth : this.rules.LineHealth;
             rng = new Random(seed);
             Budget = budget;
+            if (this.rules.EdgeMarginM > 0f && grid.EdgeMarginM <= 0f) grid.BlockEdges(this.rules.EdgeMarginM);
             routesVersion = grid.Version;
             RunSpeedMps = units.TryGet(RunBaseUnitId, out var baseUnit) && baseUnit.SpeedMps > 0f
                 ? baseUnit.SpeedMps * this.rules.RunSpeedMultiplier
