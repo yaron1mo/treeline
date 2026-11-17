@@ -10,6 +10,18 @@ namespace Treeline.Sim
         public string Id = "", Name = "", Side = "", Type = "", Subtype = "", Behaviour = "", WeaponClass = "";
         public string DamageType = "", Armour = "", TargetableBy = "";
         public float Hp, SpeedMps, SightRangeM, RangeM, BuildCost;
+        /// <summary>Price rise after each purchase (units.csv cost_increase): "25" adds 25 per unit bought, "25%"
+        /// multiplies the price by 1.25 per unit bought. Empty = the price never changes (Yaroslav 2026-11-17, recon drone).</summary>
+        public float CostIncrease;
+        public bool CostIncreaseIsShare;
+
+        /// <summary>The price of the next one after <paramref name="bought"/> have been bought, rounded to whole points.</summary>
+        public float CostAfter(int bought)
+        {
+            if (bought <= 0 || CostIncrease <= 0f) return BuildCost;
+            double c = CostIncreaseIsShare ? BuildCost * Math.Pow(1.0 + CostIncrease, bought) : BuildCost + CostIncrease * bought;
+            return (float)Math.Round(c);
+        }
         // AttackSpeed is shots per second; Damage is raw damage per successful shot.
         public float Damage, AttackSpeed, Accuracy, MoveAccuracyMult = 1f, LineDamage = 1f;
         public bool FireOnMove;
@@ -133,6 +145,13 @@ namespace Treeline.Sim
                     SpreadM = Num(col, r, "spread_m"),
                 };
                 if (table.byId.ContainsKey(id)) throw new FormatException("Unit '" + id + "' appears twice");
+                string inc = Cell(col, r, "cost_increase");
+                if (inc.EndsWith("%"))
+                {
+                    u.CostIncreaseIsShare = true;
+                    u.CostIncrease = float.Parse(inc.TrimEnd('%').Trim(), CultureInfo.InvariantCulture) / 100f;
+                }
+                else if (inc.Length > 0) u.CostIncrease = float.Parse(inc, CultureInfo.InvariantCulture);
                 table.byId[id] = u;
                 table.All.Add(u);
             }

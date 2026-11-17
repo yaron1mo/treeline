@@ -62,7 +62,9 @@ namespace Treeline.Game
         bool paused;
 
         // Input modes
-        string placing;       // unit id to place on the next click, or null
+        string placing;       // unit id to place on the next click, TrenchId to dig, or null
+        const string TrenchId = "#trench";
+        int trenchesDrawn;
         Defender selected;
         enum ClickMode { Normal, Move, Waypoint }
         ClickMode mode;
@@ -286,12 +288,18 @@ namespace Treeline.Game
             if (battle == null || runOver) return;
             if (x < 0f || y < 0f || x > grid.Width || y > grid.Height) return;
 
+            if (placing == TrenchId)
+            {
+                if (run.Dig(x, y, out string why)) { if (battle.Budget < battle.TrenchCost) placing = null; }
+                else Say(why + ".", 3f);
+                return;
+            }
             if (placing != null)
             {
                 if (run.Place(placing, x, y, out var d, out string why))
                 {
                     selected = d;
-                    if (!units.TryGet(placing, out var def) || battle.Budget < def.BuildCost) placing = null;
+                    if (!units.TryGet(placing, out var def) || battle.Budget < battle.CostOf(placing)) placing = null;
                 }
                 else Say(why + ".", 3f);
                 return;
@@ -362,6 +370,17 @@ namespace Treeline.Game
                     if (y < zone) c = Color.Lerp(c, Color.black, 0.35f);   // no placing up here
                     terrain[Index(x, y)] = c;
                 }
+            // Dug trenches (Yaroslav 2026-11-17): drawn in both modes, the art does not know about them.
+            trenchesDrawn = battle.Trenches.Count;
+            foreach (var t in battle.Trenches)
+                for (float ty = t.Y - t.RadiusM; ty <= t.Y + t.RadiusM; ty += 1f)
+                    for (float tx = t.X - t.RadiusM; tx <= t.X + t.RadiusM; tx += 1f)
+                    {
+                        if (tx < 0f || ty < 0f || tx >= W || ty >= H) continue;
+                        float dx = tx - t.X, dy = ty - t.Y, d2 = dx * dx + dy * dy, r2 = t.RadiusM * t.RadiusM;
+                        if (d2 > r2) continue;
+                        terrain[Index(tx, ty)] = d2 > r2 * 0.55f ? new Color32(150, 120, 80, 255) : new Color32(85, 62, 40, 255);
+                    }
             // Our line at the bottom.
             for (int px = 0; px < W; px++) { terrain[Index(px, H - 0.5f)] = new Color32(60, 130, 235, 255); terrain[Index(px, H - 1.5f)] = new Color32(60, 130, 235, 255); }
         }
@@ -369,7 +388,7 @@ namespace Treeline.Game
         void Draw()
         {
             if (terrain == null) return;
-            if (grid.Version != terrainVersion) BuildTerrain();   // a wreck appeared
+            if (grid.Version != terrainVersion || battle.Trenches.Count != trenchesDrawn) BuildTerrain();   // a wreck or a trench appeared
             System.Array.Copy(terrain, pixels, pixels.Length);
 
             // Selected defender: its range (white) and sight (pale) rings, and an FPV's search point.
@@ -626,11 +645,23 @@ namespace Treeline.Game
             GUILayout.Label(placing != null ? "Click the map to place (right click: stop)" : "Defenders (click, then click the map):", small);
             foreach (var d in defenderTypes)
             {
-                GUI.enabled = !runOver && battle.Budget >= d.BuildCost;
+                float cost = battle.CostOf(d.Id);
+                GUI.enabled = !runOver && battle.Budget >= cost;
                 bool on = placing == d.Id;
-                if (GUILayout.Toggle(on, $"{d.Name}  —  {d.BuildCost:0}", "Button") != on)
+                if (GUILayout.Toggle(on, $"{d.Name}  —  {cost:0}", "Button") != on)
                 {
                     placing = on ? null : d.Id;
+                    selected = null;
+                    mode = ClickMode.Normal;
+                }
+            }
+            if (!float.IsPositiveInfinity(battle.TrenchCost))
+            {
+                GUI.enabled = !runOver && battle.Budget >= battle.TrenchCost;
+                bool onT = placing == TrenchId;
+                if (GUILayout.Toggle(onT, $"Trench (cover)  —  {battle.TrenchCost:0}", "Button") != onT)
+                {
+                    placing = onT ? null : TrenchId;
                     selected = null;
                     mode = ClickMode.Normal;
                 }
@@ -646,7 +677,7 @@ namespace Treeline.Game
                 if (selected.State == DefenderState.Running) GUILayout.Label("Running in from our line...", small);
                 GUILayout.BeginHorizontal();
                 if (GUILayout.Button(mode == ClickMode.Move ? "Click the map..." : "Move")) mode = ClickMode.Move;
-                float refund = d.BuildCost * rules.SellRefund;
+                float refund = selected.PaidCost * rules.SellRefund;
                 if (GUILayout.Button($"Sell +{refund:0}"))
                 {
                     run.Sell(selected.Id, out _);

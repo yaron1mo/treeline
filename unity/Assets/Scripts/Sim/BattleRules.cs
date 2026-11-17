@@ -58,6 +58,8 @@ namespace Treeline.Sim
         /// <summary>Direct fire is held when one of the shooter's own side stands within this many metres of the line
         /// of fire (a column shoots with its front only).</summary>
         public float FriendlyBlockM = 1.5f;
+        /// <summary>A dug trench: radius of the firing position, metres (Yaroslav 2026-11-17).</summary>
+        public float TrenchRadiusM = 3f;
 
         public static BattleRules Parse(string csv)
         {
@@ -95,6 +97,7 @@ namespace Treeline.Sim
             r.LineSpeedMult = Num(values, "line_speed_mult", r.LineSpeedMult);
             r.ColumnJitterM = Num(values, "column_jitter_m", r.ColumnJitterM);
             r.FriendlyBlockM = Num(values, "friendly_block_m", r.FriendlyBlockM);
+            r.TrenchRadiusM = Num(values, "trench_radius_m", r.TrenchRadiusM);
             if (values.TryGetValue("spread_ring_shares", out var rings) && rings.Length > 0)
             {
                 var parts = rings.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);

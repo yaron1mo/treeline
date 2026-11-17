@@ -28,3 +28,4 @@ line_width_vehicle_m,30,"Assault line: how wide vehicles spread across the route
 line_speed_mult,0.75,"Assault line: speed multiplier (moving in bounds, covering each other)."
 column_jitter_m,1.5,"Column: infantry steps up to this far beside the route so they do not walk inside each other; vehicles keep to it."
 friendly_block_m,1.5,"Yaroslav 2026-11-17: direct fire is held while one of the shooter's own side stands within this many metres of the line of fire, between them (a column shoots with its front only). Mortar and shots at aircraft and drones are exempt. Both sides."
+trench_radius_m,3,"Yaroslav 2026-11-17: a trench the player digs is a round firing position this many metres across from its middle; whoever stands in it (either side) has trench cover. Price: obstacles trench build_cost."

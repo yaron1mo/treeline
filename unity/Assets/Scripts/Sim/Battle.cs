@@ -53,7 +53,12 @@ namespace Treeline.Sim
         /// <summary>Optional point for the next FPV launch to search; no prior enemy spotting is required.</summary>
         public bool HasDroneWaypoint;
         public float DroneWaypointX, DroneWaypointY;
+        /// <summary>What was paid for it (prices can rise with each purchase); selling gives back a share of this.</summary>
+        public float PaidCost;
     }
+
+    /// <summary>A trench the player dug: a firing position, cover for whoever stands in it (both sides).</summary>
+    public struct DugTrench { public float X, Y, RadiusM; }
 
     /// <summary>A drone in the air: flies from its operator to an attacker, then strikes (FPV) or drops grenades (bomber).
     /// Def is the operator's row (damage, speed, ammo); Body is the drone's own row (hp, hit radius, who can shoot it),
@@ -352,15 +357,56 @@ namespace Treeline.Sim
             placed = null;
             if (!units.TryGet(unitId, out var def)) { why = "No such unit"; return false; }
             if (!def.IsDefence) { why = "Not a defender"; return false; }
-            if (def.BuildCost > Budget) { why = "Not enough budget"; return false; }
+            float cost = CostOf(unitId);
+            if (cost > Budget) { why = "Not enough budget"; return false; }
             if (!CheckSpot(x, y, out var flow, out why)) return false;
 
-            Budget -= def.BuildCost;
-            var d = new Defender { Id = nextId++, Def = def, Hp = def.Hp };
+            Budget -= cost;
+            bought.TryGetValue(unitId, out int n);
+            bought[unitId] = n + 1;
+            var d = new Defender { Id = nextId++, Def = def, Hp = def.Hp, PaidCost = cost };
             defenders.Add(d);
             StatsFor(def).Spawned++;
             Send(d, flow, x, y);
             placed = d;
+            return true;
+        }
+
+        readonly Dictionary<string, int> bought = new Dictionary<string, int>();
+
+        /// <summary>The price of the next unit of this type: build_cost, raised by cost_increase for every one bought
+        /// before in this battle (sold or lost ones still count).</summary>
+        public float CostOf(string unitId)
+        {
+            if (!units.TryGet(unitId, out var def)) return float.PositiveInfinity;
+            bought.TryGetValue(unitId, out int n);
+            return def.CostAfter(n);
+        }
+
+        readonly List<DugTrench> trenches = new List<DugTrench>();
+        public IReadOnlyList<DugTrench> Trenches => trenches;
+
+        /// <summary>The price of a trench (obstacles.csv trench build_cost), or infinity when it cannot be dug.</summary>
+        public float TrenchCost =>
+            vision != null && vision.Table.TryGet("trench", out var t) && t.Buildable ? t.BuildCost : float.PositiveInfinity;
+
+        /// <summary>Dig a trench here (Yaroslav 2026-11-17): a round firing position trench_radius_m across that gives
+        /// trench cover to whoever stands in it. It does not change how anyone moves. Stays for the whole run.</summary>
+        public bool TryDig(float x, float y, out string why)
+        {
+            float cost = TrenchCost;
+            if (float.IsPositiveInfinity(cost)) { why = "No trench in the obstacle table"; return false; }
+            if (cost > Budget) { why = "Not enough budget"; return false; }
+            if (x < 0f || y < 0f || x > grid.Width || y > grid.Height) { why = "Outside the field"; return false; }
+            if (y < PlacementMinY) { why = "Too close to the enemy: dig in the lower part of the field"; return false; }
+            int cell = grid.CellAt(x, y);
+            if (float.IsPositiveInfinity(grid.Cost(UnitClass.Infantry)[cell])) { why = "Cannot dig there"; return false; }
+            vision.Table.TryGet("trench", out var t);
+            float r = rules.TrenchRadiusM;
+            vision.PlaceObject(t, x, y, r);
+            trenches.Add(new DugTrench { X = x, Y = y, RadiusM = r });
+            Budget -= cost;
+            why = "";
             return true;
         }
 
@@ -427,7 +473,7 @@ namespace Treeline.Sim
             foreach (var dr in drones) if (dr.Alive && dr.Owner == d) { dr.Alive = false; }
             drones.RemoveAll(dr => !dr.Alive);
             defenders.Remove(d);
-            refund = Math.Max(0f, d.Def.BuildCost * refundShare);
+            refund = Math.Max(0f, d.PaidCost * refundShare);
             Budget += refund;
             return true;
         }

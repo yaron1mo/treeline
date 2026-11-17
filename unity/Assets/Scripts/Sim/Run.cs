@@ -16,7 +16,7 @@ namespace Treeline.Sim
         /// <summary>Length of one simulation step, seconds.</summary>
         public const float Dt = 1f / 30f;
 
-        public enum ActKind { Place, Move, Sell, Waypoint, StartWave }
+        public enum ActKind { Place, Move, Sell, Waypoint, StartWave, Dig }
 
         public struct Act
         {
@@ -77,6 +77,14 @@ namespace Treeline.Sim
             return ok;
         }
 
+        public bool Dig(float x, float y, out string why)
+        {
+            if (Over) { why = "The run is over"; return false; }
+            bool ok = Battle.TryDig(x, y, out why);
+            if (ok) Record(new Act { Kind = ActKind.Dig, X = x, Y = y });
+            return ok;
+        }
+
         public bool Sell(int defenderId, out float refund)
         {
             refund = 0f;
@@ -118,6 +126,7 @@ namespace Treeline.Sim
                 case ActKind.Place: Battle.TryPlace(a.UnitId, a.X, a.Y, out _, out _); break;
                 case ActKind.Move: Battle.TryMove(a.DefenderId, a.X, a.Y, out _); break;
                 case ActKind.Sell: Battle.TrySell(a.DefenderId, rules.SellRefund, out _); break;
+                case ActKind.Dig: Battle.TryDig(a.X, a.Y, out _); break;
                 case ActKind.Waypoint: Battle.TrySetDroneWaypoint(a.DefenderId, a.X, a.Y, out _); break;
                 case ActKind.StartWave:
                     plan.Queue(Battle, Battle.WaveNumber + 1);

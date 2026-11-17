@@ -92,15 +92,19 @@ namespace Treeline.Sim
         {
             int idx = used.IndexOf(o);
             if (idx < 0) { used.Add(o); idx = used.Count - 1; }
+            bool coverOnly = o.Sight == SightEffect.None && !string.IsNullOrEmpty(o.CoverApplies);
             int centre = CellOf(x, y);
             Set(centre, o, idx);
+            if (coverOnly) coverCells[centre] = (short)idx;   // a dug trench keeps its cover inside a belt
             int reach = (int)Math.Ceiling(radius / NavGrid.CellSize);
             int c0 = centre % Cols, r0 = centre / Cols;
             for (int r = Math.Max(0, r0 - reach); r <= Math.Min(Rows - 1, r0 + reach); r++)
                 for (int c = Math.Max(0, c0 - reach); c <= Math.Min(Cols - 1, c0 + reach); c++)
                 {
                     float dx = (c + 0.5f) * NavGrid.CellSize - x, dy = (r + 0.5f) * NavGrid.CellSize - y;
-                    if (dx * dx + dy * dy <= radius * radius) Set(r * Cols + c, o, idx);
+                    if (dx * dx + dy * dy > radius * radius) continue;
+                    Set(r * Cols + c, o, idx);
+                    if (coverOnly) coverCells[r * Cols + c] = (short)idx;
                 }
         }
 
