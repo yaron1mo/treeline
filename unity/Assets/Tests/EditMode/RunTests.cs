@@ -127,5 +127,22 @@ namespace Treeline.Tests
                     Assert.IsTrue(a.X >= 9f && a.X <= 51f, a.Def.Id + " at x " + a.X);
             }
         }
+
+        [Test]
+        public void ALostDefender_IsRecordedWithWhoKilledIt()
+        {
+            var b = Make();
+            Assert.IsTrue(b.TryPlace("rifle_squad", 30f, 200f, out var rifle, out _));
+            b.QueueWave("special_forces", 10, 0f, 0.3f);
+            b.StartRound();
+            for (float t = 0f; t < 120f && rifle.Alive; t += 0.05f) b.Step(0.05f);
+            Assert.IsFalse(rifle.Alive, "ten special forces kill one rifle squad");
+            Assert.AreEqual(1, b.Losses.Count);
+            var l = b.Losses[0];
+            Assert.AreEqual("rifle_squad", l.VictimId);
+            Assert.AreEqual("special_forces", l.KillerId);
+            Assert.AreEqual(1, l.Wave);
+            Assert.Less(System.Math.Abs(l.X - 30f) + System.Math.Abs(l.Y - 200f), 1f, "where it fell");
+        }
     }
 }

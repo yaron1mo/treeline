@@ -99,6 +99,17 @@ namespace Treeline.Sim
         public float FromX, FromY, ToX, ToY;
         public float FiredAt, ArrivesAt;
         public bool Hit;
+        /// <summary>Fired by the enemy (for drawing their shots in another colour, 2026-11-17).</summary>
+        public bool ByAttacker;
+    }
+
+    /// <summary>One of our defenders killed: by whom and from where (so the player can see what killed it).</summary>
+    public struct Loss
+    {
+        public float Time;
+        public int Wave;
+        public string VictimId, KillerId;
+        public float X, Y, KillerX, KillerY;
     }
 
     /// <summary>How an attacker chose its route (rules/attackers.json, pathfinding).</summary>
@@ -321,6 +332,11 @@ namespace Treeline.Sim
         /// <summary>Defenders may not be placed or moved closer to the enemy edge than this (metres from it). The game
         /// sets it from battle_rules placement_zone_start; 0 = anywhere.</summary>
         public float PlacementMinY { get; set; }
+
+        readonly List<Loss> losses = new List<Loss>();
+
+        /// <summary>Our defenders killed so far in this battle, oldest first.</summary>
+        public IReadOnlyList<Loss> Losses => losses;
 
         /// <summary>Kill rewards earned and not yet paid (battle_rules kill_reward_share × threat_value).</summary>
         public float Rewards { get; private set; }
@@ -1188,7 +1204,7 @@ namespace Treeline.Sim
             traces.Add(new ShotTrace
             {
                 ShooterId = s.Id, FromX = s.X, FromY = s.Y, ToX = s.X + ux * endAlong, ToY = s.Y + uy * endAlong,
-                FiredAt = RoundTime, ArrivesAt = arrives, Hit = victim != null
+                FiredAt = RoundTime, ArrivesAt = arrives, Hit = victim != null, ByAttacker = s is Attacker
             });
             if (w.BlastRadiusM > 0f)
             {
@@ -1358,7 +1374,16 @@ namespace Treeline.Sim
             }
             StatsFor(target.Def).DamageTaken += done;
             target.Hp -= dmg;
-            if (target.Hp <= 0f) target.Alive = false;
+            if (target.Hp <= 0f)
+            {
+                target.Alive = false;
+                if (target is Defender)
+                    losses.Add(new Loss
+                    {
+                        Time = RoundTime, Wave = WaveNumber, VictimId = target.Def.Id, KillerId = shooter.Def.Id,
+                        X = target.X, Y = target.Y, KillerX = shooter.X, KillerY = shooter.Y,
+                    });
+            }
         }
 
         // Radial linear falloff: at impact centre 100% damage, at radius 0%.
