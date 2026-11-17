@@ -35,6 +35,7 @@ namespace Treeline.Game
         readonly List<string> fieldFiles = new List<string>();   // Resources/Fields names, for the art layer
         GameObject art;            // Treeline.Render.BattlefieldPreview, if present: the ground is drawn by it
         bool overArt;
+        bool spritesBound;
         int current;
         UnitTable units;
         ObstacleTable obstacles;
@@ -132,6 +133,7 @@ namespace Treeline.Game
             selected = null;
             mode = ClickMode.Normal;
             paused = false;
+            spritesBound = false; // a new Battle instance needs a new visual binding
             ShowArt();
             BuildTerrain();
             FitCamera();
@@ -145,7 +147,17 @@ namespace Treeline.Game
             if (art == null) art = GameObject.Find("Steppe Patch Battlefield Preview");
             bool was = overArt;
             overArt = art != null;
-            if (art != null) art.SendMessage("ShowField", fieldFiles[current], SendMessageOptions.DontRequireReceiver);
+            if (art != null)
+            {
+                art.SendMessage("ShowField", fieldFiles[current], SendMessageOptions.DontRequireReceiver);
+                // Render depends on Game; Game intentionally uses this message bridge.
+                GameObject artUnits = GameObject.Find("Unit sprites");
+                if (artUnits != null && battle != null)
+                {
+                    artUnits.SendMessage("BindBattle", battle, SendMessageOptions.DontRequireReceiver);
+                    spritesBound = true;
+                }
+            }
             if (overArt != was && grid != null) BuildTerrain();
         }
 
@@ -154,7 +166,8 @@ namespace Treeline.Game
         void Update()
         {
             if (battle == null) return;
-            if (!overArt && Time.frameCount % 30 == 0) ShowArt();   // the art layer may start after us
+            if ((!overArt || !spritesBound) && Time.frameCount % 15 == 0)
+                ShowArt(); // art and unit layer may awake after the Game playtest
             if (selected != null && !selected.Alive) { selected = null; mode = ClickMode.Normal; }
             if (selected != null)
             {
@@ -356,22 +369,26 @@ namespace Treeline.Game
                 Line(tr.FromX, tr.FromY, tr.FromX + (tr.ToX - tr.FromX) * f, tr.FromY + (tr.ToY - tr.FromY) * f,
                     tr.Hit ? new Color32(255, 190, 90, 255) : new Color32(150, 150, 150, 255));
             }
-            foreach (var a in battle.Attackers)
+            if (!spritesBound)
             {
-                Color32 c;
-                int r;
-                if (a.Airborne) { c = a.Def.Id == "fpv" ? new Color32(220, 60, 220, 255) : new Color32(255, 120, 255, 255); r = a.Def.Id == "fpv" ? 1 : 3; }
-                else if (a.Class == UnitClass.Vehicle) { c = a.Dismounting ? new Color32(255, 230, 60, 255) : new Color32(255, 140, 40, 255); r = 3; }
-                else { c = new Color32(235, 60, 50, 255); r = 1; }
-                Block(a.X, a.Y, r, c);
+                // Fallback for scenes without the new Render layer.
+                foreach (var a in battle.Attackers)
+                {
+                    Color32 c;
+                    int r;
+                    if (a.Airborne) { c = a.Def.Id == "fpv" ? new Color32(220, 60, 220, 255) : new Color32(255, 120, 255, 255); r = a.Def.Id == "fpv" ? 1 : 3; }
+                    else if (a.Class == UnitClass.Vehicle) { c = a.Dismounting ? new Color32(255, 230, 60, 255) : new Color32(255, 140, 40, 255); r = 3; }
+                    else { c = new Color32(235, 60, 50, 255); r = 1; }
+                    Block(a.X, a.Y, r, c);
+                }
+                foreach (var d in battle.Defenders)
+                {
+                    var c = d == selected ? new Color32(255, 255, 255, 255)
+                        : d.State == DefenderState.Running ? new Color32(140, 235, 245, 255) : new Color32(60, 130, 235, 255);
+                    Block(d.X, d.Y, 2, c);
+                }
+                foreach (var dr in battle.Drones) Block(dr.X, dr.Y, 1, new Color32(255, 255, 255, 255));
             }
-            foreach (var d in battle.Defenders)
-            {
-                var c = d == selected ? new Color32(255, 255, 255, 255)
-                    : d.State == DefenderState.Running ? new Color32(140, 235, 245, 255) : new Color32(60, 130, 235, 255);
-                Block(d.X, d.Y, 2, c);
-            }
-            foreach (var dr in battle.Drones) Block(dr.X, dr.Y, 1, new Color32(255, 255, 255, 255));
             foreach (var pr in battle.Projectiles)
             {
                 if (pr.Kind == ProjectileKind.Shell) Cross(pr.ToX, pr.ToY, 2, new Color32(140, 20, 20, 255));
@@ -571,9 +588,13 @@ namespace Treeline.Game
 
             // Legend.
             GUILayout.Space(8);
-            GUILayout.Label("Blue: ours (light blue: running in, white: selected). Red dots: infantry. Orange: vehicles " +
-                "(yellow: letting troops out). Pink: aircraft, purple: enemy FPV. White dots: our drones. Lines: shots " +
-                "(orange hit, grey miss). Dark red cross: where a shell lands. Dark top: no placing. Blue-grey: impassable.", small);
+            if (spritesBound)
+                GUILayout.Label("STEPPE PATCH: actual units use natural camouflage; small armbands mark sides. " +
+                    "Click a defender to view range; orange/grey lines are live shots. Dark field: no placing. " +
+                    "Explosions, smoke and dust follow real battle state.", small);
+            else
+                GUILayout.Label("Debug marks: blue defenders, red infantry, orange vehicles, pink aviation; " +
+                    "orange/grey shot traces; dark top: no placing.", small);
             GUILayout.Label("Log: " + logPath, small);
             GUILayout.EndScrollView();
             GUILayout.EndArea();
