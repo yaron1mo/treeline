@@ -17,8 +17,36 @@ namespace Treeline.Sim
         public bool DismountBlastKills = true;
         /// <summary>Direct fire hits only what the shooter itself sees; shared vision then serves indirect fire (mortars) only.</summary>
         public bool DirectFireNeedsOwnSight;
+        /// <summary>Direct fire at a target the side sees also needs a clear line from the shooter (Yaroslav, 2026-11-17).</summary>
+        public bool DirectFireNeedsLineOfSight;
         /// <summary>Drones in the air are lost when their operator dies.</summary>
         public bool DroneLostWithOperator = true;
+        /// <summary>How wrongly a shooter judges a moving target's speed when leading it (standard deviation, share of the speed).</summary>
+        public float LeadError = 0.15f;
+        /// <summary>Height bomber drones drop their grenades from.</summary>
+        public float DroneAltitudeM = 30f;
+        /// <summary>When guidance fails, the round lands about this far from the target (0.5x to 1.5x).</summary>
+        public float GuidedMissM = 6f;
+        /// <summary>A shooter who does not clearly see its target (seen chance below 1) aims this far off, on average.</summary>
+        public float BlindAimErrorM = 4f;
+        /// <summary>Area fire with spread_m: share of rounds landing in each equally wide ring, inner to outer.</summary>
+        public float[] SpreadRingShares = { 0.4f, 0.35f, 0.25f };
+        /// <summary>How long an enemy spotter (recon UAV) stays over its spot before flying out.</summary>
+        public float AviationLoiterS = 60f;
+        /// <summary>Aircraft weave: a shooter aiming at one is off by about this much (standard deviation).</summary>
+        public float AircraftEvasionM = 1f;
+        /// <summary>Budget at the start of a run (playtest economy, 2026-11-16).</summary>
+        public float StartBudget = 800f;
+        /// <summary>Budget added after each wave the defence holds.</summary>
+        public float WaveIncome = 300f;
+        /// <summary>Share of a defender's build_cost given back when it is removed.</summary>
+        public float SellRefund = 0.5f;
+        /// <summary>Share of an attacker's threat_value paid for killing it; paid out when the wave is held.</summary>
+        public float KillRewardShare = 0f;
+        /// <summary>Defenders may stand only from this share of the field's depth down to our line (0 = anywhere).</summary>
+        public float PlacementZoneStart = 0.35f;
+        /// <summary>Closed strips along the left and right edges of the field, metres (2026-11-17).</summary>
+        public float EdgeMarginM;
 
         public static BattleRules Parse(string csv)
         {
@@ -37,7 +65,26 @@ namespace Treeline.Sim
             r.RouteChoiceSlack = Num(values, "route_choice_slack", r.RouteChoiceSlack);
             r.DismountBlastKills = Flag(values, "dismount_blast_kills", r.DismountBlastKills);
             r.DirectFireNeedsOwnSight = Flag(values, "direct_fire_needs_own_sight", r.DirectFireNeedsOwnSight);
+            r.DirectFireNeedsLineOfSight = Flag(values, "direct_fire_needs_line_of_sight", r.DirectFireNeedsLineOfSight);
             r.DroneLostWithOperator = Flag(values, "drone_lost_with_operator", r.DroneLostWithOperator);
+            r.LeadError = Num(values, "lead_error", r.LeadError);
+            r.DroneAltitudeM = Num(values, "drone_altitude_m", r.DroneAltitudeM);
+            r.GuidedMissM = Num(values, "guided_miss_m", r.GuidedMissM);
+            r.BlindAimErrorM = Num(values, "blind_aim_error_m", r.BlindAimErrorM);
+            r.AviationLoiterS = Num(values, "aviation_loiter_s", r.AviationLoiterS);
+            r.AircraftEvasionM = Num(values, "aircraft_evasion_m", r.AircraftEvasionM);
+            r.StartBudget = Num(values, "start_budget", r.StartBudget);
+            r.WaveIncome = Num(values, "wave_income", r.WaveIncome);
+            r.SellRefund = Num(values, "sell_refund", r.SellRefund);
+            r.KillRewardShare = Num(values, "kill_reward_share", r.KillRewardShare);
+            r.PlacementZoneStart = Num(values, "placement_zone_start", r.PlacementZoneStart);
+            r.EdgeMarginM = Num(values, "edge_margin_m", r.EdgeMarginM);
+            if (values.TryGetValue("spread_ring_shares", out var rings) && rings.Length > 0)
+            {
+                var parts = rings.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                r.SpreadRingShares = new float[parts.Length];
+                for (int i = 0; i < parts.Length; i++) r.SpreadRingShares[i] = float.Parse(parts[i], CultureInfo.InvariantCulture);
+            }
             return r;
         }
 

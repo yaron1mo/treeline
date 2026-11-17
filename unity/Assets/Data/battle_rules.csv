@@ -1,5 +1,5 @@
 key,value,notes
-line_health,20,How much line damage the defence can take before the field is lost. Placeholder (rules/attackers.json line.hp).
+line_health,60,"Yaroslav 2026-11-16: 60 for a 20-wave run (was 20 for one field). How much line damage the defence can take before the run is lost."
 run_speed_multiplier,3,"Defenders placed or moved during a round run in at this many times the speed of a regular soldier (Yaroslav, 2026-11-05)."
 evade_length_weight_s_per_m,0.1,Evade mode: route cost is travel time plus this many seconds per metre (rules/attackers.json).
 danger_weight_m_per_hp,1000,Safest mode: one point of expected damage on the route counts as this many metres (rules/attackers.json).
@@ -9,3 +9,17 @@ route_choice_slack,0.1,Proposal. With threats known attackers pick a random entr
 dismount_blast_kills,TRUE,Proposal. A carrier destroyed while troops are still inside or getting out kills attacking troops within its blast_radius_m.
 direct_fire_needs_own_sight,FALSE,"Decided by Yaroslav 2026-11-06: shared vision for both sides; every unit fires at what any friendly unit sees, out to its own range_m. TRUE would limit direct fire to what the shooter itself sees (kept as a switch for tests)."
 drone_lost_with_operator,TRUE,Proposal. Drones in the air are lost when their operator dies.
+lead_error,0.15,"Proposal. Shooters lead a moving target by its speed times the round's flight time, misjudging the speed by this share (standard deviation)."
+drone_altitude_m,30,Proposal. Height bomber drones drop grenades from (the grenade falls drone_altitude_m / projectile_speed_mps seconds).
+guided_miss_m,6,"Proposal. When guidance fails (ATGM, FPV: chance 1 - accuracy) the round lands 0.5 to 1.5 times this far from the target."
+blind_aim_error_m,4,"Proposal. A target that is only partly seen (seen chance below 1, e.g. in a forest belt): with chance 1 - seen the shooter aims at a guess this far off (standard deviation), so concealment still protects at close range."
+spread_ring_shares,0.4 0.35 0.25,"Proposal (Yaroslav: a 30-40 m zone with rings). Area fire with spread_m (mortar): share of rounds landing in each equally wide ring of the zone, inner to outer; uniform inside a ring."
+aviation_loiter_s,60,Proposal. How long an enemy spotter (recon UAV) stays over its spot (40% down the field) before flying out.
+aircraft_evasion_m,1,"Proposal. Aircraft weave and change speed: anyone shooting at one aims about this far off (standard deviation). With hit_radius_m 0.2 an FPV is then hard to hit with a rifle."
+start_budget,250,"Yaroslav 2026-11-16: rifle squad = 100, two of them at the start."
+wave_income,100,"Proposal (economy test, 2026-11-16). Money added after each wave the defence holds, on top of kill rewards."
+sell_refund,0.5,"Proposal (playtest, 2026-11-16). Share of build_cost given back when a defender is removed."
+placement_zone_start,0,"Yaroslav 2026-11-17: defenders can stand anywhere on the field (was 0.35: only from 35% of the depth down)."
+kill_reward_share,0.25,"Yaroslav 2026-11-16 (economy test, variant B): share of an attacker's reward_value (or threat_value) paid for killing it, when the wave is held."
+direct_fire_needs_line_of_sight,TRUE,"Yaroslav 2026-11-17: a shooter fires at what its side sees only with a clear line to the target; behind a forest belt the recon drone's spotting is not enough. Mortar (indirect) and shots at aircraft and drones are exempt."
+edge_margin_m,10,"Yaroslav 2026-11-17: closed strips this wide along the left and right edges; nobody walks, drives or stands there, so units do not hug the edge of the screen."

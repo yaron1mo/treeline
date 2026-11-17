@@ -13,7 +13,9 @@ namespace Treeline.Sim
     {
         public readonly int Cols, Rows;
         public readonly float Width, Height;
-        readonly short[] cells;                 // index into 'used', -1 = nothing
+        readonly short[] cells;                      // index into 'used', -1 = nothing
+        // Objects that only give cover (trench): kept apart so they still count where a belt hides the same cell.
+        readonly short[] coverCells;
         readonly List<Obstacle> used = new List<Obstacle>();
 
         /// <summary>The obstacle table this map was built from.</summary>
@@ -28,11 +30,13 @@ namespace Treeline.Sim
             Rows = (int)Math.Round(Height / NavGrid.CellSize);
             cells = new short[Cols * Rows];
             for (int i = 0; i < cells.Length; i++) cells[i] = -1;
+            coverCells = new short[Cols * Rows];
+            for (int i = 0; i < coverCells.Length; i++) coverCells[i] = -1;
 
             foreach (var f in field.Features)
             {
                 if (!table.TryGet(f.Type, out var o)) continue;
-                if (o.Sight == SightEffect.None && !o.HasOnBonus) continue;
+                if (o.Sight == SightEffect.None && !o.HasOnBonus && string.IsNullOrEmpty(o.CoverApplies)) continue;   // a trench hides nothing but still covers
                 var pts = f.Poly ?? f.Line;
                 if (pts == null || pts.Length == 0) continue;
                 Paint(f, o, pts);
@@ -61,13 +65,16 @@ namespace Treeline.Sim
             int r1 = Math.Min(Rows - 1, (int)Math.Floor((y1 + pad) / NavGrid.CellSize));
 
             int painted = 0;
+            bool coverOnly = o.Sight == SightEffect.None && !string.IsNullOrEmpty(o.CoverApplies);
             for (int r = r0; r <= r1; r++)
             {
                 for (int c = c0; c <= c1; c++)
                 {
                     float x = (c + 0.5f) * NavGrid.CellSize, y = (r + 0.5f) * NavGrid.CellSize;
                     bool covered = f.Poly != null ? Geometry.InPoly(x, y, f.Poly) : Geometry.DistLine(x, y, f.Line) <= Half(f);
-                    if (covered && Set(r * Cols + c, o, idx)) painted++;
+                    if (!covered) continue;
+                    if (coverOnly) coverCells[r * Cols + c] = (short)idx;   // a trench keeps its cover inside a belt
+                    if (Set(r * Cols + c, o, idx)) painted++;
                 }
             }
 
@@ -239,6 +246,8 @@ namespace Treeline.Sim
         /// </summary>
         public Obstacle CoverFor(float sx, float sy, float tx, float ty)
         {
+            int tc = CellOf(tx, ty);
+            if (coverCells[tc] >= 0 && used[coverCells[tc]].CoverApplies == "inside") return used[coverCells[tc]];   // in a trench
             var here = ObstacleAt(tx, ty);
             if (here != null && here.CoverApplies == "inside") return here;
 

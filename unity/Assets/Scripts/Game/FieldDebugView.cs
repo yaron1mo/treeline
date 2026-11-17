@@ -16,6 +16,7 @@ namespace Treeline.Game
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void Boot()
         {
+            if (PlaytestView.Enabled) return;   // the playtest screen opens instead (2026-11-16)
             if (FindFirstObjectByType<FieldDebugView>() != null) return;
             new GameObject("FieldDebugView").AddComponent<FieldDebugView>();
         }
@@ -182,6 +183,20 @@ namespace Treeline.Game
                     PaintBlock(pixels, d.X, d.Y, d.State == DefenderState.Standing ? new Color32(60, 130, 235, 255) : new Color32(140, 235, 245, 255));
                 // Our drones in the air (white).
                 foreach (var dr in battle.Drones) PaintBlock(pixels, dr.X, dr.Y, new Color32(255, 255, 255, 255));
+                // Bullets in flight or just landed: the part of the line the round has covered (hits orange, misses grey).
+                foreach (var tr in battle.ShotTraces)
+                {
+                    float span = tr.ArrivesAt - tr.FiredAt;
+                    float f = span > 0f ? Mathf.Clamp01((battle.RoundTime - tr.FiredAt) / span) : 1f;
+                    PaintLine(pixels, tr.FromX, tr.FromY, tr.FromX + (tr.ToX - tr.FromX) * f, tr.FromY + (tr.ToY - tr.FromY) * f,
+                        tr.Hit ? new Color32(255, 170, 60, 255) : new Color32(170, 170, 170, 255));
+                }
+                // Shells, grenades and missiles in the air (red), and where a shell will land (dark red).
+                foreach (var pr in battle.Projectiles)
+                {
+                    if (pr.Kind == ProjectileKind.Shell) PaintBlock(pixels, pr.ToX, pr.ToY, new Color32(120, 20, 20, 255));
+                    PaintBlock(pixels, pr.X, pr.Y, new Color32(235, 40, 40, 255));
+                }
             }
 
             // Routes from the enemy edge, one every ~24 m.
@@ -261,6 +276,18 @@ namespace Treeline.Game
                 case TerrainKind.Road: return Hex(0x8a7f5c);
                 case TerrainKind.Ford: return Hex(0x5a7178);
                 default: return Hex(0x535a3a);
+            }
+        }
+
+        void PaintLine(Color32[] pixels, float x0, float y0, float x1, float y1, Color32 color)
+        {
+            float len = Mathf.Sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0));
+            int steps = Mathf.Max(1, Mathf.CeilToInt(len / (NavGrid.CellSize * 0.5f)));
+            for (int i = 0; i <= steps; i++)
+            {
+                float t = (float)i / steps;
+                int cell = grid.CellAt(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t);
+                if (cell >= 0 && cell < grid.Count) pixels[Index(cell)] = color;
             }
         }
 

@@ -146,5 +146,69 @@ namespace Treeline.Tests
             Assert.AreEqual("x, y", rows[1][0]);
             Assert.AreEqual("he said \"hi\"", rows[1][1]);
         }
+
+        [Test]
+        public void ATrenchOnTheMap_GivesCoverButDoesNotHide()
+        {
+            // Regression 2026-11-13: obstacles with no effect on sight were skipped, so a trench drawn on a field
+            // gave no cover at all.
+            var table = ObstacleTable.Parse(File.ReadAllText(Path.Combine(Application.dataPath, "Data", "obstacles.csv")));
+            var field = new Field { Name = "test", Width = 100f, Height = 60f };
+            field.Features.Add(new Feature { Type = "trench", Poly = Box(48f, 28f, 52f, 32f) });
+            var v = new VisionMap(field, table);
+            var cover = v.CoverFor(50f, 5f, 50f, 30f);
+            Assert.IsTrue(cover != null && cover.Id == "trench", "standing in the trench is covered");
+            Assert.AreEqual(1f, v.SeeChance(50f, 5f, 50f, 30f, 40f), 1e-4f, "and still seen");
+        }
+
+        [Test]
+        public void ATrenchInsideAForestBelt_StillGivesTrenchCover_AndTheBeltStillHides()
+        {
+            var table = ObstacleTable.Parse(File.ReadAllText(Path.Combine(Application.dataPath, "Data", "obstacles.csv")));
+            var field = new Field { Name = "test", Width = 100f, Height = 60f };
+            field.Features.Add(new Feature { Type = "belt", Poly = Box(40f, 20f, 60f, 40f) });
+            field.Features.Add(new Feature { Type = "trench", Poly = Box(48f, 28f, 52f, 32f) });
+            var v = new VisionMap(field, table);
+            var cover = v.CoverFor(50f, 5f, 50f, 30f);
+            Assert.IsTrue(cover != null && cover.Id == "trench", "the trench's cover");
+            Assert.Less(v.SeeChance(50f, 5f, 50f, 30f, 40f), 1f, "and the belt hides it");
+        }
+
+        static string Data(string name) => File.ReadAllText(Path.Combine(Application.dataPath, "Data", name));
+
+        // Yaroslav 2026-11-17: the recon drone spots an enemy behind a forest belt, but a gun on the other side cannot
+        // shoot it until it sees it itself. Belt 10 m deep across the field at y 140-150, machine gun at y 200 (reaches
+        // y 67), recon at y 100 (sees y 60-140). Returns the lowest y of the attacker at a moment the gun fired at it.
+        static float FirstShotY(bool lineOfSightRule)
+        {
+            var field = new Field { Name = "t", Width = 60f, Height = 300f };
+            field.Features.Add(new Feature { Type = "belt", Poly = new[] { new Pt(0f, 140f), new Pt(60f, 140f), new Pt(60f, 150f), new Pt(0f, 150f) } });
+            var obstacles = ObstacleTable.Parse(Data("obstacles.csv"));
+            var rules = BattleRules.Parse(Data("battle_rules.csv") + "direct_fire_needs_line_of_sight," + (lineOfSightRule ? "TRUE" : "FALSE") + ",test\n");
+            var b = new Battle(new NavGrid(field, obstacles), UnitTable.Parse(Data("units.csv")), 5000f, new VisionMap(field, obstacles),
+                ArmourTable.Parse(Data("armour.csv")), 1000f, 1, rules);
+            Assert.IsTrue(b.TryPlace("recon_drone", 30f, 100f, out _, out _));
+            Assert.IsTrue(b.TryPlace("machine_gun", 30f, 200f, out var mg, out _));
+            b.QueueWave("special_forces", 1, 0f, 1f);
+            b.StartRound();
+            int shots = 0;
+            for (float t = 0f; t < 60f && b.Outcome == BattleOutcome.Ongoing; t += 0.05f)
+            {
+                b.Step(0.05f);
+                if (mg.ShotsFired > shots && b.Attackers.Count > 0) return b.Attackers[0].Y;
+                shots = mg.ShotsFired;
+            }
+            return float.MaxValue;
+        }
+
+        [Test]
+        public void ARecon_SpottingBehindABelt_IsNotEnough_TheGunNeedsItsOwnLineOfSight()
+        {
+            Assert.IsTrue(BattleRules.Parse(Data("battle_rules.csv")).DirectFireNeedsLineOfSight, "the rule is on in the data");
+            Assert.Less(FirstShotY(false), 120f, "without the rule it fires through the belt at what the recon sees");
+            float y = FirstShotY(true);
+            Assert.GreaterOrEqual(y, 120f, "with it, only once the target is close to or inside the belt: " + y);
+            Assert.Less(y, float.MaxValue, "and then it does fire");
+        }
     }
 }

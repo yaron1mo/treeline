@@ -16,6 +16,7 @@ unity/.vscode/
 unity/.idea/
 unity/*.csproj
 unity/*.sln
+unity/*.slnx
 unity/*.suo
 unity/*.user
 unity/*.pidb
@@ -25,3 +26,4 @@ unity/*.aab
 unity/*.unitypackage
 unity/crashlytics-build.session
 unity/sysinfo.txt
+build/

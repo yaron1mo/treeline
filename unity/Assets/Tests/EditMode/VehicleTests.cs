@@ -40,7 +40,7 @@ namespace Treeline.Tests
             s.Battle.QueueWave("van", 1, 0f, 1f);
             s.Battle.StartRound();
             Run(s.Battle, 60f);
-            Assert.AreEqual(2f + 12f, s.Battle.LineDamage, 1e-4f, "van 2 + 12 recruits x 1");
+            Assert.AreEqual(2f + 7f, s.Battle.LineDamage, 1e-4f, "van 2 + 7 recruits x 1 (carries_count 7 since 2026-11-16)");
         }
 
         [Test]
@@ -62,8 +62,8 @@ namespace Treeline.Tests
             }
             Assert.IsTrue(sawDismounting, "the van stopped to unload");
             Assert.IsTrue(sawRecruit, "troops got out");
-            Assert.AreEqual(12, s.Battle.Stats["recruit"].Spawned, "every passenger is counted, out or dead inside");
-            Assert.AreEqual(1, s.Battle.Stats["van"].Killed);
+            Assert.AreEqual(7, s.Battle.Stats["recruit"].Spawned, "every passenger is counted, out or dead inside");
+            // Whether the van also dies is balance (since 2026-11-12 the unloaded recruits can kill the gunner first).
         }
 
         [Test]
@@ -121,13 +121,15 @@ namespace Treeline.Tests
         [Test]
         public void Mortar_HitsEveryoneAroundTheAimingPoint()
         {
-            var s = Make(new Field { Name = "t", Width = 40f, Height = 100f });
-            Assert.IsTrue(s.Battle.TryPlace("rifle_squad", 20f, 60f, out _, out _));   // spotter
-            Assert.IsTrue(s.Battle.TryPlace("mortar", 20f, 95f, out _, out _));
+            // Since 2026-11-17 the mortar fires every 4 s and its shell flies 40 m/s: a recon drone spots (it does not
+            // shoot the recruits first) and the field is long enough for several rounds beyond the 55 m minimum range.
+            var s = Make(new Field { Name = "t", Width = 40f, Height = 200f });
+            Assert.IsTrue(s.Battle.TryPlace("recon_drone", 20f, 100f, out _, out _));   // spotter
+            Assert.IsTrue(s.Battle.TryPlace("mortar", 20f, 195f, out _, out _));
             s.Battle.QueueWave("recruit", 6, 0f, 0.1f);
             s.Battle.StartRound();
             Run(s.Battle, 60f);
-            Assert.Greater(s.Battle.Stats["mortar"].DamageDealt, 0f, "the mortar fired at what the rifle squad saw");
+            Assert.Greater(s.Battle.Stats["mortar"].DamageDealt, 0f, "the mortar fired at what the recon drone saw");
         }
     }
 }
