@@ -89,6 +89,7 @@ namespace Treeline.Render
             DrawBase(terrain);
             DrawFeatures(features, terrain, crops);
             PaintAtmosphereDecor(terrain);
+            ApplySunlight(terrain);
             MarkWater(terrain, crops);
 
             groundTexture = Texture(terrain);
@@ -235,6 +236,29 @@ namespace Treeline.Render
                 new Color32(71, 60, 49, 255), 239);
             Blob(pixels, x + 0.39f, y + 0.50f, r * 0.67f, r * 0.59f,
                 new Color32(44, 43, 39, 255), 224);
+        }
+
+        void ApplySunlight(Color32[] pixels)
+        {
+            // Gentle NW-to-SE daylight gradient: texture is baked once, no dynamic 2D lights.
+            // All object shadows are displaced to the SE in the same direction.
+            float inverseX = 1f / Mathf.Max(1, pixelWidth - 1);
+            float inverseY = 1f / Mathf.Max(1, pixelHeight - 1);
+            for (int y = 0; y < pixelHeight; y++)
+            {
+                float fy = y * inverseY;
+                for (int x = 0; x < pixelWidth; x++)
+                {
+                    float fx = x * inverseX;
+                    float shade = 1.08f - 0.13f * (0.52f * fy + 0.48f * fx);
+                    int i = Idx(x, y);
+                    Color32 c = pixels[i];
+                    pixels[i] = new Color32(
+                        (byte)Mathf.Clamp(c.r * shade * 1.025f, 0f, 255f),
+                        (byte)Mathf.Clamp(c.g * shade * 1.007f, 0f, 255f),
+                        (byte)Mathf.Clamp(c.b * shade * 0.985f, 0f, 255f), c.a);
+                }
+            }
         }
 
         void PaintAtmosphereDecor(Color32[] pixels)
