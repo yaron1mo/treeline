@@ -190,6 +190,166 @@ namespace Treeline.Render
             }
         }
 
+        void DrawTractorTracks(Vector2[] path, Color32[] pixels)
+        {
+            if (path.Length < 2) return;
+            // Two dark wheel ruts and the lighter strip between them, never gameplay obstacles.
+            PaintPath(path, 3.2f, pixels, new Color32(174, 146, 95, 255));
+            for (int i = 1; i < path.Length; i++)
+            {
+                Vector2 direction = (path[i] - path[i - 1]).normalized;
+                Vector2 normal = new Vector2(-direction.y, direction.x);
+                for (int side = -1; side <= 1; side += 2)
+                {
+                    Vector2 offset = normal * (side * 1.05f);
+                    Vector2[] track = { path[i - 1] + offset, path[i] + offset };
+                    PaintPath(track, 0.47f, pixels, new Color32(107, 83, 54, 255));
+                }
+            }
+        }
+
+        void DrawCrater(Color32[] pixels, float x, float y, float nominalRadius)
+        {
+            int cx = Mathf.RoundToInt(x * 10f), cy = Mathf.RoundToInt(y * 10f);
+            float r = nominalRadius * (0.70f + Hash(cx, cy, 81) * 0.78f);
+            // Ejected loam and scorch: roughness, varying sizes and shared sunlight direction.
+            Blob(pixels, x + 0.7f, y + 1.25f, r * 1.90f, r * 1.5f,
+                new Color32(55, 52, 41, 255), 100);
+            Blob(pixels, x, y, r * 1.75f, r * 1.58f,
+                new Color32(194, 155, 100, 255), 168);
+            for (int j = 0; j < 10; j++)
+            {
+                float angle = j * Mathf.PI * 0.2f +
+                    Hash(cx, cy, j * 3 + 7) * 0.35f;
+                float dist = r * (1.05f + Hash(cx, cy, j + 12) * 0.78f);
+                Blob(pixels, x + Mathf.Cos(angle) * dist,
+                    y + Mathf.Sin(angle) * dist,
+                    r * (0.20f + Hash(cx, j, cy) * 0.26f),
+                    r * (0.20f + Hash(cy, j, cx) * 0.24f),
+                    j % 3 == 0 ? new Color32(210, 172, 119, 255)
+                        : new Color32(114, 93, 69, 255), 185);
+            }
+            Blob(pixels, x + 0.25f, y + 0.30f, r * 1.07f, r * 0.91f,
+                new Color32(71, 60, 49, 255), 239);
+            Blob(pixels, x + 0.39f, y + 0.50f, r * 0.67f, r * 0.59f,
+                new Color32(44, 43, 39, 255), 224);
+        }
+
+        void PaintAtmosphereDecor(Color32[] pixels)
+        {
+            // All props below are render-only scale cues; no geometry or movement rules change.
+            // Chosen by map, to keep a sparse and readable battlefield at phone size.
+            switch (mapIndex)
+            {
+                case 0: // Forest Belts
+                    PowerLine(pixels, new[] {
+                        new Vector2(190, 26), new Vector2(193, 114),
+                        new Vector2(190, 202), new Vector2(192, 300),
+                        new Vector2(189, 374) });
+                    HayBale(pixels, 24, 28, 2.5f);
+                    HayBale(pixels, 32, 34, 1.9f);
+                    HayBale(pixels, 65, 284, 2.2f);
+                    RuinedHouse(pixels, 178, 120);
+                    BurntVehicle(pixels, 112, 222);
+                    break;
+                case 1: // Balka and Railway
+                    PowerLine(pixels, new[] {
+                        new Vector2(189, 24), new Vector2(190, 112),
+                        new Vector2(183, 226), new Vector2(192, 354) });
+                    HayBale(pixels, 130, 304, 2.6f);
+                    HayBale(pixels, 140, 311, 1.9f);
+                    RuinedHouse(pixels, 177, 347);
+                    BurntVehicle(pixels, 110, 228);
+                    break;
+                case 2: // River Crossing
+                    // Cables do not cross the river where the bridge is destroyed.
+                    PowerLine(pixels, new[] {
+                        new Vector2(189, 35), new Vector2(185, 117) });
+                    PowerLine(pixels, new[] {
+                        new Vector2(188, 295), new Vector2(190, 365) });
+                    HayBale(pixels, 31, 86, 2.5f);
+                    HayBale(pixels, 46, 90, 2.0f);
+                    RuinedHouse(pixels, 180, 125);
+                    BurntVehicle(pixels, 159, 274);
+                    break;
+            }
+        }
+
+        void PowerLine(Color32[] pixels, Vector2[] poles)
+        {
+            if (poles.Length < 1) return;
+            for (int i = 1; i < poles.Length; i++)
+            {
+                Vector2[] cable = { poles[i - 1], poles[i] };
+                PaintPath(cable, 0.24f, pixels, new Color32(99, 98, 81, 255));
+            }
+            foreach (Vector2 p in poles)
+            {
+                // Strong SE shadow from the same sun direction as all the tree crowns.
+                Vector2[] shadow = { p + new Vector2(0.5f, 0.7f),
+                    p + new Vector2(3.7f, 6.1f) };
+                PaintPath(shadow, 1.0f, pixels, new Color32(55, 57, 47, 255));
+                Blob(pixels, p.x, p.y, 0.9f, 0.9f, new Color32(78, 69, 55, 255), 255);
+                Vector2[] bar = {
+                    p + new Vector2(-2.0f, -0.2f),
+                    p + new Vector2(2.0f, -0.2f)
+                };
+                PaintPath(bar, 0.8f, pixels, new Color32(50, 49, 40, 255));
+                Blob(pixels, p.x - 1.8f, p.y - 0.2f, 0.5f, 0.5f,
+                    new Color32(222, 213, 172, 255), 255);
+                Blob(pixels, p.x + 1.8f, p.y - 0.2f, 0.5f, 0.5f,
+                    new Color32(222, 213, 172, 255), 255);
+            }
+        }
+
+        void HayBale(Color32[] pixels, float x, float y, float radius)
+        {
+            Blob(pixels, x + 1.8f, y + 2.1f, radius * 1.14f, radius * 0.8f,
+                new Color32(54, 58, 43, 255), 163);
+            Blob(pixels, x, y, radius, radius * 0.73f,
+                new Color32(146, 105, 61, 255), 255);
+            Blob(pixels, x - 0.35f, y - 0.3f, radius * 0.8f, radius * 0.57f,
+                new Color32(225, 188, 103, 255), 255);
+            Blob(pixels, x - 0.6f, y - 0.35f, radius * 0.34f, radius * 0.2f,
+                new Color32(245, 209, 124, 255), 190);
+        }
+
+        void RuinedHouse(Color32[] pixels, float x, float y)
+        {
+            // A derelict single-storey house footprint: no Sim blocker.
+            Vector2 back = new Vector2(x, y);
+            Vector2 front = new Vector2(x, y + 8.0f);
+            FillBridgeQuad(pixels, back + new Vector2(3f, 3.5f),
+                front + new Vector2(3f, 3.5f), 11f, new Color32(48, 51, 41, 255));
+            FillBridgeQuad(pixels, back, front, 10.8f,
+                new Color32(84, 78, 64, 255));
+            FillBridgeQuad(pixels, back + new Vector2(-0.6f, 0.5f),
+                front + new Vector2(-0.6f, -1.0f), 7f,
+                new Color32(173, 146, 108, 255));
+            Blob(pixels, x + 1.3f, y + 3.3f, 3.0f, 2.3f,
+                new Color32(35, 34, 29, 255), 255);
+            Vector2[] beam = {
+                new Vector2(x - 2.9f, y + 1.0f),
+                new Vector2(x + 2.7f, y + 7.3f)
+            };
+            PaintPath(beam, 0.9f, pixels, new Color32(69, 58, 43, 255));
+        }
+
+        void BurntVehicle(Color32[] pixels, float x, float y)
+        {
+            Blob(pixels, x, y, 6f, 5.0f, new Color32(64, 52, 41, 255), 127);
+            Blob(pixels, x + 2.4f, y + 2.8f, 4.8f, 3.0f,
+                new Color32(33, 37, 32, 255), 173);
+            FillBridgeQuad(pixels, new Vector2(x, y - 3.5f),
+                new Vector2(x, y + 3.5f), 4.2f,
+                new Color32(47, 49, 44, 255));
+            FillBridgeQuad(pixels, new Vector2(x + 0.1f, y - 2.3f),
+                new Vector2(x + 0.1f, y + 1.2f), 3.3f,
+                new Color32(99, 75, 57, 255));
+            Blob(pixels, x + 0.5f, y + 0.9f, 1.4f, 1.9f,
+                new Color32(23, 28, 27, 255), 241);
+        }
+
         void ScatterFieldDetail(Color32[] pixels, byte[] crops)
         {
             // Individual stalks would be wasteful; a few low-resolution marks imply crop texture.
