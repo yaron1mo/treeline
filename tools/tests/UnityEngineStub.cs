@@ -21,9 +21,13 @@ namespace UnityEngine
     }
     public class Behaviour : Component { public bool enabled; }
     public class MonoBehaviour : Behaviour { }
+    public enum SendMessageOptions { RequireReceiver, DontRequireReceiver }
     public sealed class GameObject : Object
     {
         public GameObject(string name) { }
+        public string tag;
+        public static GameObject Find(string name) => null;
+        public void SendMessage(string method, object value, SendMessageOptions options) { }
         public T AddComponent<T>() where T : Component => null;
         public Transform transform => null;
     }
@@ -42,11 +46,14 @@ namespace UnityEngine
     {
         public Texture2D(int w, int h, TextureFormat f, bool mipChain) { }
         public static Texture2D whiteTexture => null;
+        public TextureWrapMode wrapMode;
         public void SetPixels32(Color32[] c) { }
         public void Apply() { }
+        public void Apply(bool updateMipmaps, bool makeNoLongerReadable) { }
     }
     public enum TextureFormat { RGBA32 }
     public enum FilterMode { Point, Bilinear }
+    public enum TextureWrapMode { Repeat, Clamp }
     public enum CameraClearFlags { Skybox, SolidColor }
     public sealed class Camera : Behaviour
     {
@@ -56,11 +63,16 @@ namespace UnityEngine
         public Color backgroundColor;
         public CameraClearFlags clearFlags;
         public Rect rect;
+        public float aspect;
         public Vector3 ScreenToWorldPoint(Vector3 p) => p;
         public Vector3 WorldToScreenPoint(Vector3 p) => p;
     }
     public class TextAsset : Object { public string text => ""; }
-    public static class Resources { public static T[] LoadAll<T>(string path) where T : Object => new T[0]; }
+    public static class Resources
+    {
+        public static T[] LoadAll<T>(string path) where T : Object => new T[0];
+        public static T Load<T>(string path) where T : Object => null;
+    }
     public static class Application { public static string dataPath = ""; public static string persistentDataPath = ""; }
     public static class Debug
     {
@@ -69,12 +81,29 @@ namespace UnityEngine
         public static void LogError(object m) { }
     }
     public static class Screen { public static int width, height; }
-    public static class Time { public static float deltaTime, time; }
+    public static class Time { public static float deltaTime, time, unscaledDeltaTime; public static int frameCount; }
     public enum RuntimeInitializeLoadType { AfterSceneLoad, BeforeSceneLoad }
     [AttributeUsage(AttributeTargets.Method)]
     public sealed class RuntimeInitializeOnLoadMethodAttribute : Attribute { public RuntimeInitializeOnLoadMethodAttribute(RuntimeInitializeLoadType t) { } }
-    public struct Vector2 { public float x, y; public Vector2(float x, float y) { this.x = x; this.y = y; } }
-    public struct Vector3 { public float x, y, z; public Vector3(float x, float y, float z) { this.x = x; this.y = y; this.z = z; } }
+    public struct Vector2
+    {
+        public float x, y;
+        public Vector2(float x, float y) { this.x = x; this.y = y; }
+        public Vector2 normalized => this;
+        public float magnitude => 0f;
+        public static float Distance(Vector2 a, Vector2 b) => 0f;
+        public static Vector2 Lerp(Vector2 a, Vector2 b, float t) => a;
+        public static Vector2 operator -(Vector2 a, Vector2 b) => a;
+        public static Vector2 operator +(Vector2 a, Vector2 b) => a;
+        public static Vector2 operator *(Vector2 a, float d) => a;
+        public static Vector2 operator *(float d, Vector2 a) => a;
+    }
+    public struct Vector3
+    {
+        public float x, y, z;
+        public Vector3(float x, float y, float z) { this.x = x; this.y = y; this.z = z; }
+        public static Vector3 zero => default(Vector3);
+    }
     public struct Rect { public float x, y, width, height; public Rect(float x, float y, float w, float h) { this.x = x; this.y = y; width = w; height = h; } }
     public struct Matrix4x4 { public static Matrix4x4 Scale(Vector3 v) => default(Matrix4x4); public static Matrix4x4 identity => default(Matrix4x4); }
     public struct Color
@@ -92,6 +121,10 @@ namespace UnityEngine
     public static class Mathf
     {
         public const float PI = 3.14159265f;
+        public const float Deg2Rad = PI / 180f;
+        public static float Repeat(float t, float length) => t;
+        public static float Abs(float v) => v;
+        public static float Lerp(float a, float b, float t) => a;
         public static float Max(float a, float b) => a;
         public static int Max(int a, int b) => a;
         public static float Min(float a, float b) => a;
@@ -141,6 +174,9 @@ namespace UnityEngine
         public static void EndArea() { }
         public static void BeginHorizontal(params GUILayoutOption[] o) { }
         public static void EndHorizontal() { }
+        public static void BeginVertical(params GUILayoutOption[] o) { }
+        public static void BeginVertical(GUIStyle s, params GUILayoutOption[] o) { }
+        public static void EndVertical() { }
         public static Vector2 BeginScrollView(Vector2 p, params GUILayoutOption[] o) => p;
         public static void EndScrollView() { }
         public static void Label(string t, params GUILayoutOption[] o) { }

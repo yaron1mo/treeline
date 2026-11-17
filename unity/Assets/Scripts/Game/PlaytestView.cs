@@ -32,6 +32,9 @@ namespace Treeline.Game
 
         // Data
         readonly List<Field> fields = new List<Field>();
+        readonly List<string> fieldFiles = new List<string>();   // Resources/Fields names, for the art layer
+        GameObject art;            // Treeline.Render.BattlefieldPreview, if present: the ground is drawn by it
+        bool overArt;
         int current;
         UnitTable units;
         ObstacleTable obstacles;
@@ -81,7 +84,7 @@ namespace Treeline.Game
                 try
                 {
                     var f = FieldParser.Parse(asset.text);
-                    if (f.Name != "Vision test") fields.Add(f);
+                    if (f.Name != "Vision test") { fields.Add(f); fieldFiles.Add(asset.name); }
                 }
                 catch (System.Exception e) { Debug.LogError($"Field '{asset.name}': {e.Message}"); }
             }
@@ -129,9 +132,21 @@ namespace Treeline.Game
             selected = null;
             mode = ClickMode.Normal;
             paused = false;
+            ShowArt();
             BuildTerrain();
             FitCamera();
             Say($"{field.Name}: place defenders in the lit part of the field, then start wave 1.", 8f);
+        }
+
+        // The Steppe Patch ground (Codex, Treeline.Render) under our flat layer. Found by name: Render already depends on
+        // Game, so Game cannot reference it directly.
+        void ShowArt()
+        {
+            if (art == null) art = GameObject.Find("Steppe Patch Battlefield Preview");
+            bool was = overArt;
+            overArt = art != null;
+            if (art != null) art.SendMessage("ShowField", fieldFiles[current], SendMessageOptions.DontRequireReceiver);
+            if (overArt != was && grid != null) BuildTerrain();
         }
 
         // ---- loop -------------------------------------------------------------------------------------------------
@@ -139,6 +154,7 @@ namespace Treeline.Game
         void Update()
         {
             if (battle == null) return;
+            if (!overArt && Time.frameCount % 30 == 0) ShowArt();   // the art layer may start after us
             if (selected != null && !selected.Alive) { selected = null; mode = ClickMode.Normal; }
             if (selected != null)
             {
@@ -296,6 +312,16 @@ namespace Treeline.Game
                 {
                     float x = px + 0.5f, y = py + 0.5f;
                     int cell = grid.CellAt(x, y);
+                    if (overArt)
+                    {
+                        // Only what the art does not show: the no-placing zone and wrecks that appear in battle.
+                        Color32 o = new Color32(0, 0, 0, 0);
+                        var wreck = vision != null ? vision.ObstacleInCell(cell) : null;
+                        if (wreck != null && wreck.Id == "wreck") o = new Color32(70, 50, 40, 255);
+                        else if (y < zone) o = new Color32(0, 0, 0, 90);
+                        terrain[Index(x, y)] = o;
+                        continue;
+                    }
                     Color c = TerrainColor(grid.Cells[cell]);
                     if (vision != null)
                     {

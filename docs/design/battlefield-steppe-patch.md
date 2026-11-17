@@ -29,3 +29,7 @@ This is intentionally separate from `Treeline.Sim` and `Treeline.Game`. The orig
 - No unit/FX/HUD integration in this branch, and no screenshots are claimed from an actual Unity execution.
 - Visual coordinates use map +X to the right, map +Y downward; render texture origin in Unity is centered, so later unit layers must convert to `(x - width/2, height/2 - y)`.
 - Open questions for art review: field hue/contrast, crown density, amount of pixel character, cloud shadow opacity and wind pace.
+
+## With the playtest (2026-11-17, Claude)
+
+When `PlaytestView` runs, it picks the map (`ShowField`) and owns the camera and GUI; this layer only draws the ground. Keys 1/2/3 were removed: the project uses the new Input System only, where the old `Input` class throws.

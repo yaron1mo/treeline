@@ -87,7 +87,18 @@ namespace Treeline.Render
             ground.transform.position = Vector3.zero;
             MakeWind(crops);
             MakeCloud();
-            FitCamera(width, height);
+            if (!DrivenByPlaytest()) FitCamera(width, height);
+        }
+
+        /// <summary>The playtest screen (Treeline.Game.PlaytestView) picks the map and owns the camera and the GUI;
+        /// this layer then only draws the ground under it (Claude, 2026-11-17).</summary>
+        static bool DrivenByPlaytest() => GameObject.Find("PlaytestView") != null;
+
+        /// <summary>Show a field by its Resources/Fields name; called by the playtest with SendMessage.</summary>
+        public void ShowField(string resourceName)
+        {
+            int i = Array.IndexOf(MapFiles, resourceName);
+            if (i >= 0 && (i != mapIndex || ground == null || ground.sprite == null)) LoadMap(i);
         }
 
         void DrawBase(Color32[] pixels)
@@ -379,10 +390,8 @@ namespace Treeline.Render
 
         void Update()
         {
-            if (Input.GetKeyDown(KeyCode.Alpha1)) LoadMap(0);
-            if (Input.GetKeyDown(KeyCode.Alpha2)) LoadMap(1);
-            if (Input.GetKeyDown(KeyCode.Alpha3)) LoadMap(2);
-
+            // Keys 1/2/3 removed (Claude, 2026-11-17): the project runs the new Input System only, where the old
+            // Input class throws every frame and stopped the wind and clouds below. The buttons still switch maps.
             if (windFrames == null) return;
             windClock += Time.unscaledDeltaTime;
             if (windClock >= WindFrameSeconds)
@@ -399,6 +408,7 @@ namespace Treeline.Render
         void OnGUI()
         {
             // Temporary preview controls, not the final battle HUD.
+            if (DrivenByPlaytest()) return;
             float s = Mathf.Max(1f, Screen.width / 520f);
             GUI.matrix = Matrix4x4.Scale(new Vector3(s, s, 1f));
             GUILayout.BeginArea(new Rect(8, 8, Screen.width / s - 16, 112));
