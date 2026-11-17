@@ -18,7 +18,9 @@ namespace Treeline.Render
 
         SpriteRenderer ground, wind, cloud, cloudTwo, cloudThree;
         BattlefieldEffects effects;
+        BattlefieldUnitLayer unitLayer;
         bool demoEffects;
+        bool showUnits = true;
         Texture2D groundTexture, cloudTexture;
         Sprite[] windFrames;
         Texture2D[] windTextures;
@@ -51,6 +53,9 @@ namespace Treeline.Render
             var fxObject = new GameObject("Pooled battlefield FX");
             fxObject.transform.SetParent(transform, false);
             effects = fxObject.AddComponent<BattlefieldEffects>();
+            var unitsObject = new GameObject("Unit sprites");
+            unitsObject.transform.SetParent(transform, false);
+            unitLayer = unitsObject.AddComponent<BattlefieldUnitLayer>();
             LoadMap(0);
         }
 
@@ -99,6 +104,8 @@ namespace Treeline.Render
             MakeCloud();
             effects.Initialize(width, height);
             effects.SetDemo(demoEffects);
+            unitLayer.Initialize(width, height);
+            unitLayer.ShowPreview(showUnits);
             ambientSmokeClock = 0f;
             SeedAmbientSmoke();
             FitCamera(width, height);
@@ -835,15 +842,21 @@ namespace Treeline.Render
             // Temporary preview controls, not the final battle HUD.
             float s = Mathf.Max(1f, Screen.width / 520f);
             GUI.matrix = Matrix4x4.Scale(new Vector3(s, s, 1f));
-            GUILayout.BeginArea(new Rect(8, 8, Screen.width / s - 16, 172));
+            GUILayout.BeginArea(new Rect(8, 8, Screen.width / s - 16, 208));
             GUILayout.BeginVertical(GUI.skin.box);
             GUILayout.Label("TREELINE  /  STEPPE PATCH  /  " + mapTitle);
-            GUILayout.Label("Visual test: wind, sunlight, birds, crop rows and pooled FX");
+            GUILayout.Label("ART PREVIEW — all 23 unit types / no simulated battle");
             GUILayout.BeginHorizontal();
             for (int i = 0; i < MapFiles.Length; i++)
                 if (GUILayout.Button((i + 1).ToString() + " · " + (i == 0 ? "Forest" : i == 1 ? "Balka" : "River"),
                     GUILayout.Height(34))) { if (i != mapIndex) LoadMap(i); }
             GUILayout.EndHorizontal();
+            if (GUILayout.Button(showUnits ? "UNITS: ON — 23 types" : "UNITS: OFF",
+                GUILayout.Height(30)))
+            {
+                showUnits = !showUnits;
+                if (unitLayer != null) unitLayer.ShowPreview(showUnits);
+            }
             if (GUILayout.Button(demoEffects ? "FX DEMO: ON (not Sim)" : "FX DEMO: OFF",
                 GUILayout.Height(30)))
             {
