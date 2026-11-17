@@ -47,6 +47,17 @@ namespace Treeline.Sim
         public float PlacementZoneStart = 0.35f;
         /// <summary>Closed strips along the left and right edges of the field, metres (2026-11-17).</summary>
         public float EdgeMarginM;
+        /// <summary>Assault line: how wide infantry spreads across the route, metres (2026-11-17).</summary>
+        public float LineWidthM = 50f;
+        /// <summary>Assault line: how wide vehicles spread across the route, metres.</summary>
+        public float LineWidthVehicleM = 30f;
+        /// <summary>Assault line: speed multiplier (they move in bounds, covering each other).</summary>
+        public float LineSpeedMult = 0.75f;
+        /// <summary>Column: infantry steps up to this far beside the route, so they do not walk inside each other.</summary>
+        public float ColumnJitterM = 1.5f;
+        /// <summary>Direct fire is held when one of the shooter's own side stands within this many metres of the line
+        /// of fire (a column shoots with its front only).</summary>
+        public float FriendlyBlockM = 1.5f;
 
         public static BattleRules Parse(string csv)
         {
@@ -79,6 +90,11 @@ namespace Treeline.Sim
             r.KillRewardShare = Num(values, "kill_reward_share", r.KillRewardShare);
             r.PlacementZoneStart = Num(values, "placement_zone_start", r.PlacementZoneStart);
             r.EdgeMarginM = Num(values, "edge_margin_m", r.EdgeMarginM);
+            r.LineWidthM = Num(values, "line_width_m", r.LineWidthM);
+            r.LineWidthVehicleM = Num(values, "line_width_vehicle_m", r.LineWidthVehicleM);
+            r.LineSpeedMult = Num(values, "line_speed_mult", r.LineSpeedMult);
+            r.ColumnJitterM = Num(values, "column_jitter_m", r.ColumnJitterM);
+            r.FriendlyBlockM = Num(values, "friendly_block_m", r.FriendlyBlockM);
             if (values.TryGetValue("spread_ring_shares", out var rings) && rings.Length > 0)
             {
                 var parts = rings.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
