@@ -10,7 +10,7 @@ namespace Treeline.Render
     /// Original point-filtered 2D sprites for every unit ID in units.csv.
     /// One small, 18-color atlas packed as a text/GZip asset: no binary importer or LFS dependency.
     /// Each 48x48 atlas tile is oriented toward the top of the screen.
-    /// PNG review export: tools/art/draw_units.py (the asset data, not runtime drawing, is authoritative).
+    /// PNG export/repack: tools/art/unit_atlas.py (palette and tile order are shared).
     /// </summary>
     public sealed class UnitSpriteAtlas : IDisposable
     {
