@@ -31,7 +31,7 @@
 - Point filtering, same orientation for each unit, one atlas shared between all sprite renderers. One shadow sprite per unit.
 - Binary art is encoded as an 18-color indexed `Resources/Art/Units/units_atlas_indexed.txt` (GZip + Base64), reconstructed to RGBA in `UnitSpriteAtlas.cs` once, then cut into cached Unity sprites. This keeps binary assets out of Git until we commit final artwork through Git LFS.
 - `BattlefieldUnitLayer` exposes `BindBattle(Treeline.Sim.Battle)` for read-only synchronization with live Sim attackers/defenders/drones. It **is not currently wired** to the Game layer. The on-map catalog displays 23 sample placements for checking silhouette, size and allegiance.
-- The original PNG sprites and editable drawing script are available separately in the art-review pack.
+- Editable PNG workflow is in `tools/art/unit_atlas.py`: `python tools/art/unit_atlas.py export` writes the 23 PNG tiles into `_unit_work/`; after editing, `python tools/art/unit_atlas.py pack` rebuilds the compressed text atlas. Requires Pillow. New palette colors must be added to both the script and `UnitSpriteAtlas.cs`. The original v0.1 PNGs and initial drawing script are also supplied in the art-review ZIP.
 
 ## Preview in Unity
 
