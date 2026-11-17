@@ -17,6 +17,8 @@ namespace Treeline.Sim
         public bool DismountBlastKills = true;
         /// <summary>Direct fire hits only what the shooter itself sees; shared vision then serves indirect fire (mortars) only.</summary>
         public bool DirectFireNeedsOwnSight;
+        /// <summary>Direct fire at a target the side sees also needs a clear line from the shooter (Yaroslav, 2026-11-17).</summary>
+        public bool DirectFireNeedsLineOfSight;
         /// <summary>Drones in the air are lost when their operator dies.</summary>
         public bool DroneLostWithOperator = true;
         /// <summary>How wrongly a shooter judges a moving target's speed when leading it (standard deviation, share of the speed).</summary>
@@ -61,6 +63,7 @@ namespace Treeline.Sim
             r.RouteChoiceSlack = Num(values, "route_choice_slack", r.RouteChoiceSlack);
             r.DismountBlastKills = Flag(values, "dismount_blast_kills", r.DismountBlastKills);
             r.DirectFireNeedsOwnSight = Flag(values, "direct_fire_needs_own_sight", r.DirectFireNeedsOwnSight);
+            r.DirectFireNeedsLineOfSight = Flag(values, "direct_fire_needs_line_of_sight", r.DirectFireNeedsLineOfSight);
             r.DroneLostWithOperator = Flag(values, "drone_lost_with_operator", r.DroneLostWithOperator);
             r.LeadError = Num(values, "lead_error", r.LeadError);
             r.DroneAltitudeM = Num(values, "drone_altitude_m", r.DroneAltitudeM);

@@ -21,3 +21,4 @@ wave_income,100,"Proposal (economy test, 2026-11-16). Money added after each wav
 sell_refund,0.5,"Proposal (playtest, 2026-11-16). Share of build_cost given back when a defender is removed."
 placement_zone_start,0.35,"Proposal (playtest, 2026-11-16). Defenders stand only from this share of the field's depth (from the enemy edge) down to our line."
 kill_reward_share,0.25,"Yaroslav 2026-11-16 (economy test, variant B): share of an attacker's reward_value (or threat_value) paid for killing it, when the wave is held."
+direct_fire_needs_line_of_sight,TRUE,"Yaroslav 2026-11-17: a shooter fires at what its side sees only with a clear line to the target; behind a forest belt the recon drone's spotting is not enough. Mortar (indirect) and shots at aircraft and drones are exempt."
