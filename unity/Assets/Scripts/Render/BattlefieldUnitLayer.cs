@@ -48,7 +48,8 @@ namespace Treeline.Render
             }
             ClearVisuals();
             ready = true;
-            ShowPreview(showCatalog);
+            // The owning BattlefieldPreview decides if this is an art catalog or a real match.
+            // Do not create demo squads here: Destroy() is deferred until end-of-frame in Unity.
         }
 
         /// <summary>
