@@ -19,11 +19,6 @@ on:
         default: '10'
   push:
     branches: ['mistral/**']
-    paths:
-      - 'unity/Assets/Data/**'
-      - 'unity/Assets/Scripts/Sim/**'
-      - 'tools/balance/**'
-      - '.github/workflows/balance-run.yml'
 
 concurrency:
   group: balance-run-${{ github.ref }}
