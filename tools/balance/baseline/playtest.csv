@@ -1,0 +1,91 @@
+field,style,seed,waves_held,line_damage,money_left,defenders,spent
+Balka and railway,greedy,1,9,60,13,1,1275
+Balka and railway,greedy,2,10,64,34,1,1375
+Balka and railway,greedy,3,9,60,90,1,1175
+Balka and railway,greedy,4,10,62,40,1,1375
+Balka and railway,greedy,5,9,60,1,2,1275
+Balka and railway,greedy,6,9,60,95,2,1175
+Balka and railway,greedy,7,9,61,86,1,1175
+Balka and railway,greedy,8,9,60,91,2,1175
+Balka and railway,greedy,9,9,67,14,1,1275
+Balka and railway,greedy,10,9,60,90,1,1175
+River crossing,greedy,1,9,63,90,2,1175
+River crossing,greedy,2,10,60,78,2,1375
+River crossing,greedy,3,9,63,86,3,1175
+River crossing,greedy,4,10,60,43,1,1375
+River crossing,greedy,5,10,60,84,1,1375
+River crossing,greedy,6,9,60,89,4,1175
+River crossing,greedy,7,9,64,98,1,1175
+River crossing,greedy,8,11,60,49,4,1575
+River crossing,greedy,9,9,60,69,1,1275
+River crossing,greedy,10,9,64,80,3,1175
+Forest belts,greedy,1,9,65,0,4,1275
+Forest belts,greedy,2,9,61,70,1,1175
+Forest belts,greedy,3,9,60,16,5,1275
+Forest belts,greedy,4,8,60,45,4,1075
+Forest belts,greedy,5,9,60,91,3,1175
+Forest belts,greedy,6,9,68,75,5,1175
+Forest belts,greedy,7,8,65,13,3,1075
+Forest belts,greedy,8,9,64,89,4,1175
+Forest belts,greedy,9,9,66,43,2,1200
+Forest belts,greedy,10,9,61,10,5,1275
+Balka and railway,reactive,1,9,68,99,2,1175
+Balka and railway,reactive,2,8,66,33,2,1075
+Balka and railway,reactive,3,11,63,1,3,1675
+Balka and railway,reactive,4,8,60,179,2,975
+Balka and railway,reactive,5,9,62,85,4,1175
+Balka and railway,reactive,6,9,64,191,3,1075
+Balka and railway,reactive,7,9,65,20,1,1275
+Balka and railway,reactive,8,9,63,94,4,1175
+Balka and railway,reactive,9,10,62,26,2,1375
+Balka and railway,reactive,10,8,61,29,4,1075
+River crossing,reactive,1,11,60,15,4,1575
+River crossing,reactive,2,10,60,63,1,1375
+River crossing,reactive,3,9,60,88,3,1175
+River crossing,reactive,4,9,60,295,5,975
+River crossing,reactive,5,8,60,63,1,1075
+River crossing,reactive,6,10,60,79,4,1375
+River crossing,reactive,7,9,60,94,3,1175
+River crossing,reactive,8,11,67,46,4,1625
+River crossing,reactive,9,12,65,88,3,1725
+River crossing,reactive,10,9,60,56,3,1275
+Forest belts,reactive,1,9,60,19,3,1275
+Forest belts,reactive,2,8,61,133,2,975
+Forest belts,reactive,3,10,60,46,4,1375
+Forest belts,reactive,4,8,60,63,2,1075
+Forest belts,reactive,5,8,64,20,2,1075
+Forest belts,reactive,6,9,62,241,5,1025
+Forest belts,reactive,7,9,60,13,2,1275
+Forest belts,reactive,8,8,60,159,3,975
+Forest belts,reactive,9,9,65,184,4,1075
+Forest belts,reactive,10,11,63,440,3,1225
+Balka and railway,saver,1,10,63,325,1,1075
+Balka and railway,saver,2,10,64,121,1,1275
+Balka and railway,saver,3,9,64,33,1,1225
+Balka and railway,saver,4,11,60,100,3,1525
+Balka and railway,saver,5,9,65,59,1,1225
+Balka and railway,saver,6,9,60,90,1,1175
+Balka and railway,saver,7,10,60,58,2,1375
+Balka and railway,saver,8,9,60,186,3,1075
+Balka and railway,saver,9,9,62,183,2,1075
+Balka and railway,saver,10,10,60,24,2,1425
+River crossing,saver,1,11,62,4,4,1625
+River crossing,saver,2,9,66,21,3,1275
+River crossing,saver,3,9,60,96,3,1175
+River crossing,saver,4,9,67,76,4,1175
+River crossing,saver,5,9,60,29,3,1275
+River crossing,saver,6,10,62,91,1,1375
+River crossing,saver,7,12,60,66,1,1725
+River crossing,saver,8,14,60,154,4,2225
+River crossing,saver,9,12,66,61,3,1775
+River crossing,saver,10,9,60,44,2,1275
+Forest belts,saver,1,9,63,60,4,1175
+Forest belts,saver,2,9,61,70,1,1175
+Forest belts,saver,3,9,62,105,4,1175
+Forest belts,saver,4,8,60,145,3,975
+Forest belts,saver,5,9,65,141,4,1175
+Forest belts,saver,6,9,60,188,3,1075
+Forest belts,saver,7,8,65,13,3,1075
+Forest belts,saver,8,9,62,266,4,975
+Forest belts,saver,9,9,60,41,1,1275
+Forest belts,saver,10,10,60,64,4,1375
