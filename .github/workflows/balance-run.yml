@@ -1,0 +1,149 @@
+name: Balance run
+# Wave cost and scripted players for the current data (2026-11-23). Mistral's balance loop runs this on every push to a
+# mistral/** branch; anyone can start it by hand (Actions > Balance run > Run workflow).
+# The report is in the run summary and in the "balance-report" artifact (report.md, report.json, merged CSVs).
+on:
+  workflow_dispatch:
+    inputs:
+      fields:
+        description: 'Field name parts, comma-separated (empty = all fields)'
+        required: false
+        default: ''
+      waves:
+        description: 'Waves, first-last (empty = all waves in waves.csv)'
+        required: false
+        default: ''
+      playtest_seeds:
+        description: 'Seeds per field for the scripted players (0 = skip)'
+        required: false
+        default: '10'
+  push:
+    branches: ['mistral/**']
+    paths:
+      - 'unity/Assets/Data/**'
+      - 'unity/Assets/Scripts/Sim/**'
+      - 'tools/balance/**'
+      - '.github/workflows/balance-run.yml'
+
+concurrency:
+  group: balance-run-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      shards: ${{ steps.plan.outputs.shards }}
+      seeds: ${{ steps.plan.outputs.seeds }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Mono C# compiler
+        run: sudo apt-get update && sudo apt-get install -y mono-mcs
+      - name: Build the tools
+        run: |
+          mkdir -p bin
+          mcs -langversion:latest -nowarn:0649,0169,0414 -out:bin/wave-cost.exe unity/Assets/Scripts/Sim/*.cs tools/balance/Routes.cs tools/balance/WaveCost.cs
+          mcs -langversion:latest -nowarn:0649,0169,0414 -out:bin/playtest-run.exe unity/Assets/Scripts/Sim/*.cs tools/balance/Routes.cs tools/balance/PlaytestRun.cs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bin
+          path: bin
+          retention-days: 1
+      - name: Plan the shards (one per field and wave)
+        id: plan
+        env:
+          FIELDS: ${{ github.event.inputs.fields }}
+          WAVES: ${{ github.event.inputs.waves }}
+          SEEDS: ${{ github.event.inputs.playtest_seeds }}
+        run: |
+          python3 - <<'EOF' >> "$GITHUB_OUTPUT"
+          import csv, glob, json, os
+          names = []
+          for p in sorted(glob.glob("unity/Assets/Resources/Fields/*.json")):
+              n = json.load(open(p, encoding="utf-8"))["name"]
+              if n != "Vision test":
+                  names.append(n)
+          want = [s.strip() for s in os.environ.get("FIELDS", "").split(",") if s.strip()]
+          if want:
+              names = [n for n in names if any(w in n for w in want)]
+          count = max(int(r["wave"]) for r in csv.DictReader(open("unity/Assets/Data/waves.csv", encoding="utf-8")))
+          first, last = 1, count
+          if os.environ.get("WAVES", "").strip():
+              a, b = os.environ["WAVES"].split("-")
+              first, last = int(a), int(b)
+          shards = [{"field": n, "wave": w} for n in names for w in range(first, last + 1)]
+          print("shards=" + json.dumps(shards))
+          print("seeds=" + (os.environ.get("SEEDS") or "10"))
+          EOF
+
+  wave-cost:
+    needs: plan
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(needs.plan.outputs.shards) }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Mono runtime
+        run: sudo apt-get update && sudo apt-get install -y mono-runtime
+      - uses: actions/download-artifact@v4
+        with:
+          name: bin
+          path: bin
+      - name: Wave cost
+        run: mono bin/wave-cost.exe . tools/balance/stop.csv "${{ matrix.shard.field }}" ${{ matrix.shard.wave }} ${{ matrix.shard.wave }} > out.csv
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wave-cost-${{ strategy.job-index }}
+          path: out.csv
+          retention-days: 3
+
+  playtest:
+    needs: plan
+    if: needs.plan.outputs.seeds != '0'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        style: [saver, greedy, reactive]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Mono runtime
+        run: sudo apt-get update && sudo apt-get install -y mono-runtime
+      - uses: actions/download-artifact@v4
+        with:
+          name: bin
+          path: bin
+      - name: Scripted players, 20 waves in a row
+        run: mono bin/playtest-run.exe . ${{ needs.plan.outputs.seeds }} ${{ matrix.style }} tools/balance/stop.csv > out.csv
+      - uses: actions/upload-artifact@v4
+        with:
+          name: playtest-${{ matrix.style }}
+          path: out.csv
+          retention-days: 3
+
+  report:
+    needs: [wave-cost, playtest]
+    if: always() && needs.wave-cost.result != 'cancelled'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: results
+      - name: Name the shard files
+        run: |
+          rm -rf results/bin
+          for d in results/*/; do n=$(basename "$d"); [ -f "$d/out.csv" ] && mv "$d/out.csv" "results/$n.csv"; rm -rf "$d"; done
+          ls results | head
+      - name: Report
+        run: |
+          python3 tools/balance/report.py . results report tools/balance/baseline
+          cat report/report.md >> "$GITHUB_STEP_SUMMARY"
+          echo "Verdict: $(python3 -c 'import json;print(json.load(open("report/report.json"))["verdict"])')"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: balance-report
+          path: report
+          retention-days: 30

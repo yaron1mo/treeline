@@ -2,11 +2,12 @@
 // Each wave is fought alone, on an empty field, with no memory of earlier waves.
 // The player splits the budget by need: for each attacker group it takes the cheapest defender per attacker stopped
 // (stop table), then buys those defenders in proportion until the money ends. Each entry point gets one machine gunner
-// first, and a recon drone when a long gun needs one. Defenders go to the entry points in turn.
+// first, and a recon drone when a long gun needs one. Defenders go to the lanes in turn (tools/balance/Routes.cs:
+// where the traced routes cross the placing zone, so fields without a spawns list work too).
 // A wave is held when the line takes no more than line_health / number of waves damage.
 // The cost is the smallest budget (to 25 points) that holds the wave on at least 8 of 10 seeds.
 // The result is an upper bound: the scripted player plays worse than a person.
-// Compile: mcs -langversion:latest -out:wave-cost.exe unity/Assets/Scripts/Sim/*.cs tools/balance/WaveCost.cs
+// Compile: mcs -langversion:latest -out:wave-cost.exe unity/Assets/Scripts/Sim/*.cs tools/balance/Routes.cs tools/balance/WaveCost.cs
 // Run:     mono wave-cost.exe <repo root> <stop table csv> [field name filter] [first wave] [last wave] [line damage allowed]
 using System;
 using System.Collections.Generic;
@@ -90,9 +91,10 @@ static class WaveCost
 
     static bool Fight(Field field, int wave, float budget, int seed, float allowance)
     {
-        var b = new Battle(new NavGrid(field, obstacles), units, budget, new VisionMap(field, obstacles), armour, -1f, seed, rules);
+        var grid = new NavGrid(field, obstacles);
+        var b = new Battle(grid, units, budget, new VisionMap(field, obstacles), armour, -1f, seed, rules);
         b.PlacementMinY = rules.PlacementZoneStart * field.Height;
-        Buy(b, field, wave, new Random(seed));
+        Buy(b, field, grid, wave, new Random(seed));
         plan.Queue(b, wave);
         b.StartRound();
         while (b.Outcome == BattleOutcome.Ongoing && b.RoundTime < 3000f) b.Step(0.05f);
@@ -102,7 +104,7 @@ static class WaveCost
     static Battle cb;
     static Field cf;
     static Random crng;
-    static List<float> lanes;
+    static List<Routes.Lane> lanes;
     static int next;
     static Dictionary<string, int> have;
 
@@ -112,9 +114,7 @@ static class WaveCost
         if (b.Budget < b.CostOf(id)) return false;
         for (int tries = 0; tries < 20; tries++)
         {
-            float x = lanes[next % lanes.Count] + (float)(rng.NextDouble() * 2 - 1) * 20f;
-            x = Math.Max(12f, Math.Min(f.Width - 12f, x));
-            float y = f.Height * (0.6f + 0.3f * (float)rng.NextDouble());
+            Routes.Near(lanes[next % lanes.Count], rng, f.Width, f.Height * 0.6f, f.Height * 0.9f, out float x, out float y);
             if (b.TryPlace(id, x, y, out _, out _))
             {
                 next++;
@@ -129,7 +129,7 @@ static class WaveCost
     static float Stop(string defender, string attacker) =>
         stop.TryGetValue(attacker, out var m) && m.TryGetValue(defender, out var v) ? v : 0f;
 
-    static void Buy(Battle b, Field f, int wave, Random rng)
+    static void Buy(Battle b, Field f, NavGrid grid, int wave, Random rng)
     {
         // Need: for each group, the cheapest defender per attacker stopped; how many of it the group needs.
         var need = new Dictionary<string, float>();
@@ -150,7 +150,7 @@ static class WaveCost
             need[best] = n + g.Count / Stop(best, g.UnitId);
         }
         cb = b; cf = f; crng = rng; next = 0; have = new Dictionary<string, int>();
-        lanes = f.Spawns.Count > 0 ? new List<float>(f.Spawns) : new List<float> { f.Width / 2f };
+        lanes = Routes.Of(f.Name, grid, f.Height * 0.6f, f.Height * 0.9f);
         // Every entry point first gets someone who sees it.
         for (int i = 0; i < lanes.Count; i++) if (!Put("machine_gun")) Put("rifle_squad");
         bool recon = false;

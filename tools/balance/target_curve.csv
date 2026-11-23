@@ -1,0 +1,5 @@
+wave_from,wave_to,min_ratio,max_ratio,note
+1,5,1.5,,Learning: the player can make mistakes (approved by Yaroslav 2026-11-23).
+6,12,1.2,1.4,The player must think but has a reserve.
+13,20,1.0,1.2,Tension; a lighter wave after each new heavy attacker.
+new_unit,,1.2,,A wave where an attacker type appears for the first time: at least this ratio (and max at least min + 0.2).
