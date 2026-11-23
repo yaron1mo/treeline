@@ -17,7 +17,7 @@ spread_ring_shares,0.4 0.35 0.25,"Proposal (Yaroslav: a 30-40 m zone with rings)
 aviation_loiter_s,60,Proposal. How long an enemy spotter (recon UAV) stays over its spot (40% down the field) before flying out.
 aircraft_evasion_m,1,"Proposal. Aircraft weave and change speed: anyone shooting at one aims about this far off (standard deviation). With hit_radius_m 0.2 an FPV is then hard to hit with a rifle."
 start_budget,400,"Yaroslav 2026-11-16: rifle squad = 100, two of them at the start."
-wave_income,150,"Proposal (economy test, 2026-11-16). Money added after each wave the defence holds, on top of kill rewards."
+wave_income,400,"Proposal (economy test, 2026-11-16). Money added after each wave the defence holds, on top of kill rewards."
 sell_refund,0.5,"Proposal (playtest, 2026-11-16). Share of build_cost given back when a defender is removed."
 placement_zone_start,0,"Yaroslav 2026-11-17: defenders can stand anywhere on the field (was 0.35: only from 35% of the depth down)."
 kill_reward_share,0.25,"Yaroslav 2026-11-16 (economy test, variant B): share of an attacker's reward_value (or threat_value) paid for killing it, when the wave is held."
