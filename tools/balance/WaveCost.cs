@@ -18,7 +18,8 @@ using Treeline.Sim;
 static class WaveCost
 {
     const int Seeds = 10, MustHold = 8;
-    const float Step = 25f, MaxBudget = 12000f;
+    const float Step = 25f;
+    static float MaxBudget = 12000f;
     static readonly string[] Defenders = { "rifle_squad", "machine_gun", "sniper", "mortar", "anti_tank", "air_defence", "fpv_operator", "bomber_operator" };
     static readonly HashSet<string> NeedRecon = new HashSet<string> { "mortar", "anti_tank", "air_defence", "fpv_operator", "bomber_operator" };
     static readonly Dictionary<string, Dictionary<string, float>> stop = new Dictionary<string, Dictionary<string, float>>();
@@ -45,10 +46,15 @@ static class WaveCost
         obstacles = ObstacleTable.Parse(File.ReadAllText(Path.Combine(data, "obstacles.csv")));
         armour = ArmourTable.Parse(File.ReadAllText(Path.Combine(data, "armour.csv")));
         rules = BattleRules.Parse(File.ReadAllText(Path.Combine(data, "battle_rules.csv")));
-        plan = WavePlan.Parse(File.ReadAllText(Path.Combine(data, "waves.csv")));
+        // WAVES_FILE: another wave list (for example probe waves from make_probe_waves.py). MAX_BUDGET: search limit.
+        string wavesFile = Environment.GetEnvironmentVariable("WAVES_FILE");
+        plan = WavePlan.Parse(File.ReadAllText(string.IsNullOrEmpty(wavesFile) ? Path.Combine(data, "waves.csv") : Path.Combine(root, wavesFile)));
+        string mb = Environment.GetEnvironmentVariable("MAX_BUDGET");
+        if (!string.IsNullOrEmpty(mb)) MaxBudget = float.Parse(mb, CultureInfo.InvariantCulture);
         int first = args.Length > 3 ? int.Parse(args[3]) : 1;
         int last = args.Length > 4 ? int.Parse(args[4]) : plan.WaveCount;
-        float allowance = args.Length > 5 ? float.Parse(args[5], CultureInfo.InvariantCulture) : rules.LineHealth / plan.WaveCount;
+        // Line damage allowed per wave: line_health / 20 (a 20-wave run), or the 6th argument.
+        float allowance = args.Length > 5 ? float.Parse(args[5], CultureInfo.InvariantCulture) : rules.LineHealth / 20f;
 
         Console.WriteLine("field,wave,threat,cost,held_at_cost");
         foreach (var file in Directory.GetFiles(Path.Combine(root, "unity/Assets/Resources/Fields"), "*.json"))

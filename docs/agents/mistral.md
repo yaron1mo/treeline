@@ -112,21 +112,45 @@ Keep one journal per task: `docs/balance/mistral/<topic>/iterations.md`.
 4. Add one entry on top of `docs/log/CHANGELOG.md`: `YYYY-MM-DD — [mistral] balance — what changed and why`.
 5. Do not merge.
 
-## 8. Current task: `mistral/economy-1`
+## 8. Closed task: `mistral/economy-1` (PR #5)
 
-**Goal.** All 20 waves are in the target curve on Forest belts (verdict `pass`).
+Result: 13 of 20 waves in the target, but the result fits the metric, not the game. Money went up 4 times and the waves were filled to match (wave 6: 11 special forces; waves 15-20: 6-9 tanks). Scripted players held fewer waves in a row. PR #5 is not merged. Yaroslav (2026-11-24): the 20 test waves were random and are not a reference. Find the rules of the cost first.
 
-**Limits:**
+## 9. Current task: `mistral/attacker-cost`
 
-- Keep 20 waves.
-- Keep the order in which attacker types first appear. You can move the first wave of a type by up to 2 waves.
-- Do not add `fpv` or `one_way_drone`. They are not in this playtest.
-- Do not change `line_health`.
+**Goal.** Find what each attacker costs the defence, and a formula that gives the cost of any wave from its content and its map. Later, the wave generator and the money use this formula: money before a wave = wave cost × the target ratio.
 
-**Start point** (2026-11-17 measure, the old scripted player):
+**Extra files you can change in this task:**
 
-- Waves 1–6: mostly in target. Wave 1 costs 300, but the start budget is 250.
-- Wave 7 (first `old_tank`): cost 400 → 1675, ratio 0.59.
-- Waves 15–20: ratio 0.45–0.63. The player needs about 2 times more money.
+| File | What you can change |
+| --- | --- |
+| `tools/balance/run.json` | All. It sets the Balance run on your branch |
+| `tools/balance/make_probe_waves.py` | All |
+| `tools/balance/probe_waves.csv` | All (made by `make_probe_waves.py`) |
+| `docs/balance/mistral/attacker-cost/**` | Your report, tables and charts (PNG) |
 
-The first run on your branch gives the real start point. The scripted player changed on 2026-11-23: it now stands on the traced routes.
+Do not change `waves.csv`, `battle_rules.csv` or `units.csv` in this task.
+
+**Steps:**
+
+1. Make the branch `mistral/attacker-cost` from `codex/playable-steppe-patch-integration`.
+2. Add `tools/balance/run.json`: `{"waves_file": "tools/balance/probe_waves.csv", "max_budget": 30000, "playtest_seeds": 0}`.
+3. Push. The Balance run measures the 125 probe waves on all fields and runs `tools/balance/attacker_cost.py`. The report is in the run summary and in the artifact `balance-report` (`attacker_cost.md`, `attacker_cost.json`, `wave-cost.csv`).
+4. Read the report. Check these items:
+   - The cost curve of each attacker type: entry (the fixed cost of the first unit) and each (the cost of each next unit).
+   - Steps in the curves: where one more unit needs one more defender.
+   - Types that cost 0 or are "not held" at 30000. Find the reason in the battle log or the numbers.
+   - The error of the mixed-wave models A and B.
+   - The map coefficients.
+5. If a curve has too few points, or the mixed-wave error is more than 25%, change `make_probe_waves.py` (more counts, more mixed waves, other mixes), make a new `probe_waves.csv`, and push again. Write each run in the journal.
+6. Find the best formula for the cost of a mixed wave. You can add terms, for example a factor per pair of counters or per map. Fit it in your own script under `docs/balance/mistral/attacker-cost/`. Check it on waves that you did not use for the fit.
+7. Stop after 6 runs or when the formula predicts 80% of mixed waves within 20%.
+
+**Deliverables** (in `docs/balance/mistral/attacker-cost/`):
+
+- `report.md`: a table of each attacker type (counter, entry, each, step size) per field; the cost formula and its error; the map coefficients; what you found that is strange.
+- Charts (PNG): cost against count for each attacker type, all fields on one chart; predicted against measured cost for mixed waves.
+- `model.json`: the coefficients in a form that a script can read.
+- A proposal (not a change): how `make_waves.py` makes a wave of a given cost from this model.
+
+Open the pull request as in section 7. Title: `Mistral: attacker-cost — <error>% mean error, <n>% of mixed waves within 20%`.

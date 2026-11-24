@@ -2,6 +2,9 @@ name: Balance run
 # Wave cost and scripted players for the current data (2026-11-23). Mistral's balance loop runs this on every push to a
 # mistral/** branch; anyone can start it by hand (Actions > Balance run > Run workflow).
 # The report is in the run summary and in the "balance-report" artifact (report.md, report.json, merged CSVs).
+# A branch can hold tools/balance/run.json to change the run on push (2026-11-24), for example
+#   {"waves_file": "tools/balance/probe_waves.csv", "max_budget": 30000, "playtest_seeds": 0}
+# With a waves_file, the report is the attacker cost model (tools/balance/attacker_cost.py).
 on:
   workflow_dispatch:
     inputs:
@@ -18,7 +21,7 @@ on:
         required: false
         default: '10'
   push:
-    branches: ['mistral/**']
+    branches: ['mistral/**', 'claude/balance-**']
 
 concurrency:
   group: balance-run-${{ github.ref }}
@@ -30,6 +33,8 @@ jobs:
     outputs:
       shards: ${{ steps.plan.outputs.shards }}
       seeds: ${{ steps.plan.outputs.seeds }}
+      waves_file: ${{ steps.plan.outputs.waves_file }}
+      max_budget: ${{ steps.plan.outputs.max_budget }}
     steps:
       - uses: actions/checkout@v4
       - name: Install Mono C# compiler
@@ -44,7 +49,7 @@ jobs:
           name: bin
           path: bin
           retention-days: 1
-      - name: Plan the shards (one per field and wave)
+      - name: Plan the shards (field and a range of waves; at most 200 jobs)
         id: plan
         env:
           FIELDS: ${{ github.event.inputs.fields }}
@@ -52,7 +57,12 @@ jobs:
           SEEDS: ${{ github.event.inputs.playtest_seeds }}
         run: |
           python3 - <<'EOF' >> "$GITHUB_OUTPUT"
-          import csv, glob, json, os
+          import csv, glob, json, math, os
+          cfg = json.load(open("tools/balance/run.json")) if os.path.exists("tools/balance/run.json") else {}
+          for k, e in (("fields", "FIELDS"), ("waves", "WAVES"), ("playtest_seeds", "SEEDS")):
+              if not os.environ.get(e) and k in cfg:
+                  os.environ[e] = str(cfg[k])
+          waves_file = cfg.get("waves_file", "")
           names = []
           for p in sorted(glob.glob("unity/Assets/Resources/Fields/*.json")):
               n = json.load(open(p, encoding="utf-8"))["name"]
@@ -61,14 +71,17 @@ jobs:
           want = [s.strip() for s in os.environ.get("FIELDS", "").split(",") if s.strip()]
           if want:
               names = [n for n in names if any(w in n for w in want)]
-          count = max(int(r["wave"]) for r in csv.DictReader(open("unity/Assets/Data/waves.csv", encoding="utf-8")))
+          count = max(int(r["wave"]) for r in csv.DictReader(open(waves_file or "unity/Assets/Data/waves.csv", encoding="utf-8")))
           first, last = 1, count
           if os.environ.get("WAVES", "").strip():
               a, b = os.environ["WAVES"].split("-")
               first, last = int(a), int(b)
-          shards = [{"field": n, "wave": w} for n in names for w in range(first, last + 1)]
+          chunk = max(1, math.ceil(len(names) * (last - first + 1) / 200))
+          shards = [{"field": n, "first": w, "last": min(last, w + chunk - 1)} for n in names for w in range(first, last + 1, chunk)]
           print("shards=" + json.dumps(shards))
           print("seeds=" + (os.environ.get("SEEDS") or "10"))
+          print("waves_file=" + waves_file)
+          print("max_budget=" + str(cfg.get("max_budget", 12000)))
           EOF
 
   wave-cost:
@@ -87,7 +100,10 @@ jobs:
           name: bin
           path: bin
       - name: Wave cost
-        run: mono bin/wave-cost.exe . tools/balance/stop.csv "${{ matrix.shard.field }}" ${{ matrix.shard.wave }} ${{ matrix.shard.wave }} > out.csv
+        env:
+          WAVES_FILE: ${{ needs.plan.outputs.waves_file }}
+          MAX_BUDGET: ${{ needs.plan.outputs.max_budget }}
+        run: mono bin/wave-cost.exe . tools/balance/stop.csv "${{ matrix.shard.field }}" ${{ matrix.shard.first }} ${{ matrix.shard.last }} > out.csv
       - uses: actions/upload-artifact@v4
         with:
           name: wave-cost-${{ strategy.job-index }}
@@ -119,7 +135,7 @@ jobs:
           retention-days: 3
 
   report:
-    needs: [wave-cost, playtest]
+    needs: [plan, wave-cost, playtest]
     if: always() && needs.wave-cost.result != 'cancelled'
     runs-on: ubuntu-latest
     steps:
@@ -132,7 +148,15 @@ jobs:
           rm -rf results/bin
           for d in results/*/; do n=$(basename "$d"); [ -f "$d/out.csv" ] && mv "$d/out.csv" "results/$n.csv"; rm -rf "$d"; done
           ls results | head
+      - name: Attacker cost model (probe waves)
+        if: needs.plan.outputs.waves_file != ''
+        run: |
+          mkdir -p report
+          python3 tools/balance/attacker_cost.py . "${{ needs.plan.outputs.waves_file }}" results report
+          cat report/attacker_cost.md >> "$GITHUB_STEP_SUMMARY"
+          for f in attacker_cost.json wave-cost.csv; do echo "=== BEGIN $f ==="; cat "report/$f"; echo "=== END $f ==="; done
       - name: Report
+        if: needs.plan.outputs.waves_file == ''
         run: |
           python3 tools/balance/report.py . results report tools/balance/baseline
           cat report/report.md >> "$GITHUB_STEP_SUMMARY"
