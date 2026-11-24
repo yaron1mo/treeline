@@ -1,0 +1,68 @@
+name: Android build
+# Signed Android App Bundle (.aab) for Google Play (2026-11-24).
+# Start it: push a tag build-android-<anything> (for example build-android-closed-1), or push to a release/** branch.
+# Secrets (repository settings > Secrets and variables > Actions):
+#   UNITY_LICENSE           contents of the Unity licence file (Unity_lic.ulf)
+#   UNITY_EMAIL, UNITY_PASSWORD   the Unity account
+#   ANDROID_KEYSTORE_BASE64 the upload keystore file, base64
+#   ANDROID_KEYSTORE_PASS, ANDROID_KEYALIAS_NAME, ANDROID_KEYALIAS_PASS
+# Google Play App Signing keeps the real signing key; this keystore is only the upload key.
+on:
+  push:
+    tags: ['build-android-*']
+    branches: ['release/**']
+
+concurrency:
+  group: android-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Free disk space (the Android build image is large)
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+          docker-images: false
+          swap-storage: true
+
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - uses: actions/cache@v4
+        with:
+          path: unity/Library
+          key: Library-Android-${{ hashFiles('unity/Packages/packages-lock.json', 'unity/ProjectSettings/ProjectVersion.txt') }}
+          restore-keys: Library-Android-
+
+      - name: Build the App Bundle
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: unity
+          targetPlatform: Android
+          unityVersion: 6000.3.28f1
+          buildName: Treeline
+          androidExportType: androidAppBundle
+          androidVersionCode: ${{ github.run_number }}
+          androidTargetSdkVersion: AndroidApiLevel36
+          androidKeystoreName: treeline-upload.keystore
+          androidKeystoreBase64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+          androidKeyaliasName: ${{ secrets.ANDROID_KEYALIAS_NAME }}
+          androidKeyaliasPass: ${{ secrets.ANDROID_KEYALIAS_PASS }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: treeline-android-${{ github.run_number }}
+          path: build/Android
+          retention-days: 30
