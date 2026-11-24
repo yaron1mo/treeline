@@ -108,6 +108,49 @@ namespace Treeline.Sim
         public bool ByAttacker;
     }
 
+    /// <summary>What dealt the fatal damage to an attacker (for death visuals only, 2026-11-24).</summary>
+    public enum DeathCause
+    {
+        /// <summary>Cannot be classified reliably.</summary>
+        Unknown,
+        /// <summary>A bullet or another direct small-arms hit.</summary>
+        Bullet,
+        /// <summary>An explosive that burst on the unit (the impact point is inside its hit radius).</summary>
+        DirectExplosive,
+        /// <summary>Blast or fragments from an explosion near the unit.</summary>
+        Blast
+    }
+
+    /// <summary>
+    /// One attacker killed (HP reached 0). Read-only data for the renderer; nothing in the simulation reads it.
+    /// Not made for an attacker that crosses the line or leaves the field. Same replay, same events.
+    /// </summary>
+    public struct DeathEvent
+    {
+        /// <summary>1, 2, 3... per battle, in order of death.</summary>
+        public int EventId;
+        public int VictimId;
+        /// <summary>units.csv id of the victim.</summary>
+        public string VictimType;
+        /// <summary>Victim position at death.</summary>
+        public float X, Y;
+        public float Time;
+        public int Wave;
+        public DeathCause Cause;
+        /// <summary>The shooter (or the carrier that blew up), when known.</summary>
+        public bool HasSource;
+        public int SourceUnitId;
+        public string SourceType;
+        /// <summary>Where the fatal round or explosive came from: the muzzle, the shell's launch point, the drone.</summary>
+        public float SourceX, SourceY;
+        /// <summary>Explosives: where it burst.</summary>
+        public bool HasImpact;
+        public float ImpactX, ImpactY;
+        /// <summary>Unit vector of the fatal hit's travel at the victim (bullet: source to victim; blast: burst to
+        /// victim). (0, 0) when unknown.</summary>
+        public float DirX, DirY;
+    }
+
     /// <summary>One of our defenders killed: by whom and from where (so the player can see what killed it).</summary>
     public struct Loss
     {
@@ -236,7 +279,7 @@ namespace Treeline.Sim
         readonly List<Drone> drones = new List<Drone>();
         readonly List<Projectile> projectiles = new List<Projectile>();
         readonly List<ShotTrace> traces = new List<ShotTrace>();
-        struct PendingHit { public float Due; public Unit Shooter, Victim; public float Damage; }
+        struct PendingHit { public float Due; public Unit Shooter, Victim; public float Damage; public float FromX, FromY; }
         readonly List<PendingHit> pendingHits = new List<PendingHit>();
         const float TraceKeepS = 1.5f;
         readonly List<Spawn> spawns = new List<Spawn>();
@@ -349,7 +392,11 @@ namespace Treeline.Sim
 
         public void StartRound()
         {
-            if (Phase == BattlePhase.Preparation) Phase = BattlePhase.Round;
+            if (Phase == BattlePhase.Preparation)
+            {
+                Phase = BattlePhase.Round;
+                deathEvents.Clear();   // ids keep counting; a renderer cursor stays valid
+            }
         }
 
         public bool TryPlace(string unitId, float x, float y, out Defender placed, out string why)
@@ -1334,7 +1381,7 @@ namespace Treeline.Sim
                 return;
             }
             if (victim != null && dmg > 0f)
-                pendingHits.Add(new PendingHit { Due = arrives, Shooter = s, Victim = victim, Damage = dmg });
+                pendingHits.Add(new PendingHit { Due = arrives, Shooter = s, Victim = victim, Damage = dmg, FromX = s.X, FromY = s.Y });
         }
 
         // Mortar: the shell flies over everything to where the target will be, and lands with a spread that grows
@@ -1420,7 +1467,7 @@ namespace Treeline.Sim
         void Burst(Projectile p, float x, float y)
         {
             p.X = x; p.Y = y; p.Alive = false;
-            if (p.Shooter is Defender) Explode(p.Shooter, x, y, p.Damage, p.Weapon.BlastRadiusM, p.FromAbove, p.Weapon);
+            if (p.Shooter is Defender) Explode(p.Shooter, x, y, p.Damage, p.Weapon.BlastRadiusM, p.FromAbove, p.Weapon, p.FromX, p.FromY);
         }
 
         void ApplyArrivedHits()
@@ -1429,7 +1476,11 @@ namespace Treeline.Sim
             {
                 var h = pendingHits[i];
                 if (h.Due > RoundTime + 1e-4f) continue;
-                if (h.Victim.Alive) { StatsFor(h.Shooter.Def).ShotsHit++; Hit(h.Shooter, h.Victim, h.Damage); }
+                if (h.Victim.Alive)
+                {
+                    StatsFor(h.Shooter.Def).ShotsHit++;
+                    Hit(h.Shooter, h.Victim, h.Damage, new Fatal { Cause = DeathCause.Bullet, SourceX = h.FromX, SourceY = h.FromY });
+                }
                 pendingHits[i] = new PendingHit { Due = float.MinValue };
             }
             pendingHits.RemoveAll(h => h.Due == float.MinValue);
@@ -1511,7 +1562,62 @@ namespace Treeline.Sim
             return dx * dx + dy * dy <= range * range;
         }
 
-        void Hit(Unit shooter, Unit target, float dmg)
+        // How a hit was dealt, for the death event if it kills an attacker.
+        struct Fatal
+        {
+            public DeathCause Cause;
+            public float SourceX, SourceY;
+            public bool HasImpact;
+            public float ImpactX, ImpactY;
+        }
+
+        readonly List<DeathEvent> deathEvents = new List<DeathEvent>();
+        int lastDeathEventId;
+
+        /// <summary>Attacker deaths since the current wave started (cleared when the next wave starts), oldest first.</summary>
+        public IReadOnlyList<DeathEvent> DeathEvents => deathEvents;
+
+        /// <summary>The id of the newest death event in this battle (0 = none yet).</summary>
+        public int LastDeathEventId => lastDeathEventId;
+
+        /// <summary>
+        /// Adds the death events newer than <paramref name="afterId"/> to <paramref name="into"/> and returns the newest
+        /// id. The renderer keeps the returned id and passes it next frame, so each death is shown once even when several
+        /// steps run in one frame. When the battle object changes (new run, rewind), start from its LastDeathEventId.
+        /// </summary>
+        public int ReadDeathEvents(int afterId, List<DeathEvent> into)
+        {
+            foreach (var e in deathEvents) if (e.EventId > afterId) into.Add(e);
+            return Math.Max(afterId, lastDeathEventId);
+        }
+
+        void RecordDeath(Attacker victim, Unit source, Fatal how)
+        {
+            var e = new DeathEvent
+            {
+                EventId = ++lastDeathEventId, VictimId = victim.Id, VictimType = victim.Def.Id,
+                X = victim.X, Y = victim.Y, Time = RoundTime, Wave = WaveNumber, Cause = how.Cause,
+                HasSource = source != null, SourceUnitId = source?.Id ?? 0, SourceType = source?.Def.Id,
+                SourceX = how.SourceX, SourceY = how.SourceY,
+                HasImpact = how.HasImpact, ImpactX = how.ImpactX, ImpactY = how.ImpactY,
+            };
+            // Direction: a bullet or a direct explosive travels from its source to the victim; a blast pushes away from
+            // the burst. Each falls back to the other when its two points are the same.
+            float fx = 0f, fy = 0f;
+            float sx = victim.X - how.SourceX, sy = victim.Y - how.SourceY;
+            float ix = how.HasImpact ? victim.X - how.ImpactX : 0f, iy = how.HasImpact ? victim.Y - how.ImpactY : 0f;
+            bool srcOk = how.Cause != DeathCause.Unknown && sx * sx + sy * sy > 0.01f, impOk = ix * ix + iy * iy > 0.01f;
+            if (how.Cause == DeathCause.Blast) { if (impOk) { fx = ix; fy = iy; } else if (srcOk) { fx = sx; fy = sy; } }
+            else if (srcOk) { fx = sx; fy = sy; }
+            else if (impOk) { fx = ix; fy = iy; }
+            float len = (float)Math.Sqrt(fx * fx + fy * fy);
+            if (len > 1e-4f) { e.DirX = fx / len; e.DirY = fy / len; }
+            deathEvents.Add(e);
+        }
+
+        void Hit(Unit shooter, Unit target, float dmg) => Hit(shooter, target, dmg, new Fatal { Cause = DeathCause.Unknown });
+
+        void Hit(Unit shooter, Unit target, float dmg, Fatal how)
         {
             if (dmg <= 0f || !target.Alive) return;
             float done = Math.Min(dmg, target.Hp);
@@ -1528,6 +1634,7 @@ namespace Treeline.Sim
             if (target.Hp <= 0f)
             {
                 target.Alive = false;
+                if (target is Attacker killed) RecordDeath(killed, shooter, how);
                 if (target is Defender)
                     losses.Add(new Loss
                     {
@@ -1546,9 +1653,10 @@ namespace Treeline.Sim
         }
 
         void Explode(Unit shooter, float cx, float cy, float baseDamage,
-            float radius, bool fromAbove, UnitDef weapon = null)
+            float radius, bool fromAbove, UnitDef weapon = null, float srcX = float.NaN, float srcY = float.NaN)
         {
             weapon = weapon ?? shooter.Def;
+            if (float.IsNaN(srcX)) { srcX = shooter.X; srcY = shooter.Y; }
             foreach (var a in attackers)
             {
                 if (!a.Alive) continue;
@@ -1566,7 +1674,11 @@ namespace Treeline.Sim
                     var obstacle = vision.ObstacleAt(a.X, a.Y);
                     if (obstacle != null && cls != ShooterClass.Indirect) dmg *= obstacle.OnCoverMult;
                 }
-                Hit(shooter, a, dmg);
+                Hit(shooter, a, dmg, new Fatal
+                {
+                    Cause = dist <= 0f ? DeathCause.DirectExplosive : DeathCause.Blast,
+                    SourceX = srcX, SourceY = srcY, HasImpact = true, ImpactX = cx, ImpactY = cy
+                });
             }
         }
 
@@ -1831,7 +1943,8 @@ namespace Treeline.Sim
                     // FPV: guided to the target; the guidance works with chance accuracy, otherwise it hits a few
                     // metres off. Full damage at the point of impact, falling off to the blast radius.
                     GuidedImpact(dr.Def, dr.Target.X, dr.Target.Y, out float fx, out float fy);
-                    Explode(dr.Owner, fx, fy, dr.Def.Damage, dr.Def.BlastRadiusM, true);
+                    // For the death event the source is the operator: the drone flew out from there.
+                    Explode(dr.Owner, fx, fy, dr.Def.Damage, dr.Def.BlastRadiusM, true, null, dr.Owner.X, dr.Owner.Y);
                     EndDroneFlight(dr); // starts 3-second reload AFTER the blast
                     continue;
                 }
@@ -1903,7 +2016,12 @@ namespace Treeline.Sim
                 {
                     if (!o.Alive || o.Class != UnitClass.Infantry) continue;
                     float dx = o.X - a.X, dy = o.Y - a.Y;
-                    if (dx * dx + dy * dy <= r2) { o.Hp = 0f; o.Alive = false; }
+                    if (dx * dx + dy * dy <= r2)
+                    {
+                        o.Hp = 0f;
+                        o.Alive = false;
+                        RecordDeath(o, a, new Fatal { Cause = DeathCause.Blast, SourceX = a.X, SourceY = a.Y, HasImpact = true, ImpactX = a.X, ImpactY = a.Y });
+                    }
                 }
             }
 
