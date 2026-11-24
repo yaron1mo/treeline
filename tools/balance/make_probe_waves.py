@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Probe waves for the attacker cost model, version 6 (2026-11-24).
+"""Probe waves for the attacker cost model, version 7 (2026-11-24).
 
 Version 5 taught the model on 120 train mixes; 11 of the 40 test waves used type combinations
 the train set did not have, and those waves gave the largest errors. Version 6 quadruples the
@@ -60,7 +60,13 @@ COUNTS = [4, 6, 8, 10, 12, 16, 20, 30]
 
 
 def counts(u):
-    return [n for n in COUNTS if n <= cap(u)] or [cap(u)]
+    t = units[u]["type"]
+    if t == "aviation":
+        return [1, 2, 3]
+    if heavy(u):
+        return [1, 2, 3, 4, 6, 8]
+    small = [1, 2, 3] if t != "troops" else []
+    return small + [n for n in COUNTS if n <= cap(u)]
 
 
 def rep(u):
@@ -247,6 +253,10 @@ for groups in train_waves:
 rng = random.Random(61)
 for _ in range(TEST):
     add_wave(game_wave(rng, rng.randint(1, 20)), "mixed")
+# second test set (v7): made for the Mistral fit, never used for fitting
+rng = random.Random(62)
+for _ in range(TEST):
+    add_wave(game_wave(rng, rng.randint(1, 20)), "mixed-test2")
 print(f"coverage waves added: {extra}")
 
 with open(out, "w", newline="", encoding="utf-8") as fh:
