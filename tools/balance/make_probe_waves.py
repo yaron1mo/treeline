@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""Probe waves for the attacker cost model, version 2 (2026-11-24).
+"""Probe waves for the attacker cost model, version 3 (2026-11-24).
 
 These waves are not for play. They measure what each attacker costs the defence:
 1. Single-type waves: n attackers of one type, for n in COUNTS. They give the cost curve of each type.
-2. Pair waves: two types at a fixed count each. They show what a type costs when a second counter is already in the wave.
+2. Pair waves: two types, each pair at two levels: (rep, rep) and (half rep, rep). They show how the pair effect scales with the count.
 3. Triple waves: three types. They show if pair terms are enough.
-4. Mixed waves: 2-4 types with random counts, generated with a seed that differs from the pair and triple waves. They are the test set: the model must predict them without seeing them.
+4. Mixed waves: 2-4 types with random counts, seed 23 (v3). They are the test set: the model must predict them without seeing them.
 
-Usage: make_probe_waves.py <units.csv> <out csv> [mixed waves=40] [seed=11]
-The output has the waves.csv format, plus a 'probe' column (single:<unit>:<n>, pair:<u>+<v>, triple:<u>+<v>+<w> or mixed).
+Usage: make_probe_waves.py <units.csv> <out csv> [mixed waves=40] [seed=23]
+The output has the waves.csv format, plus a 'probe' column (single:<unit>:<n>, pair:<u>+<v>@<level>, triple:<u>+<v>+<w> or mixed).
 """
 import csv
 import random
@@ -16,7 +16,7 @@ import sys
 
 units_path, out = sys.argv[1], sys.argv[2]
 MIXED = int(sys.argv[3]) if len(sys.argv) > 3 else 40
-rng = random.Random(int(sys.argv[4]) if len(sys.argv) > 4 else 11)
+rng = random.Random(int(sys.argv[4]) if len(sys.argv) > 4 else 23)
 
 ATTACKERS = ["recruit", "regular", "special_forces", "motorbike", "buggy", "van", "mrap", "ifv",
              "old_tank", "modern_tank", "helicopter"]
@@ -55,11 +55,15 @@ def counts(u):
 def rep(u):
     """The count of a type in a pair or triple wave: big enough to give a clear cost."""
     t = units[u]["type"]
-    if t == "troops":
-        return 10
     if t == "aviation":
         return 2
+    if t == "troops":
+        return 10
     return 4 if heavy(u) else 6
+
+
+def half(u):
+    return max(1, rep(u) // 2)
 
 
 rows = []
@@ -82,7 +86,8 @@ for u in ATTACKERS:
         add_wave([(u, n)], f"single:{u}:{n}")
 for i, u in enumerate(ATTACKERS):
     for v in ATTACKERS[i + 1:]:
-        add_wave([(u, rep(u)), (v, rep(v))], f"pair:{u}+{v}")
+        add_wave([(u, rep(u)), (v, rep(v))], f"pair:{u}+{v}@1")
+        add_wave([(u, half(u)), (v, rep(v))], f"pair:{u}+{v}@2")
 TRIPLES = [
     ("old_tank", "ifv", "mrap"),
     ("old_tank", "modern_tank", "ifv"),
