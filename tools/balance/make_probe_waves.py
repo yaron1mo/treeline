@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-"""Probe waves for the attacker cost model, version 7 (2026-11-24).
+"""Probe waves for the attacker cost model, version 8 (2026-11-24).
 
-Version 5 taught the model on 120 train mixes; 11 of the 40 test waves used type combinations
-the train set did not have, and those waves gave the largest errors. Version 6 quadruples the
-train set to 233 waves and forces every pair of attacker types to occur in it at least once:
-220 random game-like waves (seed 71) plus coverage waves for the pairs the random set misses. The test set is unchanged from
-version 5 (seed 61), so the two runs judge the models on the same waves.
+Version 8 adds a second train set: 220 more random game-like waves (seed 73) with the notes tag
+mixed-train2. The test sets stay unchanged (seeds 61 and 62), so the runs judge the models on the
+same waves as before.
 
 These waves are not for play. They measure what each attacker costs the defence:
 1. Single-type waves: n attackers of one type, for n in COUNTS. They give the cost curve of each type.
@@ -19,7 +17,7 @@ These waves are not for play. They measure what each attacker costs the defence:
    test waves judge it.
 
 Usage: make_probe_waves.py <units.csv> <out csv> [train=220] [test=40]  # 220 random + coverage waves
-The output has the waves.csv format, plus a 'notes' column (single:<unit>:<n>, pair:<u>+<v>@<level>, triple:<u>+<v>+<w>, mixed-train or mixed).
+The output has the waves.csv format, plus a 'notes' column (single:<unit>:<n>, pair:<u>+<v>@<level>, triple:<u>+<v>+<w>, mixed-train, mixed-train2 or mixed).
 """
 import csv
 import random
@@ -250,6 +248,10 @@ for _ in range(6):  # passes: each pass covers what earlier passes missed
         extra += 1
 for groups in train_waves:
     add_wave(groups, "mixed-train")
+# second train set (v8): more random game-like waves, so the model sees more level and mix variety
+rng = random.Random(73)
+for _ in range(TRAIN):
+    add_wave(game_wave(rng, rng.randint(1, 20)), "mixed-train2")
 rng = random.Random(61)
 for _ in range(TEST):
     add_wave(game_wave(rng, rng.randint(1, 20)), "mixed")
