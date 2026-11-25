@@ -116,7 +116,13 @@ Keep one journal per task: `docs/balance/mistral/<topic>/iterations.md`.
 
 Result: 13 of 20 waves in the target, but the result fits the metric, not the game. Money went up 4 times and the waves were filled to match (wave 6: 11 special forces; waves 15-20: 6-9 tanks). Scripted players held fewer waves in a row. PR #5 is not merged. Yaroslav (2026-11-24): the 20 test waves were random and are not a reference. Find the rules of the cost first.
 
-## 9. Current task: `mistral/attacker-cost`
+## 9. Closed task: `mistral/attacker-cost` (PR #7)
+
+Result (Claude review 2026-11-25): accepted. 213 held-out mixed waves: 13% mean error, 84% within 20%. Before the merge, remove `tools/balance/run.json` from the PR (with it, every new `mistral/**` branch would run probe waves).
+
+The original task text follows.
+
+### Task text
 
 **Goal.** Find what each attacker costs the defence, and a formula that gives the cost of any wave from its content and its map. Later, the wave generator and the money use this formula: money before a wave = wave cost × the target ratio.
 
@@ -154,3 +160,35 @@ Do not change `waves.csv`, `battle_rules.csv` or `units.csv` in this task.
 - A proposal (not a change): how `make_waves.py` makes a wave of a given cost from this model.
 
 Open the pull request as in section 7. Title: `Mistral: attacker-cost — <error>% mean error, <n>% of mixed waves within 20%`.
+
+## 10. Current task: `mistral/wave-generator`
+
+**Goal.** `make_waves.py` makes waves whose measured cost follows a target cost for each wave. The endless mode will use the same method later (Claude ports it to C#). The money model is not part of this task: the target is a cost, not a ratio.
+
+**Start.** Wait until PR #7 is merged. Then make the branch `mistral/wave-generator` from `codex/playable-steppe-patch-integration`.
+
+**Files you can change in this task:**
+
+| File | What you can change | In the PR? |
+| --- | --- | --- |
+| `tools/balance/make_waves.py` | All | Yes |
+| `tools/balance/target_costs.csv` | The test target (below) | No: delete it before the PR |
+| `unity/Assets/Data/waves.csv` | The generated test waves | No: restore the original before the PR |
+| `docs/balance/mistral/wave-generator/**` | Journal, report, charts | Yes |
+
+**Test target** (a test only, not the game design): 30 waves, `target_cost(n) = 250 × 1.13^(n−1)`, rounded to 25. Every 5th wave (5, 10, 15, 20, 25, 30) is a relief wave: × 0.8. Write it to `tools/balance/target_costs.csv` with the columns `wave,target_cost`.
+
+**Rules for the waves:**
+
+- Use the cost model from `docs/balance/mistral/attacker-cost/model.json` (field Forest belts) to predict the cost of candidate waves.
+- Keep the first-appearance order of attacker types (`UNLOCK` in `make_waves.py`). Do not use `fpv`, `one_way_drone`, `recon_uav`.
+- Caps per type (from `make_waves.py`). At most 2 helicopters in any wave.
+- From wave 4: at least 2 attacker types in a wave. From wave 8: no type has more than 70% of the predicted cost.
+- The predicted cost of a wave must not be more than 1.35 times the predicted cost of the wave before it, except a wave where a type appears for the first time.
+- The same seed gives the same waves.
+
+**Check.** With `tools/balance/target_costs.csv` on your branch, the `Balance run` report adds a "Target cost check" and decides the verdict: **pass** when at least 80% of the waves are within 20% of their target on Forest belts and no wave is "not held". `report.json` has the details under `target_cost`.
+
+**Loop:** as in section 5. Stop at pass, after 6 runs, or at an error.
+
+**Deliverables** (in `docs/balance/mistral/wave-generator/`): `report.md` (method, the final check table, the measured cost on the other two fields, problems), a chart of target against measured cost per wave, and the journal. Pull request title: `Mistral: wave-generator — <n> of 30 waves within 20%`.
