@@ -192,3 +192,60 @@ Open the pull request as in section 7. Title: `Mistral: attacker-cost — <error
 **Loop:** as in section 5. Stop at pass, after 6 runs, or at an error.
 
 **Deliverables** (in `docs/balance/mistral/wave-generator/`): `report.md` (method, the final check table, the measured cost on the other two fields, problems), a chart of target against measured cost per wave, and the journal. Pull request title: `Mistral: wave-generator — <n> of 30 waves within 20%`.
+
+## 11. Next task: `mistral/squads`
+
+Written by Claude (CTO), 2026-11-25. Start after `mistral/wave-generator` is closed, or when Yaroslav tells you to start it first. PR #7 must be merged first (you need `tools/balance/probe_waves.csv` and its measured costs).
+
+**Background.** Yaroslav's design (2026-11-25): before each mission the player takes a squad of a few defender types (slots). The player cannot take all types. The choice must be hard: the wave needs some types, and the player wants others. One squad that wins every mission is a design failure (the problem of Plants vs. Zombies: one strategy wins the game).
+
+**Goal.** Measure which squads hold which waves, and at what cost. Find dominant squads, defender types that the player must always take, and defender types that the player never needs. Do not change any value. Give the findings and a proposal.
+
+**Tool.** `WaveCost.cs` has a squad mode: `SQUADS_FILE` is a CSV `squad,defenders`, with defender types split by `|`. For each squad the scripted player can buy only these types. The output has a `squad` column. `cost` is `NaN` when the squad cannot hold the wave with `max_budget`. The `Balance run` workflow reads `squads_file` from `tools/balance/run.json`.
+
+Defender types (9): `rifle_squad`, `machine_gun`, `sniper`, `mortar`, `anti_tank`, `air_defence`, `fpv_operator`, `bomber_operator`, `recon_drone`. `recon_drone` is a type like the others: a squad without it has no recon drone.
+
+**Files you can change in this task:**
+
+| File | What you can change | In the PR? |
+| --- | --- | --- |
+| `tools/balance/make_squads.py` | All (new) | Yes |
+| `tools/balance/squads.csv` | All (made by `make_squads.py`) | Yes |
+| `tools/balance/squad_waves.csv` | All (the test waves, same columns as `waves.csv`) | Yes |
+| `tools/balance/run.json` | All | No: delete it before the PR |
+| `docs/balance/mistral/squads/**` | Journal, analysis script, report, charts | Yes |
+
+**Steps:**
+
+1. Make the branch `mistral/squads` from `codex/playable-steppe-patch-integration`.
+2. Make `tools/balance/squad_waves.csv`: 40 waves from the mixed probe waves of the attacker-cost task. Use only waves with a measured cost from 500 to 6000 on Forest belts. Include waves with each attacker type (infantry, vehicles, armour, helicopters, drones).
+3. Write `tools/balance/make_squads.py`. It writes `tools/balance/squads.csv` with every squad of 4 types from the 9 types (126 squads), plus one squad `all` with the 9 types. Name a squad by its types, for example `mg+sn+at+ad`.
+4. Add `tools/balance/run.json`: `{"waves_file": "tools/balance/squad_waves.csv", "squads_file": "tools/balance/squads.csv", "max_budget": 12000, "playtest_seeds": 0}`.
+5. Push. Download `balance-report`. `wave-cost.csv` has one row per field, wave and squad.
+6. Write your analysis script in `docs/balance/mistral/squads/`. For each squad and field, calculate:
+   - **held share**: the share of the 40 waves that the squad holds;
+   - **cost premium**: the median of (squad cost / cost of `all`) on the waves that the squad holds;
+   - **rank**: how often the squad is the cheapest squad that holds the wave.
+7. Calculate for each defender type:
+   - **must-have**: the share of waves that no squad without this type can hold;
+   - **unused**: the share of waves where no squad in the best 10 for that wave has this type.
+8. If the first run takes more than 60 minutes, use only Forest belts for the next runs and write this in the journal.
+9. Repeat with squads of 3 and of 5 types (one run each). Compare the held share of the best squad for 3, 4 and 5 slots.
+
+**Check (definitions of the findings):**
+
+- A squad is **dominant** when it holds 90% of the waves or more, with a cost premium of 1.2 or less.
+- A type is **must-have** when more than 50% of the waves need it.
+- A type is **unused** when it is in no best-10 squad for 90% of the waves or more.
+- The target (not a pass/fail for this task): no dominant squad of 4 types; each type is in the best 10 for at least 20% of the waves.
+
+**Loop:** as in section 5. Stop after 4 runs or at an error.
+
+**Deliverables** (in `docs/balance/mistral/squads/`):
+
+- `report.md`: method; a table of the best 15 squads of 4 types (held share, cost premium, rank count) per field; a table of each type (must-have, unused); the result for 3, 4 and 5 slots; dominant squads; strange results.
+- Charts (PNG): held share against cost premium for each squad (one point per squad); a heat map of type against attacker type (how often the type is in the best squad for waves with that attacker).
+- `squads.json`: the per-squad and per-type numbers.
+- A proposal (not a change): which values in `units.csv` or `stop.csv` to change to remove a dominant squad or to give an unused type a role. Give the reason for each.
+
+Pull request title: `Mistral: squads — <n> dominant squads of 4, <n> unused types`.

@@ -8,6 +8,9 @@
 // The cost is the smallest budget (to 25 points) that holds the wave on at least 8 of 10 seeds.
 // The result is an upper bound: the scripted player plays worse than a person.
 // Compile: mcs -langversion:latest -out:wave-cost.exe unity/Assets/Scripts/Sim/*.cs tools/balance/Routes.cs tools/balance/WaveCost.cs
+// Squads (2026-11-25): SQUADS_FILE = csv "squad,defenders" (defenders split by "|"). For each squad the player may buy
+// only the defender types of that squad (recon_drone too); the output gets a "squad" column. Without SQUADS_FILE all types
+// are allowed and the output is as before.
 // Run:     mono wave-cost.exe <repo root> <stop table csv> [field name filter] [first wave] [last wave] [line damage allowed]
 using System;
 using System.Collections.Generic;
@@ -20,10 +23,12 @@ static class WaveCost
     const int Seeds = 10, MustHold = 8;
     const float Step = 25f;
     static float MaxBudget = 12000f;
-    static readonly string[] Defenders = { "rifle_squad", "machine_gun", "sniper", "mortar", "anti_tank", "air_defence", "fpv_operator", "bomber_operator" };
+    static readonly string[] AllDefenders = { "rifle_squad", "machine_gun", "sniper", "mortar", "anti_tank", "air_defence", "fpv_operator", "bomber_operator" };
     static readonly HashSet<string> NeedRecon = new HashSet<string> { "mortar", "anti_tank", "air_defence", "fpv_operator", "bomber_operator" };
     static readonly Dictionary<string, Dictionary<string, float>> stop = new Dictionary<string, Dictionary<string, float>>();
 
+    static string[] Defenders;
+    static HashSet<string> Allowed;   // null = every type
     static UnitTable units;
     static ObstacleTable obstacles;
     static ArmourTable armour;
@@ -56,13 +61,30 @@ static class WaveCost
         // Line damage allowed per wave: line_health / 20 (a 20-wave run), or the 6th argument.
         float allowance = args.Length > 5 ? float.Parse(args[5], CultureInfo.InvariantCulture) : rules.LineHealth / 20f;
 
-        Console.WriteLine("field,wave,threat,cost,held_at_cost");
+        var squads = new List<(string name, HashSet<string> types)>();
+        string squadsFile = Environment.GetEnvironmentVariable("SQUADS_FILE");
+        if (!string.IsNullOrEmpty(squadsFile))
+            foreach (var line in File.ReadAllLines(Path.Combine(root, squadsFile)))
+            {
+                var c = line.Split(',');
+                if (c.Length < 2 || c[0] == "squad" || c[0].Trim().Length == 0) continue;
+                squads.Add((c[0].Trim(), new HashSet<string>(c[1].Trim().Split('|'))));
+            }
+        bool squadMode = squads.Count > 0;
+        if (!squadMode) squads.Add(("", null));
+
+        Console.WriteLine(squadMode ? "field,wave,squad,threat,cost,held_at_cost" : "field,wave,threat,cost,held_at_cost");
         foreach (var file in Directory.GetFiles(Path.Combine(root, "unity/Assets/Resources/Fields"), "*.json"))
         {
             var field = FieldParser.Parse(File.ReadAllText(file));
             if (field.Name == "Vision test" || (filter.Length > 0 && !field.Name.Contains(filter))) continue;
+            foreach (var sq in squads)
             for (int w = first; w <= last; w++)
             {
+                string squadName = sq.name;
+                Allowed = sq.types;
+                Defenders = Array.FindAll(AllDefenders, d => Ok(d));
+                squad = squadMode ? squadName : null;
                 float threat = 0f;
                 foreach (var g in plan.WaveGroups(w)) threat += g.Count * Num(units.Get(g.UnitId).ThreatValue);
                 // Smallest budget that holds: binary search on steps of 25.
@@ -79,9 +101,13 @@ static class WaveCost
     }
 
     static float Num(float v) => float.IsNaN(v) ? 0f : v;
+    static bool Ok(string id) => Allowed == null || Allowed.Contains(id);
+    static string squad;
 
     static void Out(Field f, int w, float threat, float cost, int held) =>
-        Console.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0},{1},{2:0},{3:0},{4}", f.Name, w, threat, cost, held));
+        Console.WriteLine(squad == null
+            ? string.Format(CultureInfo.InvariantCulture, "{0},{1},{2:0},{3:0},{4}", f.Name, w, threat, cost, held)
+            : string.Format(CultureInfo.InvariantCulture, "{0},{1},{2},{3:0},{4:0},{5}", f.Name, w, squad, threat, cost, held));
 
     // How many of the seeds hold the wave with this budget (stops early when the answer is known).
     static int Held(Field field, int wave, float budget, float allowance)
@@ -136,6 +162,7 @@ static class WaveCost
     static bool Put(string id)
     {
         var b = cb; var f = cf; var rng = crng;
+        if (!Ok(id)) return false;
         if (b.Budget < b.CostOf(id)) return false;
         for (int tries = 0; tries < 20; tries++)
         {

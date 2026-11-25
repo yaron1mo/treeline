@@ -5,6 +5,8 @@ name: Balance run
 # A branch can hold tools/balance/run.json to change the run on push (2026-11-24), for example
 #   {"waves_file": "tools/balance/probe_waves.csv", "max_budget": 30000, "playtest_seeds": 0}
 # With a waves_file, the report is the attacker cost model (tools/balance/attacker_cost.py).
+# With a squads_file (2026-11-25), each wave is measured once per squad (WaveCost.cs SQUADS_FILE); the report job only
+# merges the results into report/wave-cost.csv (column "squad"); the analysis is the task's own script.
 on:
   workflow_dispatch:
     inputs:
@@ -35,6 +37,7 @@ jobs:
       seeds: ${{ steps.plan.outputs.seeds }}
       waves_file: ${{ steps.plan.outputs.waves_file }}
       max_budget: ${{ steps.plan.outputs.max_budget }}
+      squads_file: ${{ steps.plan.outputs.squads_file }}
     steps:
       - uses: actions/checkout@v4
       - name: Install Mono C# compiler
@@ -82,6 +85,7 @@ jobs:
           print("seeds=" + (os.environ.get("SEEDS") or "10"))
           print("waves_file=" + waves_file)
           print("max_budget=" + str(cfg.get("max_budget", 12000)))
+          print("squads_file=" + cfg.get("squads_file", ""))
           EOF
 
   wave-cost:
@@ -103,6 +107,7 @@ jobs:
         env:
           WAVES_FILE: ${{ needs.plan.outputs.waves_file }}
           MAX_BUDGET: ${{ needs.plan.outputs.max_budget }}
+          SQUADS_FILE: ${{ needs.plan.outputs.squads_file }}
         run: mono bin/wave-cost.exe . tools/balance/stop.csv "${{ matrix.shard.field }}" ${{ matrix.shard.first }} ${{ matrix.shard.last }} > out.csv
       - uses: actions/upload-artifact@v4
         with:
@@ -148,15 +153,33 @@ jobs:
           rm -rf results/bin
           for d in results/*/; do n=$(basename "$d"); [ -f "$d/out.csv" ] && mv "$d/out.csv" "results/$n.csv"; rm -rf "$d"; done
           ls results | head
+      - name: Squad results (merge only)
+        if: needs.plan.outputs.squads_file != ''
+        run: |
+          mkdir -p report
+          python3 - <<'PY'
+          import csv, glob
+          rows = []
+          for p in sorted(glob.glob("results/**/wave-cost*.csv", recursive=True)):
+              rows += list(csv.DictReader(open(p, encoding="utf-8")))
+          with open("report/wave-cost.csv", "w", newline="", encoding="utf-8") as fh:
+              w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()), lineterminator="\n")
+              w.writeheader(); w.writerows(rows)
+          held = sum(1 for r in rows if r["cost"] not in ("NaN", ""))
+          print(f"{len(rows)} results, {held} held")
+          open("report/report.json", "w").write('{"verdict": "squads", "results": %d, "held": %d}' % (len(rows), held))
+          PY
+          echo "Squad run: $(cat report/report.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "=== BEGIN wave-cost.csv ==="; cat report/wave-cost.csv; echo "=== END wave-cost.csv ==="
       - name: Attacker cost model (probe waves)
-        if: needs.plan.outputs.waves_file != ''
+        if: needs.plan.outputs.waves_file != '' && needs.plan.outputs.squads_file == ''
         run: |
           mkdir -p report
           python3 tools/balance/attacker_cost.py . "${{ needs.plan.outputs.waves_file }}" results report
           cat report/attacker_cost.md >> "$GITHUB_STEP_SUMMARY"
           for f in attacker_cost.json wave-cost.csv; do echo "=== BEGIN $f ==="; cat "report/$f"; echo "=== END $f ==="; done
       - name: Report
-        if: needs.plan.outputs.waves_file == ''
+        if: needs.plan.outputs.waves_file == '' && needs.plan.outputs.squads_file == ''
         run: |
           python3 tools/balance/report.py . results report tools/balance/baseline
           cat report/report.md >> "$GITHUB_STEP_SUMMARY"
