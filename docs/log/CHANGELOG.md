@@ -1,5 +1,75 @@
 # Change log
 
+- 2026-11-25 — [codex] render — Increase the fallen special infantry pose to match other units.
+
+- 2026-11-25 — [codex] render — Launch loose helmets from the head when infantry falls.
+
+- 2026-11-25 — [codex] render — Add unbranded fictional rifles to infantry walk and shooting art.
+
+- 2026-11-25 — [codex] render — Add persistent loose helmets and visible snouts to infantry deaths.
+
+- 2026-11-25 — [codex] render — Align blood streaks with nearby shot traces and reduce fall sprite scale.
+
+- 2026-11-25 — [codex] render — Add cartoon blood sprays and visual kill streak messages.
+
+- 2026-11-24 — [codex] render — Add visible muzzle flashes to infantry firing poses.
+
+- 2026-11-24 — [codex] render — Add drawn firing and recoil frames for infantry.
+
+- 2026-11-24 — [codex] render — Move the recruit crutch opposite the supporting leg.
+
+- 2026-11-24 — [codex] render — Show a bandaged missing leg in the recruit crutch hop.
+
+- 2026-11-24 — [codex] render — Add a recruit shuffle and a separate crutch hop.
+
+- 2026-11-24 — [codex] render — Add a crutch and a lifted leg to the recruit walk frames.
+
+- 2026-11-24 — [codex] render — Add a limping recruit walk and slower infantry walk cycles.
+
+- 2026-11-24 — [codex] render — Add drawn base walk frames for recruit and regular infantry.
+
+- 2026-11-24 — [codex] render — Offset the special infantry rifle in the walking pose.
+
+- 2026-11-24 — [codex] render — Add a two-handed walk for special infantry and remove sprite sway.
+
+- 2026-11-24 — [codex] render — Add forward fall frames for regular and special infantry.
+
+- 2026-11-24 — [codex] render — Remove extra pixels around the fallen recruit snout.
+
+- 2026-11-24 — [codex] render — Keep the recruit snout size in the fallen pose.
+
+- 2026-11-24 — [codex] render — Show the recruit snout in the forward fall pose.
+
+- 2026-11-24 — [codex] render — Match recruit fall frame scale to the walking sprite.
+
+- 2026-11-24 — [codex] render — Fix recruit fall frame boundaries and pixel filtering.
+
+- 2026-11-24 — [codex] render — Keep infantry legs connected during walk frames.
+
+- 2026-11-24 — [codex] render — Add drawn frames for the recruit falling forward.
+
+- 2026-11-24 — [codex] render — Add front and back fall poses. Show the knees before the forward fall.
+
+- 2026-11-24 — [codex] render — Rework infantry falls, add blood splashes and remove detached snouts after 10 seconds.
+
+- 2026-11-24 — [codex] render — Keep fallen infantry on the field and add distinct knockback and kneeling falls.
+
+- 2026-11-24 — [codex] render — Enable blood by default and add three temporary infantry death reactions with snout spirits.
+
+- 2026-11-24 — [codex] render — Add a saved blood setting and a short blood effect for infantry deaths.
+
+- 2026-11-24 — [codex] render — Add infantry art and visual poses for walking, firing and falling. Keep five recruit walk styles.
+
+- 2026-11-24 — [codex] render — Add five recruit walking styles with different steps and rhythms.
+
+- 2026-11-24 — [codex] render — Add alternating infantry footstep frames and reduce body sway to make walking clearer.
+
+- 2026-11-24 — [codex] render — Keep infantry sprites upright while they walk so their helmets stay above their snouts.
+
+- 2026-11-24 — [codex] render — Add walking motion for the three infantry types. Use a separate step phase for each unit.
+
+- 2026-11-24 — [codex] render — Add three larger infantry sprites with distinct helmets and uniforms. Remove their sprite shadows. Keep the first version for review.
+
 - 2026-11-23 — [claude] tools/balance — First `Balance run` (run 45245943549, 3.5 min for 64 jobs). Baseline saved in `tools/balance/baseline/`. Verdict fail: 2 of 20 waves in the target curve. Forest belts: wave 1 ratio 1.25 (target ≥ 1.5); wave 7 (first old tank) 0.42; waves 8–20 0.44–1.04. Scripted players hold 8.8–9.6 waves.
 - 2026-11-23 — [claude] team/docs — Team roles (Yaroslav): Yaroslav CEO, Claude CTO, Codex/ChatGPT Chief Design Officer, Mistral developer to Claude's specs. `AGENTS.md`: roles table, `mistral/<topic>` branches. New `docs/agents/mistral.md`: Mistral's allowed files, the balance loop (push → Balance run → report → next change, stop at pass / 6 iterations / error), journal and pull-request format, first task `mistral/economy-1` (all 20 waves in the target curve on Forest belts).
 - 2026-11-23 — [claude] tools/balance/ci — New workflow `.github/workflows/balance-run.yml`: runs on every push to `mistral/**` and by hand. One job per field and wave runs `WaveCost` (about 60 jobs, 20 at a time); 3 jobs run `PlaytestRun` (saver, greedy, reactive); a report job writes `report.md` (also in the run summary) and `report.json` (`verdict` pass/fail, waves out of target). New `tools/balance/report.py`, `tools/balance/target_curve.csv` (approved by Yaroslav: waves 1–5 ratio ≥ 1.5, 6–12 1.2–1.4, 13–20 1.0–1.2, first appearance of an attacker type ≥ 1.2; ratio = money before the wave / wave cost on Forest belts), `tools/balance/stop.csv` (moved from the 2026-11-17 results), `tools/balance/baseline/`. New `tools/balance/Routes.cs`: the scripted players in `WaveCost` and `PlaytestRun` stand on the traced attacker routes, not in the middle of fields without a `spawns` list. Balka and River wave 1 cost 900 → 100.
