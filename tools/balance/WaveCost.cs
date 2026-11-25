@@ -103,7 +103,26 @@ static class WaveCost
         Buy(b, field, grid, wave, new Random(seed));
         plan.Queue(b, wave);
         b.StartRound();
-        while (b.Outcome == BattleOutcome.Ongoing && b.RoundTime < 3000f) b.Step(0.05f);
+        bool debug = Environment.GetEnvironmentVariable("WAVECOST_DEBUG") != null;
+        var seen = new HashSet<int>();
+        float nextLog = 0f;
+        while (b.Outcome == BattleOutcome.Ongoing && b.RoundTime < 3000f)
+        {
+            b.Step(0.05f);
+            if (debug && b.RoundTime >= nextLog)
+            {
+                nextLog = b.RoundTime + 10f;
+                var parts = new List<string>();
+                foreach (var a in b.Attackers) parts.Add($"{a.Def.Id}@{a.X:0},{a.Y:0} hp{a.Hp:0}");
+                Console.Error.WriteLine($"  t{b.RoundTime:0} line {b.LineDamage:0.#} | {string.Join(" ", parts)}");
+            }
+        }
+        if (debug)
+        {
+            var ds = new List<string>();
+            foreach (var d in b.Defenders) ds.Add($"{d.Def.Id}@{d.X:0},{d.Y:0}");
+            Console.Error.WriteLine($"budget {budget} seed {seed}: {b.Outcome} line {b.LineDamage:0.#} money left {b.Budget:0} | {string.Join(" ", ds)}");
+        }
         return b.Outcome == BattleOutcome.Won && b.LineDamage <= allowance + 0.001f;
     }
 

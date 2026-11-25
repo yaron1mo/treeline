@@ -146,6 +146,40 @@ for t in table:
               f" | {fmt(t['base'])} | {t['money']:.0f} | {fmt(t['ratio'], 2)} | {target} | {mark} |")
 md += ["", f"Waves in target: {len(table) - len(fails)} of {len(table)}.", ""]
 
+# Target cost check (2026-11-25): when tools/balance/target_costs.csv exists (wave,target_cost), the wave generator is
+# judged by how close the measured cost on the gate field is to the target of each wave. This check then decides the
+# verdict: pass when at least 80% of the waves are within 20% of their target and no wave is "not held".
+target_cost = None
+tc_path = os.path.join(root, "tools/balance/target_costs.csv")
+if os.path.exists(tc_path):
+    rows_tc, errs, within, not_held = [], [], 0, 0
+    for r in rows(tc_path):
+        w, t = int(r["wave"]), num(r["target_cost"])
+        if w not in waves or not t:
+            continue
+        c = cost.get((GATE_FIELD, w))
+        if c is None:
+            not_held += 1 if (GATE_FIELD, w) in cost else 0
+            rows_tc.append((w, t, None, None))
+            continue
+        e = c / t - 1
+        errs.append(abs(e))
+        within += 1 if abs(e) <= 0.2 else 0
+        rows_tc.append((w, t, c, e))
+    n = len(errs)
+    ok = n > 0 and within >= 0.8 * len(rows_tc) and not_held == 0
+    target_cost = {"waves": len(rows_tc), "measured": n, "within_20pct": within, "not_held": not_held,
+                   "mean_error": (sum(errs) / n) if n else None, "verdict": "pass" if ok else "fail",
+                   "rows": [{"wave": w, "target": t, "cost": c, "error": e} for w, t, c, e in rows_tc]}
+    verdict = target_cost["verdict"]
+    md[0] = f"# Balance report: {verdict.upper()} (target cost check)"
+    md += ["## Target cost check (`tools/balance/target_costs.csv`)", "",
+           f"Within 20%: {within} of {len(rows_tc)}; mean error {100 * target_cost['mean_error']:.0f}%; not held: {not_held}." if n else "No measured waves.",
+           "", "| Wave | Target | Measured | Error |", "|---|---|---|---|"]
+    for w, t, c, e in rows_tc:
+        md.append(f"| {w} | {t:.0f} | {fmt(c)} | {'-' if e is None else f'{100 * e:+.0f}%'} |")
+    md.append("")
+
 if play_rows:
     md += ["## Scripted players (20 waves in a row)", "", "| Field | Style | Runs | Mean waves held | Best |", "|---|---|---|---|---|"]
     groups = {}
@@ -160,7 +194,7 @@ md += ["The cost is an upper bound: the scripted player plays worse than a perso
 with open(os.path.join(out, "report.md"), "w", encoding="utf-8") as fh:
     fh.write("\n".join(md) + "\n")
 with open(os.path.join(out, "report.json"), "w", encoding="utf-8") as fh:
-    json.dump({"verdict": verdict, "gate_field": GATE_FIELD, "fails": fails,
+    json.dump({"verdict": verdict, "gate_field": GATE_FIELD, "fails": fails, "target_cost": target_cost,
                "waves": [{k: t[k] for k in ("wave", "threat", "money", "ratio", "lo", "hi", "status")} | {"cost": t["costs"][0] if fields else None}
                          for t in table]}, fh, indent=1)
 print("\n".join(md))
