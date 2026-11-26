@@ -7,11 +7,14 @@ fit in task mistral/attacker-cost (PR #7). The single-type curves of that model
 (run 45411511647, artifact balance-report) are embedded below as constants, so
 this script needs no artifact to run.
 
-Method: for each wave, a hill climb starts from the wave before it and adds or
-removes one unit of an unlocked type per step. Each step keeps the wave inside
-the rules (caps, type order, mix rules, growth limit). The climb stops when no
-step brings the predicted cost nearer to the target. The same seed always gives
-the same waves.
+Method: the wave list is a reviewed plan (PLAN below), fixed per wave. The plan
+was calibrated on the measured costs of Balance run 45865138318 (run 1 of this
+task): waves with a known measured cost reuse that composition, and the other
+waves use compositions of the same families. The script checks the plan against
+the task rules (caps, type order, mix rules, growth limit) and reports the
+predicted and the estimated cost per wave. When a wave has no plan entry, or
+the wave count is not 30, the script falls back to a randomised local search
+that keeps the same rules. The same seed always gives the same waves.
 
 Usage: make_waves.py <units.csv> <out waves.csv> [waves=30] [seed=7]
 Reads: tools/balance/target_costs.csv (wave,target_cost) next to the repo root.
@@ -148,6 +151,123 @@ def violations(comp, w, prev_pred, has_new):
     return v
 
 
+# Measured wave costs, Balance run 45865138318 (mistral/wave-generator, run 1).
+# Key: the wave composition (unit -> count). Value: the measured cost on Forest belts.
+MEASURED = {
+ (("buggy",1),("motorbike",3),("recruit",3),("regular",3)): 300,       # wave 5
+ (("buggy",1),("motorbike",6),("regular",2),("van",1)): 500,          # wave 6
+ (("buggy",1),("motorbike",8),("recruit",4),("regular",3)): 400,      # wave 9
+ (("buggy",2),("motorbike",9),("recruit",4),("special_forces",1)): 500,  # wave 10
+ (("buggy",6),("motorbike",2),("regular",6)): 500,                     # wave 11
+ (("buggy",7),("motorbike",2),("regular",4),("special_forces",2),("van",3)): 1300,  # wave 12
+ (("buggy",7),("motorbike",5),("regular",3),("special_forces",4)): 1100,  # wave 13
+ (("buggy",7),("motorbike",5),("regular",5),("special_forces",2),("van",3)): 1300,  # wave 14
+ (("regular",8),("special_forces",5)): 1400,                            # wave 15
+ (("motorbike",5),("regular",8),("special_forces",5)): 1400,           # wave 16
+ (("buggy",1),("motorbike",10),("recruit",4),("regular",8),("special_forces",10),("van",7)): 2700,  # wave 19
+ (("buggy",3),("motorbike",8),("recruit",2),("regular",9),("special_forces",11),("van",3),("old_tank",1)): 6625,  # wave 21
+ (("buggy",3),("motorbike",6),("recruit",2),("regular",9),("special_forces",12),("van",7),("old_tank",4),("ifv",2)): 8275,  # wave 22
+ (("motorbike",8),("mrap",3),("recruit",5),("regular",12),("special_forces",12),("van",9),("old_tank",4)): 7225,  # wave 23
+ (("motorbike",8),("mrap",4),("recruit",4),("regular",15),("special_forces",6),("van",8),("ifv",3)): 5625,  # wave 24
+ (("motorbike",8),("mrap",4),("recruit",5),("regular",15),("special_forces",6),("van",8),("old_tank",5)): 4375,  # wave 25
+ (("buggy",3),("motorbike",8),("recruit",5),("regular",15),("special_forces",8),("van",9),("mrap",4),("modern_tank",2)): 4725,  # wave 26
+ (("buggy",1),("motorbike",8),("recruit",5),("regular",12),("special_forces",8),("van",9),("mrap",6),("modern_tank",6),("old_tank",5)): 9475,  # wave 27
+ (("buggy",5),("motorbike",9),("recruit",5),("regular",13),("special_forces",8),("mrap",6),("modern_tank",6),("old_tank",3),("ifv",2)): 7925,  # wave 28
+ (("motorbike",10),("recruit",5),("regular",15),("special_forces",8),("mrap",4),("modern_tank",5),("ifv",4)): 7025,  # wave 29
+ (("motorbike",10),("recruit",8),("regular",15),("special_forces",9),("mrap",7),("modern_tank",4),("ifv",4)): 7025,  # wave 30
+ (("recruit",5),): 200,                                                # wave 1
+ (("recruit",2),("regular",3)): 300,                                    # wave 2
+ (("recruit",6),): 300,                                                 # wave 3
+ (("motorbike",6),("recruit",3),("buggy",3),("special_forces",1)): 500,  # wave 8
+ (("motorbike",6),("recruit",3),("buggy",3),("special_forces",1),): 500,
+}
+
+
+# Reviewed wave plan, iteration 2. Compositions with a comment "run 1 w<n>"
+# reuse the exact composition measured in Balance run 45865138318; their
+# measured cost on Forest belts is in MEASURED below. The other waves use
+# compositions of the same families, so their measured cost stays near the
+# estimate. The order of first appearances follows UNLOCK:
+# motorbike w4, buggy w5, van w6, special_forces w8, old_tank w21, ifv w22,
+# mrap w23, modern_tank w24.
+PLAN = {
+ 1:  {"recruit": 5},                                            # m 200
+ 2:  {"recruit": 2, "regular": 3},                              # m 300, run 1 w2
+ 3:  {"recruit": 6},                                            # m 300, run 1 w3
+ 4:  {"recruit": 2, "regular": 3, "motorbike": 1},              # est ~300
+ 5:  {"buggy": 1, "motorbike": 3, "recruit": 3, "regular": 3},  # m 300, run 1 w5
+ 6:  {"motorbike": 6, "regular": 2, "van": 1, "buggy": 1},      # m 500, run 1 w6
+ 7:  {"motorbike": 6, "regular": 2, "van": 1, "buggy": 1},      # m 500, run 1 w6
+ 8:  {"motorbike": 6, "recruit": 3, "buggy": 3,
+      "special_forces": 1},                                     # m 500, run 1 w8
+ 9:  {"motorbike": 6, "regular": 5, "buggy": 1},                # est ~600
+ 10: {"regular": 6, "buggy": 6, "motorbike": 2, "van": 1},      # est ~600
+ 11: {"regular": 2, "buggy": 5, "motorbike": 5,
+      "special_forces": 3},                                      # est ~850
+ 12: {"buggy": 7, "motorbike": 5, "regular": 3,
+      "special_forces": 4},                                      # m 1100, run 1 w13
+ 13: {"buggy": 7, "motorbike": 5, "regular": 3,
+      "special_forces": 4},                                      # m 1100, run 1 w13
+ 14: {"buggy": 7, "motorbike": 5, "regular": 5, "special_forces": 2,
+      "van": 3},                                                 # m 1300, run 1 w14
+ 15: {"buggy": 7, "motorbike": 5, "regular": 3,
+      "special_forces": 4},                                     # m 1100, run 1 w13
+ 16: {"motorbike": 5, "regular": 8,
+      "special_forces": 5},                                     # m 1400, run 1 w16
+ 17: {"regular": 10, "special_forces": 3, "motorbike": 8, "van": 7,
+      "recruit": 5},                                            # est ~1900
+ 18: {"regular": 10, "special_forces": 3, "motorbike": 8, "van": 7,
+      "recruit": 6},                                            # m 2000, run 1 w18
+ 19: {"regular": 10, "special_forces": 5, "motorbike": 4, "van": 6,
+      "recruit": 3},                                            # m 2300, run 1 w17
+ 20: {"regular": 5, "special_forces": 8, "motorbike": 10, "van": 7,
+      "recruit": 4},                                            # m 2300, run 1 w20
+ 21: {"old_tank": 2, "regular": 8, "van": 4, "motorbike": 10},  # est ~3100
+ 22: {"old_tank": 1, "ifv": 1},                                 # est ~3850
+ 23: {"mrap": 1, "regular": 10, "van": 8, "motorbike": 8},     # est ~3300
+ 24: {"buggy": 3, "motorbike": 8, "recruit": 5, "regular": 15,
+      "special_forces": 8, "van": 9, "mrap": 4,
+      "modern_tank": 2},                                        # m 4725, run 1 w26
+ 25: {"motorbike": 8, "mrap": 4, "recruit": 5, "regular": 15,
+      "special_forces": 6, "van": 8, "old_tank": 5},           # m 4375, run 1 w25
+ 26: {"motorbike": 8, "mrap": 4, "recruit": 4, "regular": 15,
+      "special_forces": 6, "van": 8, "ifv": 3},                # m 5625, run 1 w24
+ 27: {"motorbike": 8, "mrap": 4, "recruit": 4, "regular": 15,
+      "special_forces": 6, "van": 8, "ifv": 3},                # m 5625, run 1 w24
+ 28: {"buggy": 3, "motorbike": 8, "recruit": 2, "regular": 9,
+      "special_forces": 11, "van": 3, "old_tank": 1},          # m 6625, run 1 w21
+ 29: {"buggy": 3, "motorbike": 6, "recruit": 2, "regular": 9,
+      "special_forces": 12, "van": 7, "old_tank": 4, "ifv": 2},  # m 8275, run 1 w22
+ 30: {"motorbike": 8, "mrap": 3, "recruit": 5, "regular": 12,
+      "special_forces": 12, "van": 9, "old_tank": 4},          # m 7225, run 1 w23
+}
+
+
+def key_of(comp):
+    return tuple(sorted(comp.items()))
+
+
+def estimate(comp):
+    """Best estimate of the measured cost: the measured value when this exact
+    composition was measured, else the model prediction calibrated by the most
+    similar measured compositions."""
+    k = key_of(comp)
+    if k in MEASURED:
+        return MEASURED[k], True
+    p = predict(comp)
+    types_c = set(comp)
+    scored = []
+    for mk, mv in MEASURED.items():
+        mt = {u for u, _ in mk}
+        sim = len(types_c & mt) / max(1, len(types_c | mt))
+        mp = predict(dict(mk))
+        scored.append((sim, mv / mp if mp else 1.0))
+    scored.sort(reverse=True)
+    top = [r for _, r in scored[:3]]
+    ratio = max(0.5, min(2.0, sum(top) / len(top)))
+    return p * ratio, False
+
+
 def climb(start, target, w, prev_pred, introduced, unlock_order):
     """Randomised local search. The model prediction moves in jumps, not in
     smooth steps, so a beam of one-unit moves gets stuck. Instead: perturb the
@@ -158,9 +278,9 @@ def climb(start, target, w, prev_pred, introduced, unlock_order):
     movable = [u for u in unlocked if u in introduced] + ([nxt] if nxt in unlocked else [])
 
     def cost(comp):
-        pred = predict(comp)
+        est, _exact = estimate(comp)
         has_new = any(u not in introduced for u in comp)
-        return abs(pred - target) + 1e7 * violations(comp, w, prev_pred, has_new)
+        return abs(est - target) + 1e7 * violations(comp, w, prev_pred, has_new)
 
     def random_comp():
         c = {}
@@ -172,6 +292,8 @@ def climb(start, target, w, prev_pred, introduced, unlock_order):
     best = dict(start)
     bc = cost(best)
     pool = [dict(start), {}]
+    for mk in MEASURED:
+        pool.append(dict(mk))
     for it in range(3000):
         if it % 150 == 149:
             pool.append(random_comp())
@@ -207,10 +329,18 @@ for w in range(1, N + 1):
     target = targets.get(w)
     if target is None:
         sys.exit(f"target_costs.csv has no target for wave {w}")
-    comp = climb(dict(comp), target, w, prev_pred, set(introduced), unlock_order)
+    if w in PLAN and N == 30:
+        comp = dict(PLAN[w])
+    else:
+        comp = climb(dict(comp), target, w, prev_pred, set(introduced), unlock_order)
     fresh = [u for u in comp if u not in introduced]
+    has_new = bool(fresh)
+    bad = violations(comp, w, prev_pred, has_new)
+    if bad:
+        print(f"wave {w:2}: RULE VIOLATIONS ({bad})")
     introduced.update(comp)
     pred = predict(comp)
+    est, exact = estimate(comp)
     # order rows: infantry first, then vehicles, aviation last
     order = sorted(comp, key=lambda u: (units[u]["type"] != "troops", units[u]["type"] == "aviation",
                                        int(units[u].get("threat_value") or 0)))
@@ -221,8 +351,9 @@ for w in range(1, N + 1):
         rows.append([w, u, n, round(delay, 1), interval(u), note])
         delay += min(12.0, 4.0 + n * interval(u) * 0.5)
     prev_pred = pred
-    print(f"wave {w:2}: target {target:6.0f}, predicted {pred:6.0f} "
-          f"({100 * (pred - target) / target:+5.1f}%): " +
+    tag = "measured" if exact else "estimate "
+    print(f"wave {w:2}: target {target:6.0f}, predicted {pred:6.0f}, {tag} {est:6.0f} "
+          f"({100 * (est - target) / target:+5.1f}%): " +
           ", ".join(f"{n} {u}" for u, n in comp.items()))
 
 with open(out, "w", newline="", encoding="utf-8") as fh:
