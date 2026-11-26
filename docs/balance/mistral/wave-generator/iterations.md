@@ -1,0 +1,7 @@
+# Mistral wave-generator: model iterations
+
+Task: make waves whose measured cost follows a target cost per wave (see `docs/agents/mistral.md`, section 10).
+
+| Iteration | Run | Change | Hypothesis | Verdict | Waves in target | Notes |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | pending | New `make_waves.py`: predicts the cost of a candidate wave with the attacker-cost model (Forest belts), randomised local search over wave compositions under the task rules; `target_costs.csv` (30 waves); `waves.csv` generated with seed 7 | A local search over the model prediction can put 80% of the waves within 20% of the target cost | pending | pending | Predicted: 29 of 30 within 20% (wave 1 is 29% low: only recruits are unlocked and the model steps from 178 to 325). Helicopter never appears: its model cost (6375) is above every wave target except 28-30, and a first appearance there would break the 1.35 growth limit for the waves after it. |
