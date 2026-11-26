@@ -1,0 +1,44 @@
+name: Claude
+# Agent office, stage 0 (2026-11-26). Claude answers "@claude ..." in an issue, a PR comment or a PR review.
+# Codex comments from its GitHub bot can call Claude too (allowed_bots). Claude's own bot cannot (no loops).
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  pull_request_review:
+    types: [submitted]
+  issues:
+    types: [opened]
+
+concurrency:
+  group: claude-${{ github.event.issue.number || github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  claude:
+    if: |
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
+      (github.event_name == 'issues' && contains(github.event.issue.body, '@claude'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          allowed_bots: "chatgpt-codex-connector"
+          claude_args: |
+            --max-turns 40
+            --append-system-prompt "You are Claude, CTO of the Treeline team. Follow AGENTS.md and docs/agents/office.md. Write in ASD-STE100. Never merge. Never read or print secrets."
+            --allowedTools "Bash(gh:*),Bash(git:*),Bash(bash tools/tests/*),Bash(python3:*),Read,Grep,Glob,Edit,Write"
