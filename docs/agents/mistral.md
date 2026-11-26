@@ -249,3 +249,42 @@ Defender types (9): `rifle_squad`, `machine_gun`, `sniper`, `mortar`, `anti_tank
 - A proposal (not a change): which values in `units.csv` or `stop.csv` to change to remove a dominant squad or to give an unused type a role. Give the reason for each.
 
 Pull request title: `Mistral: squads — <n> dominant squads of 4, <n> unused types`.
+
+## 12. Next task: `mistral/model-refit`
+
+Written by Claude (CTO), 2026-11-26. Start after `mistral/wave-generator` is merged (the generator fixes the model format). Yaroslav can change the order.
+
+**Background.** The cost model (`model.json`) is fit on the results of the current data. When a value in `units.csv`, `armour.csv`, `stop.csv`, `battle_rules.csv` or `obstacles.csv` changes, or a new attacker or defender type is added, the model becomes old. The wave generator then makes waves with the wrong cost. The fit must run again. Now this is manual work (3 Balance runs and a local script). Make it one automatic step.
+
+**Goal.** One workflow measures the probe waves, fits the model, checks it on held-out waves and proposes the new model in a pull request. It starts on a data change and by hand.
+
+**Files you can change in this task:**
+
+| File | What you can change |
+| --- | --- |
+| `.github/workflows/model-refit.yml` | All (new) |
+| `tools/balance/fit_model.py`, `tools/balance/fitlib.py` | All (move them from `docs/balance/mistral/attacker-cost/`; keep the old copies) |
+| `tools/balance/model.json`, `tools/balance/model_metrics.json` | Made by the workflow |
+| `tools/balance/make_probe_waves.py` | All |
+| `tools/balance/make_waves.py` | Only the path of the model file |
+| `docs/balance/mistral/model-refit/**` | Journal, report |
+
+Do not change `balance-run.yml`, the C# tools or the data files.
+
+**Steps:**
+
+1. Make the branch `mistral/model-refit` from `codex/playable-steppe-patch-integration`.
+2. `make_probe_waves.py`: read the attacker types from `units.csv` (`side` = attacker). Do not keep a fixed list. Keep the excluded types (`fpv`, `one_way_drone`, `recon_uav`) in one list at the top. A new attacker type in `units.csv` must get single-type and mixed probe waves with no other change.
+3. Move the fit to `tools/balance/fit_model.py`. Input: the probe waves and the merged `wave-cost.csv`. Output: `tools/balance/model.json` and `tools/balance/model_metrics.json` (mean error and share within 20% on held-out mixed waves, per field). Use the same held-out rule as in the attacker-cost task. Use a fixed seed: the same input gives the same model.
+4. Change `make_waves.py` to read `tools/balance/model.json`.
+5. Write `.github/workflows/model-refit.yml`:
+   - Start: `workflow_dispatch`, and a push to `codex/playable-steppe-patch-integration` that changes `unity/Assets/Data/units.csv`, `armour.csv`, `stop.csv`, `battle_rules.csv`, `obstacles.csv`, `tools/balance/stop.csv` or `unity/Assets/Resources/Fields/**`.
+   - Jobs: make the probe waves; measure them on all fields (the same shards as `balance-run.yml`: field and a range of waves, at most 200 jobs, `MAX_BUDGET` 30000); fit; check.
+   - Check: **pass** when the share within 20% is 80% or more on each field. **fail** otherwise.
+   - On pass: open a pull request from a branch `model-refit/<run number>` with the new `model.json` and `model_metrics.json`. Title: `Model refit <run number>: <mean error>% mean error, <share>% within 20%`. In the body, give the old and the new metrics.
+   - On fail: no pull request. The run fails with the metrics in the run summary.
+6. Test it: start the workflow by hand on your branch. Then make a test change in your branch only (for example `old_tank` `hp` +20%), run it again, and compare the models. Remove the test change before the PR.
+
+**Deliverables:** the workflow and scripts; `docs/balance/mistral/model-refit/report.md` with the two test runs (time, metrics, what changed in the model after the test change).
+
+Pull request title: `Mistral: model-refit — <minutes> min per refit, <share>% within 20%`.
