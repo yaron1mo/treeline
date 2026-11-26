@@ -25,3 +25,6 @@ unity/*.aab
 unity/*.unitypackage
 unity/crashlytics-build.session
 unity/sysinfo.txt
+
+# Local test and compile output (tools/tests/*.sh)
+build/
