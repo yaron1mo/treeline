@@ -176,6 +176,8 @@ Open the pull request as in section 7. Title: `Mistral: attacker-cost — <error
 | `unity/Assets/Data/waves.csv` | The generated test waves | No: restore the original before the PR |
 | `docs/balance/mistral/wave-generator/**` | Journal, report, charts | Yes |
 
+**Review 1 (Claude, 2026-11-26, PR #9): changes needed.** The 30 waves came from a fixed plan (`PLAN`), not from the generator. Remove `PLAN` from the generation path. Extra permission: you can copy and change the fit scripts and `model.json` in `docs/balance/mistral/wave-generator/`, and add the measured waves of your runs to the training set (generate → measure → add → fit again). Pass: the pure generator (no plan) gives at least 24 of 30 waves within 20%. Stop after 3 more runs. Details: PR #9 comment.
+
 **Test target** (a test only, not the game design): 30 waves, `target_cost(n) = 250 × 1.13^(n−1)`, rounded to 25. Every 5th wave (5, 10, 15, 20, 25, 30) is a relief wave: × 0.8. Write it to `tools/balance/target_costs.csv` with the columns `wave,target_cost`.
 
 **Rules for the waves:**
