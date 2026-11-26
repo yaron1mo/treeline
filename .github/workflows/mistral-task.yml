@@ -1,7 +1,8 @@
 name: Mistral task
-# Agent office, stage 1 (2026-11-26). The label "agent:mistral" on an issue starts Mistral Vibe on Yaroslav's computer
-# (a self-hosted runner with the label "mistral"), with his own Vibe login. No API key. One task at a time.
-# When the computer is off, the job waits in the queue.
+# Agent office, stage 1 (2026-11-26). The label "agent:mistral" on an issue starts Mistral Vibe CLI on Yaroslav's
+# Windows computer (a self-hosted runner with the label "mistral"), with his own Mistral login. No API key.
+# One task at a time. When the computer or the runner window is off, the job waits in the queue.
+# Steps use Windows PowerShell (always present), not bash.
 # Mistral pushes and opens the PR with Yaroslav's own git and gh login on that computer (not GITHUB_TOKEN): a push with
 # GITHUB_TOKEN does not start other workflows, so Claude would not see the PR.
 on:
@@ -20,6 +21,9 @@ jobs:
     permissions:
       contents: read
       issues: write
+    defaults:
+      run:
+        shell: powershell
     steps:
       - uses: actions/checkout@v4
         with:
@@ -30,31 +34,33 @@ jobs:
           TITLE: ${{ github.event.issue.title }}
           BODY: ${{ github.event.issue.body }}
           NUM: ${{ github.event.issue.number }}
-        shell: bash
         run: |
-          {
-            echo "You are Mistral, a developer in the Treeline team. Read AGENTS.md and docs/agents/mistral.md first."
-            echo "Your task is GitHub issue #$NUM: $TITLE"
-            echo
-            echo "$BODY"
-            echo
-            echo "When you finish: push your branch and open the pull request with gh (section 7 of docs/agents/mistral.md)."
-            echo "Then write a comment on issue #$NUM with the PR link. If you need a design decision, add the label needs:yaroslav to the issue and stop."
-          } > "$RUNNER_TEMP/task.md"
+          $lines = @(
+            "You are Mistral, a developer in the Treeline team. Read AGENTS.md and docs/agents/mistral.md first.",
+            "Your task is GitHub issue #$env:NUM : $env:TITLE",
+            "",
+            $env:BODY,
+            "",
+            "When you finish: push your branch and open the pull request with gh (section 7 of docs/agents/mistral.md).",
+            "Then write a comment on issue #$env:NUM with the PR link. If you need a design decision, add the label needs:yaroslav to the issue and stop."
+          )
+          [System.IO.File]::WriteAllLines("$env:RUNNER_TEMP\task.md", $lines, (New-Object System.Text.UTF8Encoding $false))
       - name: Mark in progress
         env:
           GH_TOKEN: ${{ github.token }}
-        shell: bash
         run: gh issue edit ${{ github.event.issue.number }} --repo ${{ github.repository }} --add-label in-progress
       - name: Run Mistral Vibe
-        shell: bash
-        run: vibe --prompt-file "$RUNNER_TEMP/task.md" --auto-approve --max-turns 200 --time-limit 13800 --output-dir "$RUNNER_TEMP/vibe-out"
+        run: |
+          vibe --prompt-file "$env:RUNNER_TEMP\task.md" --auto-approve --max-turns 200 --time-limit 13800 --output-dir "$env:RUNNER_TEMP\vibe-out"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Report
         if: always()
         env:
           GH_TOKEN: ${{ github.token }}
-        shell: bash
         run: |
-          gh issue edit ${{ github.event.issue.number }} --repo ${{ github.repository }} --remove-label in-progress || true
-          usage=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(json.dumps(d.get('usage', {})))" "$RUNNER_TEMP/vibe-out/export.json" 2>/dev/null || echo "{}")
-          gh issue comment ${{ github.event.issue.number }} --repo ${{ github.repository }} --body "Mistral run finished: ${{ job.status }}. Usage: \`$usage\`. Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          gh issue edit ${{ github.event.issue.number }} --repo ${{ github.repository }} --remove-label in-progress
+          $usage = "{}"
+          $f = "$env:RUNNER_TEMP\vibe-out\export.json"
+          if (Test-Path $f) { try { $usage = ((Get-Content $f -Raw | ConvertFrom-Json).usage | ConvertTo-Json -Compress) } catch {} }
+          gh issue comment ${{ github.event.issue.number }} --repo ${{ github.repository }} --body "Mistral run finished: ${{ job.status }}. Usage: $usage. Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          exit 0

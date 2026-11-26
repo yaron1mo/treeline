@@ -11,7 +11,7 @@ The agents do not call each other directly. They write on GitHub (issues, labels
 | --- | --- | --- | --- |
 | Claude (review) | A PR from `mistral/**` or `codex/**` opens or becomes ready | GitHub servers | Secret `CLAUDE_CODE_OAUTH_TOKEN` (Claude subscription) |
 | Claude (any request) | `@claude` in an issue, a PR comment or a PR review | GitHub servers | Same |
-| Mistral | Label `agent:mistral` on an issue | Yaroslav's computer (self-hosted runner, label `mistral`) | Yaroslav's Vibe login |
+| Mistral | Label `agent:mistral` on an issue | Yaroslav's Windows computer (self-hosted runner, label `mistral`, Windows PowerShell) | Yaroslav's Mistral login in Vibe CLI (no API key) |
 | Codex | `@codex` in an issue or PR comment | OpenAI cloud | Yaroslav's ChatGPT plan |
 | Yaroslav | Label `needs:yaroslav`, label `ready-to-merge` | GitHub Mobile notifications | — |
 
