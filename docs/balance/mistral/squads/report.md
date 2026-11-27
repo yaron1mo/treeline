@@ -22,6 +22,8 @@ Run 1 took 1 h 45 min, so runs 2-3 measured only Forest belts (the gate field). 
 
 ### Best 15 squads of 4 types, per field
 
+Note: the cost premium is the median over the waves the squad holds, so a squad with held share below 1.00 can show a premium below 1 (example: sn+at+bo+rd on River crossing, held 0.88, premium 0.831). The list is sorted by rank first.
+
 ### Field: Balka and railway - best 15 squads of 4 types
 | Squad | Held share | Cost premium | Rank |
 | --- | --- | --- | --- |
@@ -169,13 +171,13 @@ Dominant squads of 4 (held >= 0.90, premium <= 1.2): 23
 
 ### 3 vs 4 vs 5 slots (Forest belts)
 
-### Forest belts: 3 vs 4 vs 5 slots
 | Slots | Best squad | Held share | Premium | Dominant squads |
 | --- | --- | --- | --- | --- |
-| 3 | all | 1.00 | 1.000 | 9 |
-| 4 | all | 1.00 | 1.000 | 23 |
+| 3 | mg+at+rd | 1.00 | 1.000 | 9 |
+| 4 | rs+mg+at+rd | 1.00 | 1.000 | 23 |
+| 5 | rs+mg+at+bo+rd | 1.00 | 1.000 | 36 |
 
-The best squad of each size holds all 40 waves at premium 1.000. The slot count changes how many squads are dominant (9 -> 23 -> 36) and how often the cheapest squad needs the type, not the held share: in the 500-6000 cost band on Forest belts, even 3 well-chosen types hold everything at 12000.
+The best squad of each size holds all 40 waves at premium 1.000 (rank 11 for 3 slots, 19 for 4 and 5 slots; the dominant counts include `all`). The slot count changes how many squads are dominant (9 -> 23 -> 36) and how often the cheapest squad needs the type, not the held share: in the 500-6000 cost band on Forest belts, even 3 well-chosen types hold everything at 12000.
 
 ### Target check (definitions of the findings)
 
@@ -205,7 +207,7 @@ Goal: no dominant squad of 4, and every defender type has a measured role. Candi
 
 1. Give armour a second counter, so that anti_tank is not in every dominant squad: `stop.csv` `fpv_operator,modern_tank` 1.00 -> 2.00 and `fpv_operator,old_tank` 2.43 -> 3.00. Reason: the FPV warhead is anti_tank damage (1.0 vs medium and 0.85 vs high armour in `unity/Assets/Data/armour.csv`), so the armour table already allows it; today anti_tank is the only type with stopped > 0 against all four armour rows.
 2. Make machine_gun the clear anti-elite pick: `stop.csv` `machine_gun,special_forces` 2.43 -> 4.00 (rifle_squad 0.97 unchanged). Reason: machine_gun is the most unused type on River crossing (0.475); special_forces waves are the only waves where it clearly beats rifle_squad.
-3. Make air_defence worth its 500 cost on helicopter waves: `stop.csv` `air_defence,helicopter` 0.80 -> 2.00, or add waves with 2+ helicopters to `squad_waves.csv`. Reason: air_defence is in the best 10 for 0% of helicopter waves; its unique roles (helicopter, fpv drones) are small or unmeasured in this band.
+3. Make air_defence worth its 500 cost on helicopter waves: `stop.csv` `air_defence,helicopter` 0.80 -> 2.00, or add waves with 2+ helicopters to `squad_waves.csv`. Reason: air_defence is in the best 10 for 0% of helicopter waves; its unique roles (helicopter, fpv drones) are small or unmeasured in this band. The finding rests on the single helicopter wave of the set (wave 23), so adding 2+ helicopter waves should come first.
 4. Before the squad design is final, add drone-attacker waves (recon_uav spotting plus fpv or one_way_drone) to `squad_waves.csv` in the 500-6000 band. Reason: no drone wave is in the set, so air_defence, fpv_operator and the recon-dependent guns have no measured role.
 5. Sniper needs no change: it is in the best 10 for 77-100% of the waves on all fields (unused 0.15-0.225).
 

@@ -20,7 +20,7 @@ ABBR = {"rifle_squad": "rs", "machine_gun": "mg", "sniper": "sn", "mortar": "mo"
 
 types = [r["id"] for r in csv.DictReader(open(units_path, newline="", encoding="utf-8"))
          if r["side"] == "defence"]
-assert len(types) == 9, types
+assert len(types) == 9, "expected the 9 defence types of units.csv; when a defender type is added, extend ABBR and this check: " + str(types)
 for t in types:
     assert t in ABBR, "no short name for " + t
 
