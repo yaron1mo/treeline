@@ -49,6 +49,7 @@ public static class AgentTools
 
     static double playStart;
     static float waitSeconds;
+    static bool battleStarted;
 
     public static void CapturePlay()
     {
@@ -57,6 +58,7 @@ public static class AgentTools
             EditorSceneManager.OpenScene(Arg("-agentScene", "Assets/Scenes/SampleScene.unity"));
             waitSeconds = ArgInt("-agentWait", 5);
             playStart = -1;
+            battleStarted = false;
             EditorApplication.update += PlayTick;
             EditorApplication.EnterPlaymode();
         }
@@ -71,12 +73,40 @@ public static class AgentTools
     {
         if (!EditorApplication.isPlaying) return;
         if (playStart < 0) playStart = EditorApplication.timeSinceStartup;
+        if (!battleStarted && Arg("-agentBattle", "") == "1" && EditorApplication.timeSinceStartup - playStart >= 1)
+        {
+            battleStarted = true;
+            try { StartStyleBattle(); }
+            catch (Exception e) { Debug.LogError("[AgentTools] battle setup: " + e); EditorApplication.Exit(1); return; }
+        }
         if (EditorApplication.timeSinceStartup - playStart < waitSeconds) return;
         EditorApplication.update -= PlayTick;
         int code = 0;
         try { Save(FindCamera(), Arg("-agentOut", "capture.png")); }
         catch (Exception e) { Debug.LogError("[AgentTools] " + e); code = 1; }
         EditorApplication.Exit(code);
+    }
+
+    static void StartStyleBattle()
+    {
+        var view = UnityEngine.Object.FindFirstObjectByType<Treeline.Game.PlaytestView>();
+        if (view == null) throw new InvalidOperationException("PlaytestView is missing");
+        var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+        var type = view.GetType();
+        var files = (System.Collections.Generic.List<string>)type.GetField("fieldFiles", flags).GetValue(view);
+        int field = files.IndexOf("forest-belts");
+        if (field < 0) throw new InvalidOperationException("Forest belts is missing");
+        type.GetField("current", flags).SetValue(view, field);
+        type.GetMethod("NewRun", flags).Invoke(view, null);
+        var run = (Treeline.Sim.Run)type.GetField("run", flags).GetValue(view);
+        run.Battle.AddBudget(1000f); // Capture setup only.
+        foreach (var item in new[] { ("rifle_squad", 70f, 260f), ("machine_gun", 100f, 270f), ("sniper", 130f, 280f) })
+        {
+            bool placed = run.Place(item.Item1, item.Item2, item.Item3, out _, out string why);
+            Debug.Log("[AgentTools] place " + item.Item1 + ": " + placed + " " + why);
+        }
+        Debug.Log("[AgentTools] start wave: " + run.StartNextWave());
+        type.GetField("simSpeed", flags).SetValue(view, 3);
     }
 
     static Camera FindCamera()
@@ -92,6 +122,12 @@ public static class AgentTools
         int w = ArgInt("-agentWidth", 1280), h = ArgInt("-agentHeight", 720);
         var rt = new RenderTexture(w, h, 24);
         RenderTexture old = cam.targetTexture;
+        if (Arg("-agentBattle", "") == "1")
+        {
+            cam.rect = new Rect(0, 0, 1, 1);
+            cam.transform.position = new Vector3(0, 0, cam.transform.position.z);
+            cam.orthographicSize = 210f;
+        }
         cam.targetTexture = rt;
         cam.Render();
         RenderTexture.active = rt;

@@ -66,6 +66,40 @@ namespace Treeline.Render
         Sprite muzzleSprite;
 
         UnitSpriteAtlas sprites;
+        readonly Dictionary<string, Sprite> styleSprites = new Dictionary<string, Sprite>();
+        readonly List<Texture2D> styleTextures = new List<Texture2D>();
+
+        void LoadStyleTest()
+        {
+            if (styleSprites.Count > 0) return;
+            string[] args = Environment.GetCommandLineArgs();
+            string style = "";
+            for (int i = 0; i + 1 < args.Length; i++)
+                if (args[i] == "-agentStyle") style = args[i + 1];
+            if (style != "pixel" && style != "painted") return;
+            foreach (string name in new[] { "pig", "recruit", "experienced", "veteran" })
+            {
+                var source = Resources.Load<TextAsset>("Art/StyleTest/" + style + "_" + name);
+                if (source == null) { Debug.LogError("Missing style test: " + name); continue; }
+                var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+                if (!texture.LoadImage(Convert.FromBase64String(source.text.Trim()))) { Destroy(texture); continue; }
+                texture.filterMode = style == "pixel" ? FilterMode.Point : FilterMode.Bilinear;
+                styleTextures.Add(texture);
+                styleSprites[name] = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height),
+                    new Vector2(0.5f, 0.5f), texture.width / 12f);
+            }
+        }
+
+        Sprite StyleSprite(string id, bool attacker)
+        {
+            string name = null;
+            if (attacker && (id == "recruit" || id == "regular" || id == "special_forces")) name = "pig";
+            else if (!attacker && id == "rifle_squad") name = "recruit";
+            else if (!attacker && id == "machine_gun") name = "experienced";
+            else if (!attacker && id == "sniper") name = "veteran";
+            return name != null && styleSprites.TryGetValue(name, out var result) ? result : null;
+        }
+
         Battle battle;
         BattlefieldEffects effects;
         readonly Dictionary<int, float> previousShotTimes = new Dictionary<int, float>();
@@ -93,6 +127,7 @@ namespace Treeline.Render
                 try { sprites = new UnitSpriteAtlas(); }
                 catch (Exception ex) { Debug.LogError("Unit atlas could not load: " + ex); return; }
             }
+            LoadStyleTest();
             ClearVisuals();
             ready = true;
             // The owning BattlefieldPreview decides if this is an art catalog or a real match.
@@ -155,7 +190,7 @@ namespace Treeline.Render
             var root = new GameObject("Unit " + unitId + (key > 0 ? " #" + key : ""));
             root.transform.SetParent(transform, false);
             root.transform.localPosition = World(location);
-            float scale = DisplayScale(unitId);
+            float scale = StyleSprite(unitId, attacker) != null ? 0.4f : DisplayScale(unitId);
             root.transform.localScale = Vector3.one * scale;
 
             var silhouette = new GameObject("Shadow");
@@ -171,7 +206,7 @@ namespace Treeline.Render
             var shape = new GameObject("Pixel-lite sprite");
             shape.transform.SetParent(root.transform, false);
             var sr = shape.AddComponent<SpriteRenderer>();
-            sr.sprite = sprite;
+            sr.sprite = StyleSprite(unitId, attacker) ?? sprite;
             sr.sortingOrder = 19;
             sr.color = Color.white;
 
@@ -545,6 +580,8 @@ namespace Treeline.Render
                 float angle = Mathf.Atan2(-velocity.x, -velocity.y) * Mathf.Rad2Deg;
                 visual.Root.transform.rotation = Quaternion.Euler(0f, 0f, angle);
             }
+            var styleSprite = StyleSprite(type, attacking);
+            if (styleSprite != null) visual.Body.sprite = styleSprite;
             visual.Previous = pos;
         }
 
@@ -711,6 +748,8 @@ namespace Treeline.Render
 
         void OnDestroy()
         {
+            foreach (var sprite in styleSprites.Values) if (sprite != null) Destroy(sprite);
+            foreach (var texture in styleTextures) if (texture != null) Destroy(texture);
             ClearVisuals();
             if (bloodSprite != null) Destroy(bloodSprite);
             if (bloodTexture != null) Destroy(bloodTexture);
