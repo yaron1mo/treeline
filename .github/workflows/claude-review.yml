@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   review:
-    if: (startsWith(github.head_ref, 'mistral/') || startsWith(github.head_ref, 'codex/')) && !github.event.pull_request.draft
+    if: (startsWith(github.head_ref, 'mistral/') || startsWith(github.head_ref, 'codex/') || startsWith(github.head_ref, 'design/')) && !github.event.pull_request.draft
     runs-on: ubuntu-latest
     timeout-minutes: 40
     permissions:
@@ -33,7 +33,7 @@ jobs:
             You are Claude, CTO of the Treeline team. Review pull request #${{ github.event.pull_request.number }}
             (branch ${{ github.head_ref }} into ${{ github.base_ref }}) in ${{ github.repository }}.
             Follow docs/agents/office.md, section "Review". Read AGENTS.md and the task spec of the author
-            (docs/agents/mistral.md for mistral/**, the linked issue for codex/**). Write in ASD-STE100.
+            (docs/agents/mistral.md for mistral/**, the linked issue for codex/**, docs/agents/designer.md for design/**: check only that the proposal can be built and measured; the design decision is Yaroslav's). Write in ASD-STE100.
           claude_args: |
             --max-turns 40
             --allowedTools "Bash(gh:*),Bash(git:*),Bash(bash tools/tests/*),Bash(python3:*),Read,Grep,Glob"

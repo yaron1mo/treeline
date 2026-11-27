@@ -2,6 +2,76 @@
 
 - 2026-11-27 — [mistral] balance/wave-generator-2 — Issue #17 done, pass in 3 runs: the pure generator gave 25 of 30 waves within 20% of the target cost on Forest belts (0 not held, mean error 14.4%, Balance run 45926887097). The three findings of the Claude review 2 on PR #9: waves 1-3 need at least 4 infantry in `tools/balance/make_waves.py` (a smaller wave leaks at the 25 minimum budget), 75 armour probe waves with little infantry were measured (run 1) and added to the training set (tag mixed-train4; the first armour waves 21-23 are within 20% now), and `make_waves.py` takes an optional `targets` argument (comma-separated target costs) so the endless mode can pass the target without `tools/balance/target_costs.csv`. Model and training set in `docs/balance/mistral/wave-generator-2/` (`model.json` is the refit that generated the passing run 3). Dev files (`target_costs.csv`, generated `waves.csv`) removed from the branch again.
 - 2026-11-27 — [mistral] balance/wave-generator-2 — Follow-up of PR #9 (issue #17, findings 4 and 5 of the Claude review 2): `tools/balance/make_waves.py` now requires at least 4 infantry in waves 1-3 (a smaller wave leaks at the 25 minimum budget, measured in run 45916087929 wave 2) and takes an optional `targets` argument (comma-separated target costs) so the endless mode can pass the target costs without `tools/balance/target_costs.csv`; the model copy and the training set moved to `docs/balance/mistral/wave-generator-2/` with 75 new armour probe waves (1-3 armour units with little infantry, `make_probe_waves_armour.py`, tag mixed-train4). Dev files for the Balance runs: `tools/balance/target_costs.csv`, `tools/balance/run.json`, the generated `unity/Assets/Data/waves.csv` (all removed before the PR).
+- 2026-11-25 — [codex] render — Increase the fallen special infantry pose to match other units.
+
+- 2026-11-25 — [codex] render — Launch loose helmets from the head when infantry falls.
+
+- 2026-11-25 — [codex] render — Add unbranded fictional rifles to infantry walk and shooting art.
+
+- 2026-11-25 — [codex] render — Add persistent loose helmets and visible snouts to infantry deaths.
+
+- 2026-11-25 — [codex] render — Align blood streaks with nearby shot traces and reduce fall sprite scale.
+
+- 2026-11-25 — [codex] render — Add cartoon blood sprays and visual kill streak messages.
+
+- 2026-11-24 — [codex] render — Add visible muzzle flashes to infantry firing poses.
+
+- 2026-11-24 — [codex] render — Add drawn firing and recoil frames for infantry.
+
+- 2026-11-24 — [codex] render — Move the recruit crutch opposite the supporting leg.
+
+- 2026-11-24 — [codex] render — Show a bandaged missing leg in the recruit crutch hop.
+
+- 2026-11-24 — [codex] render — Add a recruit shuffle and a separate crutch hop.
+
+- 2026-11-24 — [codex] render — Add a crutch and a lifted leg to the recruit walk frames.
+
+- 2026-11-24 — [codex] render — Add a limping recruit walk and slower infantry walk cycles.
+
+- 2026-11-24 — [codex] render — Add drawn base walk frames for recruit and regular infantry.
+
+- 2026-11-24 — [codex] render — Offset the special infantry rifle in the walking pose.
+
+- 2026-11-24 — [codex] render — Add a two-handed walk for special infantry and remove sprite sway.
+
+- 2026-11-24 — [codex] render — Add forward fall frames for regular and special infantry.
+
+- 2026-11-24 — [codex] render — Remove extra pixels around the fallen recruit snout.
+
+- 2026-11-24 — [codex] render — Keep the recruit snout size in the fallen pose.
+
+- 2026-11-24 — [codex] render — Show the recruit snout in the forward fall pose.
+
+- 2026-11-24 — [codex] render — Match recruit fall frame scale to the walking sprite.
+
+- 2026-11-24 — [codex] render — Fix recruit fall frame boundaries and pixel filtering.
+
+- 2026-11-24 — [codex] render — Keep infantry legs connected during walk frames.
+
+- 2026-11-24 — [codex] render — Add drawn frames for the recruit falling forward.
+
+- 2026-11-24 — [codex] render — Add front and back fall poses. Show the knees before the forward fall.
+
+- 2026-11-24 — [codex] render — Rework infantry falls, add blood splashes and remove detached snouts after 10 seconds.
+
+- 2026-11-24 — [codex] render — Keep fallen infantry on the field and add distinct knockback and kneeling falls.
+
+- 2026-11-24 — [codex] render — Enable blood by default and add three temporary infantry death reactions with snout spirits.
+
+- 2026-11-24 — [codex] render — Add a saved blood setting and a short blood effect for infantry deaths.
+
+- 2026-11-24 — [codex] render — Add infantry art and visual poses for walking, firing and falling. Keep five recruit walk styles.
+
+- 2026-11-24 — [codex] render — Add five recruit walking styles with different steps and rhythms.
+
+- 2026-11-24 — [codex] render — Add alternating infantry footstep frames and reduce body sway to make walking clearer.
+
+- 2026-11-24 — [codex] render — Keep infantry sprites upright while they walk so their helmets stay above their snouts.
+
+- 2026-11-24 — [codex] render — Add walking motion for the three infantry types. Use a separate step phase for each unit.
+
+- 2026-11-24 — [codex] render — Add three larger infantry sprites with distinct helmets and uniforms. Remove their sprite shadows. Keep the first version for review.
+
 - 2026-11-27 — [claude] design — `docs/design/progression.md`: the design source of truth in the repo (copy of Notion page 11 plus the decisions of 2026-11-25…27: squads and slots, upgrade paths, weekly challenge, Forest belts as the reference map, units before maps). The designer agent works from this file.
 - 2026-11-27 — [claude] tools/unity — `unity/Assets/Editor/AgentTools.cs` and `tools/unity/unity.ps1`: agents on the self-hosted Windows runner run the Unity Editor without a window (`-batchmode`) with the local Unity Personal licence. `AgentTools.Ping` (import and compile), `CaptureEdit` and `CapturePlay` (scene to PNG), and `-Tests EditMode` (Unity Test Runner).
 - 2026-11-27 — [mistral] balance/wave-generator — Review 1 of PR #9 done: `PLAN` removed from the generation path of `tools/balance/make_waves.py` (pure local search on the model prediction for every N and seed); the waves measured in the task runs added to the training set and the model copy refit (`docs/balance/mistral/wave-generator/`: `fit_model.py`, `training_waves.csv`, `model.json`, `eval_model.py`); small-wave floor (at least one rifle squad, 100 measured); a feature-order bug in `make_waves.py` found and fixed (features were permuted against the model `types` order in runs 1-3). 3 Balance runs after the review (45915363348, 45916087929, 45916673189): the pure generator gave 10, 23 and 19 of 30 waves within 20% of the target (0 not held each); best 23 of 30, mean error 18.8% — the gate of 24 was not reached, the stop rule (3 runs) was. Report and journal updated in `docs/balance/mistral/wave-generator/`. Dev files (`target_costs.csv`, generated `waves.csv`) removed from the branch again.
