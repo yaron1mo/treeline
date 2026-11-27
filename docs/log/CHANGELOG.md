@@ -1,5 +1,7 @@
 # Change log
 
+- 2026-11-27 ? [codex] art ? Add a GIF of the current recruit fall frames.
+
 - 2026-11-27 ? [codex] art ? Add a GIF of the current recruit shoot frames.
 
 - 2026-11-27 ? [codex] art ? Add a GIF of the current recruit walk for review.
