@@ -1,5 +1,7 @@
 # Change log
 
+- 2026-11-27 ? [codex] design ? Audit the current visuals and compare 3 art directions for phone readability.
+
 - 2026-11-27 ? [codex] editor (shared Game area) ? Add an optional playtest setup for visual captures.
 
 - 2026-11-27 — [mistral] balance/wave-generator-2 — Issue #17 done, pass in 3 runs: the pure generator gave 25 of 30 waves within 20% of the target cost on Forest belts (0 not held, mean error 14.4%, Balance run 45926887097). The three findings of the Claude review 2 on PR #9: waves 1-3 need at least 4 infantry in `tools/balance/make_waves.py` (a smaller wave leaks at the 25 minimum budget), 75 armour probe waves with little infantry were measured (run 1) and added to the training set (tag mixed-train4; the first armour waves 21-23 are within 20% now), and `make_waves.py` takes an optional `targets` argument (comma-separated target costs) so the endless mode can pass the target without `tools/balance/target_costs.csv`. Model and training set in `docs/balance/mistral/wave-generator-2/` (`model.json` is the refit that generated the passing run 3). Dev files (`target_costs.csv`, generated `waves.csv`) removed from the branch again.
