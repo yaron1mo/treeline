@@ -21,10 +21,11 @@ sys.path.insert(0, HERE)
 import grammar  # noqa: E402
 
 # Feature types the Sim knows (TerrainTable names + obstacle ids used on fields).
+# bridge_ruins is decoration only (the Sim ignores it; the road is split at the banks).
 KNOWN_TYPES = {
     "field", "tracks", "craters", "grove", "pond", "belt", "road",
     "rock", "wreck", "bush", "heap", "embankment", "hill", "trench", "balka",
-    "river", "ford", "pipe", "wire", "hedgehog",
+    "river", "ford", "pipe", "wire", "hedgehog", "bridge_ruins",
 }
 
 
@@ -36,7 +37,7 @@ def validate(field, concept):
     for s in field["spawns"]:
         assert grammar.RULES["edge_margin"] <= s <= w - grammar.RULES["edge_margin"]
     belts = [f for f in field["features"] if f["type"] == "belt"]
-    assert grammar.RULES["belts_per_map"][0] <= len(belts) <= 12
+    assert len(belts) <= 12, "at most 12 belt features"
     for f in field["features"]:
         assert f["type"] in KNOWN_TYPES, f["type"]
         pts = f.get("poly") or f.get("line") or f.get("points")

@@ -47,26 +47,37 @@ def main():
                 shifts.append(min(abs(g - p) for p in lay["gaps"][i - 1]))
         min_shift = min(shifts) if shifts else None
         ls = sim_routes.analyse(ROOT, field)
-        # design lanes: the band between the first and the last belt row
+        # design lanes: the band between the first and the last belt row (mid-field without belts)
         grid = sim_routes.NavGrid(field, sim_routes.load_obstacles(ROOT), edge_margin=10.0)
         h = field["size"][1]
-        design = sim_routes.lanes(grid, lay["belt_ys"][0] + 10, lay["belt_ys"][-1] - 10)
+        if lay["belt_ys"] and len(lay["belt_ys"]) >= 2:
+            design = sim_routes.lanes(grid, lay["belt_ys"][0] + 10, lay["belt_ys"][-1] - 10)
+        else:
+            design = sim_routes.lanes(grid, h * 0.25, h * 0.75)
         design_lanes = [{"x": round(l["x"], 1), "weight": l["weight"]} for l in design]
-        hold = sum(1 for f in field["features"] if f["type"] in ("grove", "pond"))
+        hold = sum(1 for f in field["features"] if f["type"] in ("grove", "pond", "trench", "rock", "wreck", "heap"))
+        hold += len(lay["belt_ys"])
         if concept.get("pocket"):
             hold += 1
+        # reachability: from every spawn an infantry and a vehicle route must reach the base
+        reach = []
+        for cost_name, cost in (("inf", grid.cost_i), ("veh", grid.cost_v)):
+            dist, _nxt = sim_routes.flow_field(grid, cost)
+            ok = all(dist[grid.cell_at(s, 1.0)] != sim_routes.INF for s in field["spawns"])
+            reach.append(f"{cost_name}:{'ok' if ok else 'BLOCKED'}")
         row = {
             "name": concept["name"], "file": concept["file"],
             "lanes_design": [l["x"] for l in design_lanes], "lanes_design_weights": [l["weight"] for l in design_lanes],
             "lanes_placing": [l["x"] for l in ls["placing"]],
             "expect_lanes": concept["expect_lanes"], "min_gap_shift": round(min_shift, 1) if min_shift else None,
-            "hold_points": hold, "spawns": field["spawns"],
+            "hold_points": hold, "spawns": field["spawns"], "reach": reach,
             "belts": lay["belt_ys"], "gaps": lay["gaps"],
         }
         out.append(row)
         print(f"{concept['name']:24s} design={str([l['x'] for l in design_lanes]):22s} "
               f"zone={str([l['x'] for l in ls['placing']]):16s} expect={concept['expect_lanes']} "
-              f"shift={str(round(min_shift,1)) if min_shift else '-':>6s} hold={hold}  spawns={field['spawns']}")
+              f"shift={str(round(min_shift,1)) if min_shift else '-':>6s} hold={hold} "
+              f"{'/'.join(reach)}  spawns={field['spawns']}")
     # reference map, for comparison
     ref = load_field(os.path.join(FIELDS, "forest-belts.json"))
     ls = sim_routes.analyse(ROOT, ref)
