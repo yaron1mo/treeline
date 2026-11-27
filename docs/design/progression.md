@@ -38,6 +38,7 @@ Write all text in ASD-STE100. Mark each item as **Decided** (with date and who) 
 
 - **Death or wounded:** a unit at 0 HP is wounded ("300") or killed ("200"); proposal 50/50; what evacuation costs; recovery time.
 - **Unit roster for release** (10 attacker types, 10 defender types, 3 support calls), EW station numbers and effects, air-defence rules, roster cuts. Proposal and options: [unit-roster.md](unit-roster.md).
+- **Roster follow-up (2026-11-27, after PR #28 decisions):** 14 attacker types accepted?; does the player see the radius of the own EW station while placing it?; does EW work on the Shahed-type drone?; how base damage of the Shahed is set. Options: [unit-roster.md](unit-roster.md), section 11.
 - **Barracks size** and units per level.
 - **Slots:** how many at start, how they open.
 - **Squad rules** for the weekly challenge (fixed squad or own) and for endless.
