@@ -23,20 +23,20 @@ New-Item -ItemType Directory -Force -Path $logDir | Out-Null
 $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $log = Join-Path $logDir "unity-$stamp.log"
 
-$args = @("-batchmode", "-projectPath", "`"$project`"", "-logFile", "`"$log`"")
+$uargs = @("-batchmode", "-projectPath", "`"$project`"", "-logFile", "`"$log`"")
 if ($Tests) {
     $results = Join-Path $logDir "tests-$stamp.xml"
-    $args += @("-runTests", "-testPlatform", $Tests, "-testResults", "`"$results`"")
+    $uargs += @("-runTests", "-testPlatform", $Tests, "-testResults", "`"$results`"")
 } elseif ($Method) {
-    $args += @("-executeMethod", $Method)
+    $uargs += @("-executeMethod", $Method)
 } else {
     Write-Error "Give -Method or -Tests."
 }
-$args += $Extra
+$uargs += $Extra
 
 Write-Host "Unity: $unity"
-Write-Host "Args:  $($args -join ' ')"
-$p = Start-Process -FilePath $unity -ArgumentList $args -PassThru -NoNewWindow
+Write-Host "Args:  $($uargs -join ' ')"
+$p = Start-Process -FilePath $unity -ArgumentList $uargs -PassThru -NoNewWindow
 if (-not $p.WaitForExit($TimeoutMinutes * 60 * 1000)) {
     $p.Kill()
     Write-Host "Unity did not finish in $TimeoutMinutes minutes."
