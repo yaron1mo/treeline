@@ -1,6 +1,7 @@
 {
   "waves_file": "tools/balance/squad_waves.csv",
   "squads_file": "tools/balance/squads.csv",
+  "fields": "Forest",
   "max_budget": 12000,
   "playtest_seeds": 0
 }
