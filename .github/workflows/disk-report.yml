@@ -7,6 +7,10 @@ on:
       issue:
         description: 'Issue number for the report'
         required: true
+      roots:
+        description: 'Folders to list one level deep, separated by ;  (empty = the default set)'
+        required: false
+        default: ''
 
 jobs:
   disk:
@@ -27,6 +31,7 @@ jobs:
           Get-PSDrive -PSProvider FileSystem | ForEach-Object { if ($_.Used -ne $null) { $out.Add(("- {0}: used {1:N1} GB, free {2:N1} GB" -f $_.Name, ($_.Used/1GB), ($_.Free/1GB))) } }
           function SizeOf($p) { try { (Get-ChildItem -LiteralPath $p -Recurse -Force -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum / 1GB } catch { 0 } }
           $roots = @("C:\actions-runner", "C:\actions-runner-2", "$env:USERPROFILE", "C:\Program Files\Unity", "C:\ProgramData", "C:\Windows\Temp")
+          if ("${{ github.event.inputs.roots }}" -ne "") { $roots = "${{ github.event.inputs.roots }}".Split(";") | ForEach-Object { [Environment]::ExpandEnvironmentVariables($_.Trim()) } }
           $rows = @()
           foreach ($r in $roots) {
             if (-not (Test-Path $r)) { continue }
@@ -35,7 +40,7 @@ jobs:
             }
           }
           $out.Add("")
-          $out.Add("### Largest folders (one level below: actions-runner, actions-runner-2, user profile, Unity, ProgramData, Windows Temp)")
+          $out.Add("### Largest folders (one level below the listed roots)")
           $rows | Sort-Object GB -Descending | Select-Object -First 30 | ForEach-Object { $out.Add(("- {0:N1} GB  {1}" -f $_.GB, $_.Path)) }
           $lad = "$env:LOCALAPPDATA"
           $out.Add("")
