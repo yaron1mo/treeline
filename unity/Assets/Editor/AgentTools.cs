@@ -52,6 +52,48 @@ public static class AgentTools
 
     static double playStart;
     static float waitSeconds;
+    static bool densityReady;
+    static SpriteRenderer[] densityRenderers;
+    static Sprite[][] densityFrames;
+
+    // Visual-only comparison placed over the live battle. It does not alter Sim.
+    static void SetupDensityComparison()
+    {
+        var view = UnityEngine.Object.FindFirstObjectByType<Treeline.Game.PlaytestView>();
+        if (view == null) throw new InvalidOperationException("PlaytestView is missing.");
+        var type = view.GetType();
+        const System.Reflection.BindingFlags flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+        var files = (System.Collections.Generic.List<string>)type.GetField("fieldFiles", flags).GetValue(view);
+        int forest = files.IndexOf("forest-belts");
+        if (forest < 0) throw new InvalidOperationException("Forest belts is missing.");
+        type.GetField("current", flags).SetValue(view, forest);
+        type.GetMethod("NewRun", flags).Invoke(view, null);
+        type.GetMethod("StartNextWave", flags).Invoke(view, null);
+        string[] names = { "current", "one-half", "double", "painted" };
+        densityRenderers = new SpriteRenderer[4];
+        densityFrames = new Sprite[4][];
+        Camera cam = FindCamera();
+        for (int i = 0; i < names.Length; i++)
+        {
+            string file = Path.Combine(Directory.GetParent(Application.dataPath).Parent.FullName,
+                "docs/design/visual/density/" + names[i] + ".png");
+            Texture2D tex = Load(file);
+            if (i == 3) tex.filterMode = FilterMode.Bilinear;
+            int cell = tex.height / 2;
+            densityFrames[i] = new Sprite[4];
+            for (int f = 0; f < 4; f++)
+                densityFrames[i][f] = Sprite.Create(tex, new Rect(f * cell, cell, cell, cell),
+                    new Vector2(0.5f, 0.5f), cell / 12f);
+            var go = new GameObject("Density comparison " + names[i]);
+            var renderer = go.AddComponent<SpriteRenderer>();
+            renderer.sortingOrder = 200;
+            Vector3 pos = cam.ViewportToWorldPoint(new Vector3(0.30f + i * 0.13f, 0.50f, -cam.transform.position.z));
+            go.transform.position = new Vector3(pos.x, pos.y, 0);
+            densityRenderers[i] = renderer;
+        }
+        densityReady = true;
+    }
+
 
     public static void CapturePlay()
     {
@@ -60,6 +102,7 @@ public static class AgentTools
             EditorSceneManager.OpenScene(Arg("-agentScene", "Assets/Scenes/SampleScene.unity"));
             waitSeconds = ArgInt("-agentWait", 5);
             playStart = -1;
+            densityReady = false;
             EditorApplication.update += PlayTick;
             EditorApplication.EnterPlaymode();
         }
@@ -74,6 +117,12 @@ public static class AgentTools
     {
         if (!EditorApplication.isPlaying) return;
         if (playStart < 0) playStart = EditorApplication.timeSinceStartup;
+        if (Arg("-agentDensity", "") == "1" && EditorApplication.timeSinceStartup - playStart > 1)
+        {
+            if (!densityReady) SetupDensityComparison();
+            int frame = (int)(EditorApplication.timeSinceStartup * 5) % 4;
+            for (int i = 0; i < densityRenderers.Length; i++) densityRenderers[i].sprite = densityFrames[i][frame];
+        }
         if (EditorApplication.timeSinceStartup - playStart < waitSeconds) return;
         EditorApplication.update -= PlayTick;
         int code = 0;
