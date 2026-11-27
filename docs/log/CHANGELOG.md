@@ -1,5 +1,7 @@
 # Change log
 
+- 2026-11-27 — [mistral] maps — 20 real map prototypes from OpenStreetMap (issue #25): `tools/maps/` (Overpass download with cache, candidate scan of UA/MD/RO/PL farmland regions, OSM-to-field conversion, preview and lane tools) and `unity/Assets/Resources/Fields/real-sector-*.json` (real 0.6x1.2 km windows, rotated so the windbreak belts cross the line of advance, scaled 3x to 200x400 m, fictional sector names). Previews in `docs/maps/`, report in `docs/maps/report.md`, licence in `docs/maps/ATTRIBUTION.md`. Balance run 45942152079 ranked the 24 candidates; the 20 best maps are kept (Sector 10, 11, 15 removed: only one lane; Sector 27 removed: most waves outside 0.6-1.6x the Forest belts cost).
+
 - 2026-11-25 — [codex] render — Increase the fallen special infantry pose to match other units.
 
 - 2026-11-25 — [codex] render — Launch loose helmets from the head when infantry falls.
