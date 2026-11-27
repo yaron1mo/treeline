@@ -50,6 +50,7 @@ public static class AgentTools
     static double playStart;
     static float waitSeconds;
     static bool battleStarted;
+    static bool effectStarted;
 
     public static void CapturePlay()
     {
@@ -59,6 +60,7 @@ public static class AgentTools
             waitSeconds = ArgInt("-agentWait", 5);
             playStart = -1;
             battleStarted = false;
+            effectStarted = false;
             EditorApplication.update += PlayTick;
             EditorApplication.EnterPlaymode();
         }
@@ -78,7 +80,24 @@ public static class AgentTools
             try { StartCaptureBattle(); battleStarted = true; }
             catch (Exception e) { Debug.LogError("[AgentTools] " + e); EditorApplication.Exit(1); return; }
         }
-        if (EditorApplication.timeSinceStartup - playStart < waitSeconds) return;
+        double elapsed = EditorApplication.timeSinceStartup - playStart;
+        if (!effectStarted && Arg("-agentExplosion", "0") == "1" && elapsed >= waitSeconds - 0.15)
+        {
+            var effects = UnityEngine.Object.FindFirstObjectByType<Treeline.Render.BattlefieldEffects>();
+            var view = UnityEngine.Object.FindFirstObjectByType<Treeline.Game.PlaytestView>();
+            var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+            var run = (Treeline.Sim.Run)typeof(Treeline.Game.PlaytestView).GetField("run", flags).GetValue(view);
+            if (effects == null || run.Battle.Attackers.Count == 0)
+                Debug.LogError("[AgentTools] Cannot stage explosion: no effect layer or attacker.");
+            else
+            {
+                var attacker = run.Battle.Attackers[0];
+                effects.Explosion(new Vector2(attacker.X, attacker.Y), 6.5f);
+                Debug.Log("[AgentTools] staged explosion at attacker");
+            }
+            effectStarted = true;
+        }
+        if (elapsed < waitSeconds) return;
         EditorApplication.update -= PlayTick;
         int code = 0;
         try { Save(FindCamera(), Arg("-agentOut", "capture.png")); }
