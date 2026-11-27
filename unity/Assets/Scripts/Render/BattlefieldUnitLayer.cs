@@ -23,6 +23,9 @@ namespace Treeline.Render
             public float MotionAge;
             public int WalkVariant;
             public float ShotUntil;
+            public float PreviousHp = -1f;
+            public float HitUntil;
+            public Vector2 HitDirection;
             public SpriteRenderer MuzzleFlash;
             public Vector2 BloodDirection;
             public float DeathStarted;
@@ -256,7 +259,18 @@ namespace Treeline.Render
             foreach (int key in live.Keys) missing.Add(key);
 
             foreach (var a in battle.Attackers)
+            {
                 Sync(a.Id, a.Def.Id, new Vector2(a.X, a.Y), true);
+                if (live.TryGetValue(a.Id, out var hitVisual))
+                {
+                    if (hitVisual.PreviousHp >= 0f && a.Hp < hitVisual.PreviousHp)
+                    {
+                        hitVisual.HitUntil = Time.time + 0.15f;
+                        hitVisual.HitDirection = FindImpactDirection(a);
+                    }
+                    hitVisual.PreviousHp = a.Hp;
+                }
+            }
             foreach (var d in battle.Defenders)
                 Sync(d.Id, d.Def.Id, new Vector2(d.X, d.Y), false);
             foreach (var drone in battle.Drones)
@@ -545,6 +559,13 @@ namespace Treeline.Render
                         visual.MuzzleFlash.enabled = shotElapsed < 0.14f;
                 }
                 else if (visual.MuzzleFlash != null) visual.MuzzleFlash.enabled = false;
+                if (Time.time < visual.HitUntil)
+                {
+                    float strength = Mathf.Clamp01((visual.HitUntil - Time.time) / 0.15f);
+                    visual.Body.color = Color.Lerp(Color.white, new Color(1f, 0.35f, 0.35f), strength);
+                    visual.Body.transform.localPosition += new Vector3(visual.HitDirection.x, visual.HitDirection.y, 0f) * (0.45f * strength);
+                }
+                else visual.Body.color = Color.white;
             }
             if (!infantry && velocity.sqrMagnitude > 0.04f)
             {
