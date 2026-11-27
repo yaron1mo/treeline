@@ -1,0 +1,715 @@
+{
+  "comment": "Group A of docs/design/maps.md section 5.1: 12 designed maps on the Forest belts grammar (issue #46). Each entry is a parameter set for tools/maps/grammar.py. Same seed + same parameters -> same map. gap_x gives the gap centres of every belt row (top row first); the check in tools/maps/check.py reports the real gap shift between rows.",
+  "maps": [
+    {
+      "name": "Sector Birch",
+      "file": "sector-birch",
+      "sector": "Sector 21",
+      "seed": 4601,
+      "idea": "The reference: zig-zag gaps teach \"hold at the gap or behind it\".",
+      "expect_lanes": 2,
+      "spawns": [
+        150,
+        60
+      ],
+      "belts": {
+        "count": 4,
+        "y0": 74,
+        "spacing": 82,
+        "gap_x": [
+          [
+            150
+          ],
+          [
+            60
+          ],
+          [
+            120
+          ],
+          [
+            45
+          ]
+        ],
+        "gap_width": 18
+      },
+      "road": {
+        "y": 197,
+        "width": 5
+      },
+      "tracks": {
+        "mode": "gaps",
+        "extra": 1
+      },
+      "groves": [
+        {
+          "x": 40,
+          "y": 120,
+          "r": 12
+        },
+        {
+          "x": 165,
+          "y": 285,
+          "r": 11
+        }
+      ],
+      "pond": {
+        "x": 118,
+        "y": 360,
+        "r": 10
+      },
+      "craters": 70,
+      "fields": {
+        "tones": [
+          "stubble",
+          "plowed",
+          "sunflower"
+        ],
+        "wavy": 6
+      },
+      "subtitle": "Farmland cut by four windbreak belts with one gap each, shifted from belt to belt; a road runs behind the second belt."
+    },
+    {
+      "name": "Sector Twin Gap",
+      "file": "sector-twin-gap",
+      "sector": "Sector 22",
+      "seed": 4602,
+      "idea": "Each belt has 2 gaps. The enemy splits, so the player must pick a side.",
+      "expect_lanes": 2,
+      "spawns": [
+        40,
+        160
+      ],
+      "belts": {
+        "count": 3,
+        "y0": 90,
+        "spacing": 95,
+        "gap_x": [
+          [
+            40,
+            160
+          ],
+          [
+            20,
+            100
+          ],
+          [
+            65,
+            140
+          ]
+        ],
+        "gap_width": [
+          18,
+          20
+        ]
+      },
+      "tracks": {
+        "mode": "gaps"
+      },
+      "groves": [
+        {
+          "x": 150,
+          "y": 200,
+          "r": 12
+        }
+      ],
+      "craters": 60,
+      "fields": {
+        "tones": [
+          "plowed",
+          "stubble",
+          "rape"
+        ],
+        "wavy": 5
+      },
+      "subtitle": "Three belts with two gaps each; the attack splits at every belt and the defence must choose a side."
+    },
+    {
+      "name": "Sector Needle",
+      "file": "sector-needle",
+      "sector": "Sector 23",
+      "seed": 4603,
+      "idea": "One gap in each belt, all in one line: a long straight lane. \"Stack your fire.\"",
+      "expect_lanes": 1,
+      "spawns": [
+        100
+      ],
+      "belts": {
+        "count": 3,
+        "y0": 90,
+        "spacing": 100,
+        "gap_x": [
+          [
+            100
+          ],
+          [
+            100
+          ],
+          [
+            100
+          ]
+        ],
+        "gap_width": 18
+      },
+      "tracks": {
+        "mode": "gaps"
+      },
+      "groves": [
+        {
+          "x": 62,
+          "y": 145,
+          "r": 12
+        },
+        {
+          "x": 138,
+          "y": 245,
+          "r": 12
+        },
+        {
+          "x": 66,
+          "y": 340,
+          "r": 11
+        }
+      ],
+      "craters": 55,
+      "fields": {
+        "tones": [
+          "stubble",
+          "sunflower",
+          "plowed"
+        ],
+        "wavy": 6
+      },
+      "subtitle": "Three belts with one gap in the middle of each: one straight lane from the spawn to the base."
+    },
+    {
+      "name": "Sector Pocket",
+      "file": "sector-pocket",
+      "sector": "Sector 24",
+      "seed": 4604,
+      "idea": "A belt runs along the route: a pocket next to the gap. Holding the pocket gives a flank shot.",
+      "expect_lanes": 2,
+      "spawns": [
+        60,
+        140
+      ],
+      "belts": {
+        "count": 3,
+        "y0": 90,
+        "spacing": 95,
+        "gap_x": [
+          [
+            60
+          ],
+          [
+            140
+          ],
+          [
+            70
+          ]
+        ],
+        "gap_width": 18
+      },
+      "pocket": {
+        "belt": 2,
+        "gap_x": 70,
+        "side": 1,
+        "len": 80,
+        "toward": "up"
+      },
+      "tracks": {
+        "mode": "gaps",
+        "extra": 1
+      },
+      "groves": [
+        {
+          "x": 150,
+          "y": 150,
+          "r": 12
+        }
+      ],
+      "craters": 60,
+      "fields": {
+        "tones": [
+          "plowed",
+          "stubble",
+          "fallow"
+        ],
+        "wavy": 5
+      },
+      "subtitle": "Three belts plus a long side belt that forms a pocket next to the last gap: a flank position or a trap."
+    },
+    {
+      "name": "Sector Highway",
+      "file": "sector-highway",
+      "sector": "Sector 25",
+      "seed": 4605,
+      "idea": "A road runs along the whole front, behind belt 1. Runners go fast. \"Cover the width.\"",
+      "expect_lanes": 2,
+      "spawns": [
+        150,
+        60
+      ],
+      "belts": {
+        "count": 3,
+        "y0": 74,
+        "spacing": 95,
+        "gap_x": [
+          [
+            150
+          ],
+          [
+            60
+          ],
+          [
+            120
+          ]
+        ],
+        "gap_width": 18
+      },
+      "road": {
+        "y": 122,
+        "width": 5
+      },
+      "tracks": {
+        "mode": "gaps",
+        "extra": 2
+      },
+      "groves": [
+        {
+          "x": 40,
+          "y": 300,
+          "r": 12
+        }
+      ],
+      "pond": {
+        "x": 160,
+        "y": 350,
+        "r": 9
+      },
+      "craters": 60,
+      "fields": {
+        "tones": [
+          "stubble",
+          "rape",
+          "plowed"
+        ],
+        "wavy": 6
+      },
+      "subtitle": "Three belts with a road along the whole front behind the first belt; three field tracks cross the field."
+    },
+    {
+      "name": "Sector Switchback",
+      "file": "sector-switchback",
+      "sector": "Sector 26",
+      "seed": 4606,
+      "idea": "4 belts with the gaps at the far edges, alternating: the longest route, a long time under fire.",
+      "expect_lanes": 2,
+      "spawns": [
+        165,
+        35
+      ],
+      "belts": {
+        "count": 4,
+        "y0": 70,
+        "spacing": 85,
+        "gap_x": [
+          [
+            165
+          ],
+          [
+            35
+          ],
+          [
+            165
+          ],
+          [
+            35
+          ]
+        ],
+        "gap_width": 18
+      },
+      "tracks": {
+        "mode": "gaps",
+        "extra": 1
+      },
+      "groves": [
+        {
+          "x": 100,
+          "y": 210,
+          "r": 13
+        },
+        {
+          "x": 60,
+          "y": 360,
+          "r": 11
+        }
+      ],
+      "craters": 65,
+      "fields": {
+        "tones": [
+          "fallow",
+          "stubble",
+          "plowed",
+          "sunflower"
+        ],
+        "wavy": 6
+      },
+      "subtitle": "Four belts with the gaps at alternating far edges: the attack runs the full width of the field twice."
+    },
+    {
+      "name": "Sector Funnel",
+      "file": "sector-funnel",
+      "sector": "Sector 27",
+      "seed": 4607,
+      "idea": "Belts form a V: the lanes join at one gap near the base. \"One strong point.\"",
+      "expect_lanes": 1,
+      "spawns": [
+        100
+      ],
+      "belts": {
+        "count": 3,
+        "y0": 100,
+        "spacing": 100,
+        "shape": "chevron",
+        "chevron_drop": 30,
+        "gap_x": [
+          [
+            100
+          ],
+          [
+            100
+          ],
+          [
+            100
+          ]
+        ],
+        "gap_width": 20
+      },
+      "tracks": {
+        "mode": "gaps"
+      },
+      "groves": [
+        {
+          "x": 45,
+          "y": 70,
+          "r": 12
+        },
+        {
+          "x": 155,
+          "y": 70,
+          "r": 12
+        }
+      ],
+      "craters": 60,
+      "fields": {
+        "tones": [
+          "stubble",
+          "plowed",
+          "sunflower"
+        ],
+        "wavy": 5
+      },
+      "subtitle": "Three V-shaped belts whose arms join at one gap near the base: every route ends at the same strong point."
+    },
+    {
+      "name": "Sector Fork",
+      "file": "sector-fork",
+      "sector": "Sector 28",
+      "seed": 4608,
+      "idea": "The route splits at belt 1 into 2 lanes that join again at belt 3. Two ways, same end.",
+      "expect_lanes": 2,
+      "spawns": [
+        70,
+        130
+      ],
+      "belts": {
+        "count": 3,
+        "y0": 90,
+        "spacing": 100,
+        "gap_x": [
+          [
+            100
+          ],
+          [
+            55,
+            145
+          ],
+          [
+            100
+          ]
+        ],
+        "gap_width": 18
+      },
+      "fork": {
+        "stub_x": 100,
+        "between": [
+          0,
+          1
+        ]
+      },
+      "tracks": {
+        "mode": "gaps",
+        "extra": 1
+      },
+      "groves": [
+        {
+          "x": 30,
+          "y": 300,
+          "r": 11
+        },
+        {
+          "x": 170,
+          "y": 300,
+          "r": 11
+        }
+      ],
+      "craters": 60,
+      "fields": {
+        "tones": [
+          "plowed",
+          "stubble",
+          "rape"
+        ],
+        "wavy": 5
+      },
+      "subtitle": "A central stub belt splits the corridor into two lanes after the first gap; both lanes meet again at the last gap."
+    },
+    {
+      "name": "Sector Orchard",
+      "file": "sector-orchard",
+      "sector": "Sector 29",
+      "seed": 4609,
+      "idea": "Many groves, few belts. Sight is short everywhere. \"Who sees first wins.\"",
+      "expect_lanes": 2,
+      "spawns": [
+        70,
+        130
+      ],
+      "belts": {
+        "count": 2,
+        "y0": 110,
+        "spacing": 110,
+        "gap_x": [
+          [
+            70
+          ],
+          [
+            130
+          ]
+        ],
+        "gap_width": 18
+      },
+      "tracks": {
+        "mode": "gaps"
+      },
+      "groves": [
+        {
+          "x": 40,
+          "y": 60,
+          "r": 13
+        },
+        {
+          "x": 120,
+          "y": 80,
+          "r": 12
+        },
+        {
+          "x": 170,
+          "y": 55,
+          "r": 12
+        },
+        {
+          "x": 55,
+          "y": 180,
+          "r": 12
+        },
+        {
+          "x": 145,
+          "y": 200,
+          "r": 13
+        },
+        {
+          "x": 100,
+          "y": 320,
+          "r": 12
+        }
+      ],
+      "pond": {
+        "x": 30,
+        "y": 300,
+        "r": 9
+      },
+      "craters": 45,
+      "fields": {
+        "tones": [
+          "sunflower",
+          "stubble",
+          "plowed",
+          "fallow"
+        ],
+        "wavy": 7,
+        "patchwork": true
+      },
+      "subtitle": "Two belts and six groves: short sight everywhere, the player who sees first wins."
+    },
+    {
+      "name": "Sector Long Shadow",
+      "file": "sector-long-shadow",
+      "sector": "Sector 30",
+      "seed": 4610,
+      "idea": "Only 2 belts, very wide strips (120 m). Long range matters; cover is thin.",
+      "expect_lanes": 2,
+      "spawns": [
+        60,
+        140
+      ],
+      "belts": {
+        "count": 2,
+        "y0": 110,
+        "spacing": 120,
+        "gap_x": [
+          [
+            60
+          ],
+          [
+            140
+          ]
+        ],
+        "gap_width": 20
+      },
+      "tracks": {
+        "mode": "gaps",
+        "extra": 1
+      },
+      "groves": [
+        {
+          "x": 150,
+          "y": 250,
+          "r": 12
+        }
+      ],
+      "craters": 50,
+      "fields": {
+        "tones": [
+          "stubble",
+          "plowed",
+          "fallow"
+        ],
+        "wavy": 8
+      },
+      "subtitle": "Two belts 120 m apart: wide open strips where long range and thin cover decide the fight."
+    },
+    {
+      "name": "Sector Double Front",
+      "file": "sector-double-front",
+      "sector": "Sector 31",
+      "seed": 4611,
+      "idea": "Two spawns (left and right top). The enemy comes from two sides at once.",
+      "expect_lanes": 2,
+      "spawns": [
+        30,
+        170
+      ],
+      "belts": {
+        "count": 3,
+        "y0": 95,
+        "spacing": 95,
+        "gap_x": [
+          [
+            65
+          ],
+          [
+            120
+          ],
+          [
+            75
+          ]
+        ],
+        "gap_width": 18
+      },
+      "tracks": {
+        "mode": "gaps",
+        "extra": 1
+      },
+      "groves": [
+        {
+          "x": 100,
+          "y": 160,
+          "r": 12
+        }
+      ],
+      "pond": {
+        "x": 45,
+        "y": 330,
+        "r": 9
+      },
+      "craters": 60,
+      "fields": {
+        "tones": [
+          "plowed",
+          "stubble",
+          "sunflower"
+        ],
+        "wavy": 6
+      },
+      "subtitle": "Two spawn points at the top corners and three belts with gaps near the middle: the attack comes from both sides."
+    },
+    {
+      "name": "Sector Gauntlet",
+      "file": "sector-gauntlet",
+      "sector": "Sector 32",
+      "seed": 4612,
+      "idea": "4 narrow strips (60 m). The fight never stops; there is no safe place to fall back.",
+      "expect_lanes": 2,
+      "spawns": [
+        150,
+        45
+      ],
+      "belts": {
+        "count": 4,
+        "y0": 80,
+        "spacing": 60,
+        "spacing_jitter": 4,
+        "gap_x": [
+          [
+            150
+          ],
+          [
+            45
+          ],
+          [
+            150
+          ],
+          [
+            45
+          ]
+        ],
+        "gap_width": 20,
+        "width": 12
+      },
+      "tracks": {
+        "mode": "gaps",
+        "extra": 1
+      },
+      "groves": [
+        {
+          "x": 100,
+          "y": 330,
+          "r": 11
+        }
+      ],
+      "craters": 70,
+      "fields": {
+        "tones": [
+          "stubble",
+          "plowed",
+          "rape",
+          "fallow",
+          "sunflower"
+        ],
+        "wavy": 4
+      },
+      "subtitle": "Four belts only 60 m apart with one gap each: four narrow strips, no safe place to fall back."
+    }
+  ]
+}
