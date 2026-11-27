@@ -22,6 +22,7 @@ namespace Treeline.Render
             public float WalkPhase;
             public float MotionAge;
             public int WalkVariant;
+            public int DirectionView;
             public float ShotUntil;
             public float PreviousHp = -1f;
             public float HitUntil;
@@ -522,7 +523,13 @@ namespace Treeline.Render
             bool infantry = attacking && (type == "recruit" || type == "regular" || type == "special_forces");
             if (infantry)
             {
-                if (velocity.sqrMagnitude > 0.000001f) visual.MotionAge = 0f;
+                if (velocity.sqrMagnitude > 0.000001f)
+                {
+                    visual.MotionAge = 0f;
+                    if (type == "recruit")
+                        visual.DirectionView = Mathf.Abs(velocity.x) < Mathf.Abs(velocity.y) * 0.41421356f
+                            ? 0 : velocity.x < 0f ? -1 : 1;
+                }
                 else visual.MotionAge += Time.deltaTime;
 
                 if (visual.MotionAge < 0.15f)
@@ -537,7 +544,10 @@ namespace Treeline.Render
                         float cycle = Mathf.Repeat(visual.WalkPhase, Mathf.PI * 2f) / (Mathf.PI * 2f);
                         frame = cycle < 0.34f ? 0 : cycle < 0.54f ? 1 : cycle < 0.76f ? 2 : 3;
                     }
-                    visual.Body.sprite = sprites.GetWalkFrame(type, frame, visual.WalkVariant);
+                    visual.Body.sprite = type == "recruit" && visual.DirectionView != 0
+                        ? sprites.GetRecruitDiagonalWalkFrame(frame, visual.WalkVariant)
+                        : sprites.GetWalkFrame(type, frame, visual.WalkVariant);
+                    visual.Body.flipX = type == "recruit" && visual.DirectionView > 0;
                     visual.Body.transform.localRotation = Quaternion.identity;
                     float hop = type == "recruit" && visual.WalkVariant == 0 && frame == 2 ? 0.25f : 0f;
                     visual.Body.transform.localPosition = new Vector3(0f, Mathf.Abs(step) * 0.04f + hop, 0f);
@@ -546,13 +556,17 @@ namespace Treeline.Render
                 {
                     visual.Body.transform.localRotation = Quaternion.identity;
                     visual.Body.transform.localPosition = Vector3.zero;
-                    visual.Body.sprite = sprites.GetWalkFrame(type, 1, visual.WalkVariant);
+                    visual.Body.sprite = type == "recruit" && visual.DirectionView != 0
+                        ? sprites.GetRecruitDiagonalWalkFrame(1, visual.WalkVariant)
+                        : sprites.GetWalkFrame(type, 1, visual.WalkVariant);
+                    visual.Body.flipX = type == "recruit" && visual.DirectionView > 0;
                 }
                 if (Time.time < visual.ShotUntil)
                 {
                     float shotElapsed = 0.3f - (visual.ShotUntil - Time.time);
                     int shotFrame = shotElapsed < 0.08f ? 0 : shotElapsed < 0.18f ? 1 : 2;
                     visual.Body.sprite = sprites.GetInfantryShootFrame(type, shotFrame, visual.WalkVariant);
+                    visual.Body.flipX = false;
                     visual.Body.transform.localRotation = Quaternion.identity;
                     visual.Body.transform.localPosition = Vector3.zero;
                     if (visual.MuzzleFlash != null)

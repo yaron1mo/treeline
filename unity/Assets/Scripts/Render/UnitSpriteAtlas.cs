@@ -58,6 +58,8 @@ namespace Treeline.Render
         readonly Dictionary<string, Sprite[]> walkFrames =
             new Dictionary<string, Sprite[]>(StringComparer.OrdinalIgnoreCase);
         Sprite[] recruitCrutchFrames;
+        Sprite[] recruitDiagonalWalkFrames;
+        Sprite[] recruitDiagonalCrutchFrames;
         readonly List<Texture2D> walkTextures = new List<Texture2D>();
         readonly Dictionary<string, Sprite> aimSprites = new Dictionary<string, Sprite>();
         readonly Dictionary<string, Sprite> headlessSprites = new Dictionary<string, Sprite>();
@@ -213,12 +215,27 @@ namespace Treeline.Render
                     for (int frame = 0; frame < frameCount; frame++)
                         recruitCrutchFrames[frame] = Sprite.Create(crutch, new Rect(frame * size, 0, size, size),
                             new Vector2(0.5f, 0.5f), size / 12f, 0, SpriteMeshType.FullRect);
+                    recruitDiagonalWalkFrames = LoadRecruitDiagonalWalk("diagonal_walk");
+                    recruitDiagonalCrutchFrames = LoadRecruitDiagonalWalk("diagonal_crutch_walk");
                 }
             }
         }
 
         public Sprite GetWalkFrame(string unitId, int frame, int variant = 0) =>
             unitId == "recruit" && variant == 0 ? recruitCrutchFrames[frame] : walkFrames[unitId][frame];
+
+        Sprite[] LoadRecruitDiagonalWalk(string pose)
+        {
+            var texture = LoadInfantryTexture("recruit", pose);
+            var frames = new Sprite[4];
+            for (int frame = 0; frame < frames.Length; frame++)
+                frames[frame] = Sprite.Create(texture, new Rect(frame * 64, 0, 64, 64),
+                    new Vector2(0.5f, 0.5f), 64f / 12f, 0, SpriteMeshType.FullRect);
+            return frames;
+        }
+
+        public Sprite GetRecruitDiagonalWalkFrame(int frame, int variant) =>
+            variant == 0 ? recruitDiagonalCrutchFrames[frame] : recruitDiagonalWalkFrames[frame];
 
         public Sprite GetAim(string unitId) => aimSprites[unitId];
         public Sprite GetHeadless(string unitId) => headlessSprites[unitId];
@@ -403,6 +420,10 @@ namespace Treeline.Render
             infantryShootFrames.Clear();
             if (recruitCrutchFrames != null)
                 foreach (var frame in recruitCrutchFrames) UnityEngine.Object.Destroy(frame);
+            if (recruitDiagonalWalkFrames != null)
+                foreach (var frame in recruitDiagonalWalkFrames) UnityEngine.Object.Destroy(frame);
+            if (recruitDiagonalCrutchFrames != null)
+                foreach (var frame in recruitDiagonalCrutchFrames) UnityEngine.Object.Destroy(frame);
             foreach (var sprite in cleanSnouts.Values) UnityEngine.Object.Destroy(sprite);
             foreach (var sprite in looseHelmets.Values) UnityEngine.Object.Destroy(sprite);
             foreach (var sprite in bareBodies.Values) UnityEngine.Object.Destroy(sprite);
