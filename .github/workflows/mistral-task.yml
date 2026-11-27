@@ -1,5 +1,5 @@
 name: Mistral task
-run-name: ${{ github.event.issue.title || format('Restart issue #{0}', github.event.inputs.issue) }}
+run-name: "${{ github.event.issue.title || format('Restart issue #{0}', github.event.inputs.issue) }}"
 # Agent office, stage 1 (2026-11-26). The label "agent:mistral" on an issue starts Mistral Vibe CLI on Yaroslav's
 # Windows computer (the self-hosted Windows runner MASHINA), with his own Mistral login. No API key.
 # One task at a time. When the computer or the runner window is off, the job waits in the queue.
