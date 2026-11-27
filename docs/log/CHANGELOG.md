@@ -1,5 +1,7 @@
 # Change log
 
+- 2026-11-27 — [codex] art — Add a recruit hit GIF for review.
+
 - 2026-11-27 — [codex] render — Add a short infantry hit reaction and show DOUBLE KILL for 2 kills.
 
 - 2026-11-27 ? [codex] art ? Add a GIF of the current recruit fall frames.
