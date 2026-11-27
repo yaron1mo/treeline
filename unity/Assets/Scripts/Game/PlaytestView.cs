@@ -169,6 +169,7 @@ namespace Treeline.Game
                 GameObject artUnits = GameObject.Find("Unit sprites");
                 if (artUnits != null && battle != null)
                 {
+                    artUnits.SendMessage("BindUnitTable", units, SendMessageOptions.DontRequireReceiver);
                     artUnits.SendMessage("BindBattle", battle, SendMessageOptions.DontRequireReceiver);
                     spritesBound = true;
                 }

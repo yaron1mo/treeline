@@ -66,6 +66,7 @@ namespace Treeline.Render
         Sprite muzzleSprite;
 
         UnitSpriteAtlas sprites;
+        UnitTable units;
         Battle battle;
         BattlefieldEffects effects;
         readonly Dictionary<int, float> previousShotTimes = new Dictionary<int, float>();
@@ -88,6 +89,12 @@ namespace Treeline.Render
             widthMetres = width;
             heightMetres = height;
             bloodEnabled = PlayerPrefs.GetInt(BloodSetting, 1) == 1;
+            if (units == null)
+            {
+                string path = System.IO.Path.Combine(Application.dataPath, "Data", "units.csv");
+                if (System.IO.File.Exists(path))
+                    units = UnitTable.Parse(System.IO.File.ReadAllText(path));
+            }
             if (sprites == null)
             {
                 try { sprites = new UnitSpriteAtlas(); }
@@ -104,6 +111,8 @@ namespace Treeline.Render
         /// If bound, the catalog is hidden automatically and actual combat units are shown.
         /// </summary>
         public void BindEffects(BattlefieldEffects value) { effects = value; }
+
+        public void BindUnitTable(UnitTable value) { units = value; }
 
         public void BindBattle(Battle current)
         {
@@ -155,7 +164,8 @@ namespace Treeline.Render
             var root = new GameObject("Unit " + unitId + (key > 0 ? " #" + key : ""));
             root.transform.SetParent(transform, false);
             root.transform.localPosition = World(location);
-            float scale = DisplayScale(unitId);
+            float scale = units != null && units.TryGet(unitId, out var definition)
+                && definition.DisplayScale > 0f ? definition.DisplayScale : 1f;
             root.transform.localScale = Vector3.one * scale;
 
             var silhouette = new GameObject("Shadow");
@@ -184,19 +194,6 @@ namespace Treeline.Render
                 WalkPhase = key * 1.7f,
                 WalkVariant = unitId == "recruit" && key > 0 ? key % 5 : 0
             };
-        }
-
-        static float DisplayScale(string id)
-        {
-            if (id == "recruit" || id == "regular" || id == "special_forces") return 1.3417f;
-            if (id == "old_tank" || id == "modern_tank") return 0.86f;
-            if (id == "helicopter" || id == "one_way_drone") return 1.0f;
-            if (id == "ifv" || id == "mrap" || id == "van") return 0.72f;
-            if (id == "buggy" || id == "motorbike") return 0.55f;
-            if (id == "air_defence") return 0.68f;
-            if (id == "fpv" || id == "recon_uav" || id == "recon_drone") return 0.39f;
-            if (id == "mortar" || id == "anti_tank") return 0.45f;
-            return 0.40f;
         }
 
         Vector3 World(Vector2 loc) => new Vector3(

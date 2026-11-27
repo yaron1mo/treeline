@@ -10,6 +10,7 @@ namespace Treeline.Sim
         public string Id = "", Name = "", Side = "", Type = "", Subtype = "", Behaviour = "", WeaponClass = "";
         public string DamageType = "", Armour = "", TargetableBy = "";
         public float Hp, SpeedMps, SightRangeM, RangeM, BuildCost;
+        public float DisplayScale = 1f;
         /// <summary>Price rise after each purchase (units.csv cost_increase): "25" adds 25 per unit bought, "25%"
         /// multiplies the price by 1.25 per unit bought. Empty = the price never changes (Yaroslav 2026-11-17, recon drone).</summary>
         public float CostIncrease;
@@ -138,6 +139,7 @@ namespace Treeline.Sim
                     SightRangeM = Num(col, r, "sight_range_m"),
                     RangeM = Num(col, r, "range_m"),
                     BuildCost = Num(col, r, "build_cost"),
+                    DisplayScale = NumOr(col, r, "display_scale", 1f),
                     ProjectileSpeedMps = Num(col, r, "projectile_speed_mps"),
                     Guided = Cell(col, r, "guided").Equals("TRUE", StringComparison.OrdinalIgnoreCase),
                     HitRadiusM = Num(col, r, "hit_radius_m"),

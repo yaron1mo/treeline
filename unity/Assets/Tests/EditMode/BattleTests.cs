@@ -132,6 +132,9 @@ namespace Treeline.Tests
             Assert.IsTrue(t.Get("machine_gun").IsDefence);
             Assert.Greater(t.Get("machine_gun").BuildCost, 0f);
             Assert.AreEqual("Machine gunner", t.Get("machine_gun").Name);
+            Assert.AreEqual(1.3417f, t.Get("recruit").DisplayScale, 0.0001f);
+            Assert.AreEqual(0.39f, t.Get("fpv").DisplayScale, 0.0001f);
+            foreach (var unit in t.All) Assert.Greater(unit.DisplayScale, 0f, unit.Id);
         }
     }
 }
