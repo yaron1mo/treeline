@@ -53,7 +53,7 @@ for name, im in zip(('recruit','experienced','veteran'), images):
     (assets / ('defender_' + name + '.txt.meta')).write_text('fileFormatVersion: 2\nguid: ' + __import__('hashlib').md5(('treeline-defender-'+name).encode()).hexdigest() + '\nTextScriptImporter:\n  externalObjects: {}\n  userData: \n  assetBundleName: \n  assetBundleVariant: \n')
 # Compare the existing rifle-squad tile and the new art at native size and 4x.
 from unit_atlas import unpack
-old = unpack().crop((288,48,336,96)).resize((64,64), Image.Resampling.NEAREST)
+old = unpack().crop((288,48,336,96))
 pigs = [load('infantry_'+n+'_idle.txt') for n in ('recruit','regular','special_forces')]
 sheet = Image.new('RGB',(1120, 6*310+80),'#d4ccb7')
 d = ImageDraw.Draw(sheet)
@@ -66,6 +66,6 @@ for i,(label,before,after) in enumerate([(n,p,p) for n,p in zip(('Pig recruit (k
         x=40+j*520
         d.text((x,y+25),'PR #8' if j==0 else 'Refresh',font=font,fill='#202821')
         sheet.paste(im,(x,y+53),im)
-        big=im.resize((256,256),Image.Resampling.NEAREST)
+        big=im.resize((im.width * 4, im.height * 4),Image.Resampling.NEAREST)
         sheet.paste(big,(x+100,y+45),big)
 sheet.save(out/'before-after.png')
