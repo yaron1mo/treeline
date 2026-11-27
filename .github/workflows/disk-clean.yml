@@ -23,16 +23,17 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          $ErrorActionPreference = "Continue"   # npm and uv write notes to stderr; that is not an error
           function Free { "{0:N1} GB" -f ((Get-PSDrive C).Free / 1GB) }
           $out = New-Object System.Collections.Generic.List[string]
           $out.Add("### Cache clean")
           $out.Add("- Free on C before: $(Free)")
-          try { npm cache clean --force 2>&1 | Out-Null; $out.Add("- npm cache: cleaned") } catch { $out.Add("- npm cache: error $_") }
+          cmd /c "npm cache clean --force >nul 2>&1"; $out.Add("- npm cache: exit $LASTEXITCODE")
           $before = (Get-ChildItem -LiteralPath $env:TEMP -Force -ErrorAction SilentlyContinue | Measure-Object).Count
           Get-ChildItem -LiteralPath $env:TEMP -Force -ErrorAction SilentlyContinue | ForEach-Object { Remove-Item -LiteralPath $_.FullName -Recurse -Force -ErrorAction SilentlyContinue }
           $after = (Get-ChildItem -LiteralPath $env:TEMP -Force -ErrorAction SilentlyContinue | Measure-Object).Count
           $out.Add("- Temp: $before items before, $after left (in use)")
-          try { uv cache clean 2>&1 | Out-Null; $out.Add("- uv cache: cleaned") } catch { $out.Add("- uv cache: error $_") }
+          cmd /c "uv cache clean >nul 2>&1"; $out.Add("- uv cache: exit $LASTEXITCODE")
           $out.Add("- Free on C after: $(Free)")
           $f = "$env:RUNNER_TEMP\clean.md"
           [System.IO.File]::WriteAllLines($f, $out, (New-Object System.Text.UTF8Encoding $false))
