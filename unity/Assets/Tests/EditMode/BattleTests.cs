@@ -34,6 +34,15 @@ namespace Treeline.Tests
         }
 
         [Test]
+        public void UnitTable_ReadsDisplayScale()
+        {
+            var table = UnitTable.Parse(File.ReadAllText(Path.Combine(Application.dataPath, "Data", "units.csv")));
+            Assert.AreEqual(1.3417f, table.Get("recruit").DisplayScale, 0.0001f);
+            Assert.AreEqual(0.39f, table.Get("fpv").DisplayScale, 0.0001f);
+            Assert.AreEqual(0.4f, UnitTable.Parse(Units).Get("regular").DisplayScale, 0.0001f);
+        }
+
+        [Test]
         public void Preparation_PlacingAndMovingAreInstant()
         {
             var b = Open();

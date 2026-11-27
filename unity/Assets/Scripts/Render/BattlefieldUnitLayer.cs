@@ -69,6 +69,7 @@ namespace Treeline.Render
 
         UnitSpriteAtlas sprites;
         Battle battle;
+        UnitTable unitTable;
         BattlefieldEffects effects;
         readonly Dictionary<int, float> previousShotTimes = new Dictionary<int, float>();
         readonly Dictionary<int, Projectile> priorProjectiles = new Dictionary<int, Projectile>();
@@ -90,6 +91,12 @@ namespace Treeline.Render
             widthMetres = width;
             heightMetres = height;
             bloodEnabled = PlayerPrefs.GetInt(BloodSetting, 1) == 1;
+            string path = System.IO.Path.Combine(Application.dataPath, "Data", "units.csv");
+            if (System.IO.File.Exists(path))
+            {
+                try { unitTable = UnitTable.Parse(System.IO.File.ReadAllText(path)); }
+                catch (Exception ex) { Debug.LogError("Cannot read unit display scales: " + ex.Message); }
+            }
             if (sprites == null)
             {
                 try { sprites = new UnitSpriteAtlas(); }
@@ -188,16 +195,9 @@ namespace Treeline.Render
             };
         }
 
-        static float DisplayScale(string id)
+        float DisplayScale(string id)
         {
-            if (id == "recruit" || id == "regular" || id == "special_forces") return 1.3417f;
-            if (id == "old_tank" || id == "modern_tank") return 0.86f;
-            if (id == "helicopter" || id == "one_way_drone") return 1.0f;
-            if (id == "ifv" || id == "mrap" || id == "van") return 0.72f;
-            if (id == "buggy" || id == "motorbike") return 0.55f;
-            if (id == "air_defence") return 0.68f;
-            if (id == "fpv" || id == "recon_uav" || id == "recon_drone") return 0.39f;
-            if (id == "mortar" || id == "anti_tank") return 0.45f;
+            if (unitTable != null && unitTable.TryGet(id, out var definition)) return definition.DisplayScale;
             return 0.40f;
         }
 

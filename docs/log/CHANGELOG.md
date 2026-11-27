@@ -1,3 +1,5 @@
+2026-11-27 ? [Codex] Data and Render ? Add display_scale to unit rows. Use these values for unit art. Keep the current sizes. This changes Claude-owned data.
+
 2026-11-27 ? [Codex] Render ? Keep blood marks until the battle ends, with a limit. Show DOUBLE KILL for 2 kills. Limit corpses to protect performance.
 
 # Change log
