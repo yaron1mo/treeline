@@ -52,7 +52,7 @@ jobs:
               return None
           for wf, agent in (("mistral-task.yml", "mistral"), ("codex-task.yml", "codex")):
               runs = [r for r in api(f"repos/{repo}/actions/workflows/{wf}/runs?per_page=20").get("workflow_runs", [])
-                      if r["conclusion"] not in ("skipped",)]
+                      if r["conclusion"] not in ("skipped", "cancelled") and r["event"] in ("issues", "workflow_dispatch")]
               if not runs: continue
               last = runs[0]
               issue = issue_no(last)
