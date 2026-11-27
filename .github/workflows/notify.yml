@@ -15,7 +15,11 @@ jobs:
     if: >-
       (github.event.action == 'labeled' && github.event.label.name == 'needs:yaroslav') ||
       (github.event.action == 'closed' && github.event.pull_request.merged) ||
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'failure')
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'failure') ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' &&
+        (github.event.workflow_run.name == 'Mistral task' || github.event.workflow_run.name == 'Codex task')) ||
+      (github.event_name == 'issues' && github.event.action == 'labeled' &&
+        (github.event.label.name == 'agent:mistral' || github.event.label.name == 'agent:codex'))
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -29,11 +33,21 @@ jobs:
           ISSUE_URL: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}
           RUN_NAME: ${{ github.event.workflow_run.name }}
           RUN_URL: ${{ github.event.workflow_run.html_url }}
+          RUN_TITLE: ${{ github.event.workflow_run.display_title }}
+          RUN_OK: ${{ github.event.workflow_run.conclusion }}
+          LABEL: ${{ github.event.label.name }}
         run: |
           if [ -z "$TG_TOKEN" ] || [ -z "$TG_CHAT" ]; then echo "No Telegram secrets: token set=$([ -n "$TG_TOKEN" ] && echo yes || echo no), chat set=$([ -n "$TG_CHAT" ] && echo yes || echo no)"; exit 1; fi
-          if [ "$EVENT" = "workflow_run" ]; then
-            msg="❌ Збій: $RUN_NAME
+          if [ "$EVENT" = "workflow_run" ] && [ "$RUN_OK" = "success" ]; then
+            msg="🏁 $RUN_NAME завершено: $RUN_TITLE
+          Далі: рев'ю Claude в PR.
           $RUN_URL"
+          elif [ "$EVENT" = "workflow_run" ]; then
+            msg="❌ Збій: $RUN_NAME — $RUN_TITLE
+          $RUN_URL"
+          elif [ "$LABEL" = "agent:mistral" ] || [ "$LABEL" = "agent:codex" ]; then
+            msg="▶️ Старт ${LABEL#agent:}: $ISSUE_TITLE
+          $ISSUE_URL"
           elif [ "$ACTION" = "closed" ]; then
             msg="✅ Змержено: $ISSUE_TITLE
           $ISSUE_URL"
