@@ -4,8 +4,9 @@ Written by Claude (CTO) from Yaroslav's decisions, 2026-11-27. Every visual task
 
 ## 1. Fixed (decided)
 
+- **Style base (Yaroslav, 2026-11-27): the PR #8 unit art is the base.** Round 3 (PR #31) looked too childish ("a game for five-year-olds"); its pixel variant has some good points and is a secondary source. Combine, improve and complete; do not start a new style.
 - **Genre and tone: a satire.** Yaroslav (2026-11-27): the game is a satire in which the invaders are pigs. It is not a shooter or a simulator. **No hyper-realism and no horror.** Stylised, readable, with dark humour.
-- **Attackers: pigs in helmets** in the gear of a modern invading army. They are **ridiculous, not scary**: stupid, clumsy, greedy (looting), cowardly. No horror-monster fangs, no rotting "zombie" look.
+- **Attackers: zombie pigs in helmets** in the gear of a modern invading army (the PR #8 pig is the reference): angry, aggressive, they push forward to kill you; gross and dirty (snot from the snout, drool). The satire comes from the grossness and the stupidity, not from cute cartoon shapes. Not a realistic horror monster either.
 - **Defenders: soldiers in modern uniform. No zombies on the defence side** (Yaroslav, 2026-11-27): no rotting flesh, no decay stage.
   - Low level: a **human** soldier.
   - Middle level: a human with more experience (more gear, scars, beard, more patches), still a human.
