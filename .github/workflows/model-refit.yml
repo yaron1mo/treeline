@@ -22,7 +22,7 @@ on:
         required: false
         default: ''
   push:
-    branches: ['codex/playable-steppe-patch-integration', 'mistral/model-refit']  # TEMP test trigger, removed before the PR
+    branches: ['codex/playable-steppe-patch-integration']
     paths:
       - 'unity/Assets/Data/units.csv'
       - 'unity/Assets/Data/armour.csv'
