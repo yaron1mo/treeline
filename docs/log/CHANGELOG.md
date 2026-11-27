@@ -1,5 +1,7 @@
 # Change log
 
+- 2026-11-27 ? [codex] art ? Add straight crutch falls and new fall transition frames.
+
 - 2026-11-27 ? [codex] art ? Add diagonal fall frames for recruits with and without a crutch.
 
 - 2026-11-27 ? [codex] art ? Add diagonal shooting poses for recruits with and without a crutch.

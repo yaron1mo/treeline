@@ -281,8 +281,9 @@ namespace Treeline.Render
         }
         public Sprite GetInfantryFallFrame(string unitId, int frame, bool diagonal = false, int variant = 1)
         {
-            string key = diagonal && unitId == "recruit"
-                ? (variant == 0 ? "recruit_diagonal_crutch" : "recruit_diagonal") : unitId;
+            string key = unitId == "recruit" && variant == 0
+                ? (diagonal ? "recruit_diagonal_crutch" : "recruit_crutch")
+                : diagonal && unitId == "recruit" ? "recruit_diagonal" : unitId;
             if (!infantryFallFrames.TryGetValue(key, out var frames))
             {
                 Texture2D texture = LoadInfantryTexture(key, "fall");
@@ -297,8 +298,9 @@ namespace Treeline.Render
 
         public Sprite GetBareFallFrame(string unitId, int frame, bool diagonal = false, int variant = 1)
         {
-            string artId = diagonal && unitId == "recruit"
-                ? (variant == 0 ? "recruit_diagonal_crutch" : "recruit_diagonal") : unitId;
+            string artId = unitId == "recruit" && variant == 0
+                ? (diagonal ? "recruit_diagonal_crutch" : "recruit_crutch")
+                : diagonal && unitId == "recruit" ? "recruit_diagonal" : unitId;
             string cacheKey = artId + "_bare";
             if (!infantryFallFrames.TryGetValue(cacheKey, out var frames))
             {
