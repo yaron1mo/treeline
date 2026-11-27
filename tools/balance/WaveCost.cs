@@ -4,6 +4,8 @@
 // (stop table), then buys those defenders in proportion until the money ends. Each entry point gets one machine gunner
 // first, and a recon drone when a long gun needs one. Defenders go to the lanes in turn (tools/balance/Routes.cs:
 // where the traced routes cross the placing zone, so fields without a spawns list work too).
+// Houses near a route and hill tops that see it are scored as candidate spots first, per defender type
+// (Routes.TerrainSpots, 2026-11-28, issue #49).
 // A wave is held when the line takes no more than line_health / number of waves damage.
 // The cost is the smallest budget (to 25 points) that holds the wave on at least 8 of 10 seeds.
 // The result is an upper bound: the scripted player plays worse than a person.
@@ -124,9 +126,10 @@ static class WaveCost
     static bool Fight(Field field, int wave, float budget, int seed, float allowance)
     {
         var grid = new NavGrid(field, obstacles);
-        var b = new Battle(grid, units, budget, new VisionMap(field, obstacles), armour, -1f, seed, rules);
+        var vision = new VisionMap(field, obstacles);
+        var b = new Battle(grid, units, budget, vision, armour, -1f, seed, rules);
         b.PlacementMinY = rules.PlacementZoneStart * field.Height;
-        Buy(b, field, grid, wave, new Random(seed));
+        Buy(b, field, grid, vision, wave, new Random(seed));
         plan.Queue(b, wave);
         b.StartRound();
         bool debug = Environment.GetEnvironmentVariable("WAVECOST_DEBUG") != null;
@@ -154,6 +157,7 @@ static class WaveCost
 
     static Battle cb;
     static Field cf;
+    static VisionMap cvision;
     static Random crng;
     static List<Routes.Lane> lanes;
     static int next;
@@ -164,6 +168,20 @@ static class WaveCost
         var b = cb; var f = cf; var rng = crng;
         if (!Ok(id)) return false;
         if (b.Budget < b.CostOf(id)) return false;
+        // Houses and hill tops first when they suit this type (Routes.TerrainSpots, issue #49), then the lanes.
+        var spots = Routes.TerrainSpots(f.Name, f, cvision, lanes, units.Get(id), f.Height * 0.6f, f.Height * 0.9f);
+        foreach (var s in spots)
+        {
+            if (s.Score <= Routes.LaneScore) break;   // not worth it for this type: use the lane points below
+            if (s.House >= 0 && b.HouseOccupant(s.House) >= 0) continue;
+            if (b.TryPlace(id, s.X, s.Y, out _, out _))
+            {
+                next++;
+                have.TryGetValue(id, out int h);
+                have[id] = h + 1;
+                return true;
+            }
+        }
         for (int tries = 0; tries < 20; tries++)
         {
             Routes.Near(lanes[next % lanes.Count], rng, f.Width, f.Height * 0.6f, f.Height * 0.9f, out float x, out float y);
@@ -181,7 +199,7 @@ static class WaveCost
     static float Stop(string defender, string attacker) =>
         stop.TryGetValue(attacker, out var m) && m.TryGetValue(defender, out var v) ? v : 0f;
 
-    static void Buy(Battle b, Field f, NavGrid grid, int wave, Random rng)
+    static void Buy(Battle b, Field f, NavGrid grid, VisionMap vision, int wave, Random rng)
     {
         // Need: for each group, the cheapest defender per attacker stopped; how many of it the group needs.
         var need = new Dictionary<string, float>();
@@ -201,7 +219,7 @@ static class WaveCost
             need.TryGetValue(best, out float n);
             need[best] = n + g.Count / Stop(best, g.UnitId);
         }
-        cb = b; cf = f; crng = rng; next = 0; have = new Dictionary<string, int>();
+        cb = b; cf = f; cvision = vision; crng = rng; next = 0; have = new Dictionary<string, int>();
         lanes = Routes.Of(f.Name, grid, f.Height * 0.6f, f.Height * 0.9f);
         // Every entry point first gets someone who sees it.
         for (int i = 0; i < lanes.Count; i++) if (!Put("machine_gun")) Put("rifle_squad");
