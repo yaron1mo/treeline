@@ -1,0 +1,47 @@
+name: Disk report
+# Runs on Yaroslav's Windows computer (self-hosted runner) by hand: free space and the largest folders (2026-11-27).
+# The result is a comment on the issue given as input.
+on:
+  workflow_dispatch:
+    inputs:
+      issue:
+        description: 'Issue number for the report'
+        required: true
+
+jobs:
+  disk:
+    runs-on: [self-hosted, Windows]
+    timeout-minutes: 30
+    permissions:
+      issues: write
+    defaults:
+      run:
+        shell: powershell
+    steps:
+      - name: Measure
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $out = New-Object System.Collections.Generic.List[string]
+          $out.Add("### Drives")
+          Get-PSDrive -PSProvider FileSystem | ForEach-Object { if ($_.Used -ne $null) { $out.Add(("- {0}: used {1:N1} GB, free {2:N1} GB" -f $_.Name, ($_.Used/1GB), ($_.Free/1GB))) } }
+          function SizeOf($p) { try { (Get-ChildItem -LiteralPath $p -Recurse -Force -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum / 1GB } catch { 0 } }
+          $roots = @("C:\actions-runner", "C:\actions-runner-2", "$env:USERPROFILE", "C:\Program Files\Unity", "C:\ProgramData", "C:\Windows\Temp")
+          $rows = @()
+          foreach ($r in $roots) {
+            if (-not (Test-Path $r)) { continue }
+            Get-ChildItem -LiteralPath $r -Force -Directory -ErrorAction SilentlyContinue | ForEach-Object {
+              $rows += [pscustomobject]@{ Path = $_.FullName; GB = (SizeOf $_.FullName) }
+            }
+          }
+          $out.Add("")
+          $out.Add("### Largest folders (one level below: actions-runner, actions-runner-2, user profile, Unity, ProgramData, Windows Temp)")
+          $rows | Sort-Object GB -Descending | Select-Object -First 30 | ForEach-Object { $out.Add(("- {0:N1} GB  {1}" -f $_.GB, $_.Path)) }
+          $lad = "$env:LOCALAPPDATA"
+          $out.Add("")
+          $out.Add("### AppData\Local (largest)")
+          Get-ChildItem -LiteralPath $lad -Force -Directory -ErrorAction SilentlyContinue | ForEach-Object { [pscustomobject]@{ Path = $_.FullName; GB = (SizeOf $_.FullName) } } | Sort-Object GB -Descending | Select-Object -First 12 | ForEach-Object { $out.Add(("- {0:N1} GB  {1}" -f $_.GB, $_.Path)) }
+          $f = "$env:RUNNER_TEMP\disk.md"
+          [System.IO.File]::WriteAllLines($f, $out, (New-Object System.Text.UTF8Encoding $false))
+          Get-Content $f
+          gh issue comment ${{ github.event.inputs.issue }} --repo ${{ github.repository }} --body-file $f
