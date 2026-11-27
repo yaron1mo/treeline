@@ -414,12 +414,13 @@ namespace Treeline.Render
         void UpdateFallPose(Visual fallen, float elapsed)
         {
             Transform body = fallen.Body.transform;
-            if (fallen.DeathVariant == 1)
+            bool diagonal = fallen.UnitId == "recruit" && fallen.DirectionView != 0;
+            if (fallen.DeathVariant == 1 || diagonal)
             {
                 int frame = Mathf.Min(5, Mathf.FloorToInt(elapsed / 0.09f));
-                fallen.Body.sprite = fallen.HelmetComesOff ? sprites.GetBareFallFrame(fallen.UnitId, frame)
-                    : sprites.GetInfantryFallFrame(fallen.UnitId, frame);
-                fallen.Snout.gameObject.SetActive(frame >= 4);
+                fallen.Body.sprite = fallen.HelmetComesOff ? sprites.GetBareFallFrame(fallen.UnitId, frame, diagonal, fallen.WalkVariant)
+                    : sprites.GetInfantryFallFrame(fallen.UnitId, frame, diagonal, fallen.WalkVariant);
+                fallen.Snout.gameObject.SetActive(!diagonal && frame >= 4);
                 if (fallen.HelmetComesOff)
                 {
                     float time = Mathf.Clamp01(elapsed / 0.65f);

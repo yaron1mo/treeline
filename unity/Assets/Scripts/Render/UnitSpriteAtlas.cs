@@ -279,26 +279,30 @@ namespace Treeline.Render
             }
             return frames[frame];
         }
-        public Sprite GetInfantryFallFrame(string unitId, int frame)
+        public Sprite GetInfantryFallFrame(string unitId, int frame, bool diagonal = false, int variant = 1)
         {
-            if (!infantryFallFrames.TryGetValue(unitId, out var frames))
+            string key = diagonal && unitId == "recruit"
+                ? (variant == 0 ? "recruit_diagonal_crutch" : "recruit_diagonal") : unitId;
+            if (!infantryFallFrames.TryGetValue(key, out var frames))
             {
-                Texture2D texture = LoadInfantryTexture(unitId, "fall");
+                Texture2D texture = LoadInfantryTexture(key, "fall");
                 frames = new Sprite[6];
                 for (int i = 0; i < frames.Length; i++)
                     frames[i] = Sprite.Create(texture, new Rect(i * 64, 0, 64, 64),
                         new Vector2(0.5f, 0.5f), 64f / 12f, 0, SpriteMeshType.FullRect);
-                infantryFallFrames[unitId] = frames;
+                infantryFallFrames[key] = frames;
             }
             return frames[frame];
         }
 
-        public Sprite GetBareFallFrame(string unitId, int frame)
+        public Sprite GetBareFallFrame(string unitId, int frame, bool diagonal = false, int variant = 1)
         {
-            string cacheKey = unitId + "_bare";
+            string artId = diagonal && unitId == "recruit"
+                ? (variant == 0 ? "recruit_diagonal_crutch" : "recruit_diagonal") : unitId;
+            string cacheKey = artId + "_bare";
             if (!infantryFallFrames.TryGetValue(cacheKey, out var frames))
             {
-                Texture2D texture = LoadInfantryTexture(unitId, "bare_fall");
+                Texture2D texture = LoadInfantryTexture(artId, "bare_fall");
                 frames = new Sprite[6];
                 for (int i = 0; i < frames.Length; i++)
                     frames[i] = Sprite.Create(texture, new Rect(i * 64, 0, 64, 64),
