@@ -1,12 +1,21 @@
 name: Telegram images
 # Sends new concept art, previews and map images to Yaroslav's Telegram when an agent pushes them (2026-11-27).
-# Paths: docs/design/visual/**, docs/maps/**. At most 10 images per push.
+# Art (docs/design/visual/**) goes as a document: Telegram does not compress it, so pixel details stay exact.
+# Map previews go as photos. At most 10 images per push. By hand: resend files of a branch that match a pattern.
 on:
   push:
     branches: ['codex/**', 'mistral/**', 'design/**']
     paths:
       - 'docs/design/visual/**'
       - 'docs/maps/**'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Branch'
+        required: true
+      pattern:
+        description: 'Path pattern (grep -E), for example docs/design/visual/density/'
+        required: true
 
 jobs:
   send:
@@ -15,27 +24,36 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.inputs.ref || github.ref }}
           fetch-depth: 0
           lfs: true
-      - name: Send the new images
+      - name: Send the images
         env:
           TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
           BEFORE: ${{ github.event.before }}
           AFTER: ${{ github.sha }}
-          BRANCH: ${{ github.ref_name }}
+          BRANCH: ${{ github.event.inputs.ref || github.ref_name }}
+          PATTERN: ${{ github.event.inputs.pattern }}
         run: |
           if [ -z "$TG_TOKEN" ] || [ -z "$TG_CHAT" ]; then echo "No Telegram secrets"; exit 1; fi
-          if [ "$BEFORE" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$BEFORE" 2>/dev/null; then
-            BEFORE=$(git merge-base origin/codex/playable-steppe-patch-integration "$AFTER" 2>/dev/null || git rev-list --max-parents=0 "$AFTER" | tail -1)
+          if [ -n "$PATTERN" ]; then
+            git ls-files | grep -E "$PATTERN" | grep -iE '\.(png|jpe?g|webp|gif)$' | head -20 > images.txt || true
+          else
+            if [ "$BEFORE" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$BEFORE" 2>/dev/null; then
+              BEFORE=$(git merge-base origin/codex/playable-steppe-patch-integration "$AFTER" 2>/dev/null || git rev-list --max-parents=0 "$AFTER" | tail -1)
+            fi
+            git diff --name-only --diff-filter=AM "$BEFORE" "$AFTER" -- 'docs/design/visual/*' 'docs/maps/*' \
+              | grep -iE '\.(png|jpe?g|webp|gif)$' | head -10 > images.txt || true
           fi
-          git diff --name-only --diff-filter=AM "$BEFORE" "$AFTER" -- 'docs/design/visual/*' 'docs/maps/*' \
-            | grep -iE '\.(png|jpe?g|webp)$' | head -10 > images.txt || true
           echo "Images:"; cat images.txt
           while read -r f; do
             [ -f "$f" ] || continue
-            size=$(stat -c %s "$f")
-            if [ "$size" -gt 9500000 ]; then method=sendDocument; field=document; else method=sendPhoto; field=photo; fi
+            case "$f" in
+              docs/design/visual/*) method=sendDocument; field=document ;;
+              *) method=sendPhoto; field=photo ;;
+            esac
+            [ "$(stat -c %s "$f")" -gt 9500000 ] && { method=sendDocument; field=document; }
             resp=$(curl -s -X POST "https://api.telegram.org/bot${TG_TOKEN}/${method}" \
               -F "chat_id=${TG_CHAT}" -F "${field}=@${f}" -F "caption=🎨 ${BRANCH}: ${f}")
             echo "$f: $(echo "$resp" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("ok"), d.get("description",""))')"
