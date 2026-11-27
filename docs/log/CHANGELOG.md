@@ -1,5 +1,7 @@
 # Change log
 
+- 2026-11-27 — [codex] art — Add 4 pig density studies and a phone capture for review. Add an Editor capture mode for the live wave. The Editor tool is shared work.
+
 - 2026-11-27 — [codex] art — Add the approved pig frames for the density test.
 
 - 2026-11-27 — [claude] tools/unity — `AgentTools.Showroom`: lays out PNG sprites pixel-perfect on a background (for example an in-game capture) and renders a phone-size PNG. For art comparisons when a battle capture shows no units.
