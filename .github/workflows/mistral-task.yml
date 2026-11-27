@@ -1,6 +1,6 @@
 name: Mistral task
 # Agent office, stage 1 (2026-11-26). The label "agent:mistral" on an issue starts Mistral Vibe CLI on Yaroslav's
-# Windows computer (a self-hosted runner with the label "mistral"), with his own Mistral login. No API key.
+# Windows computer (the self-hosted Windows runner MASHINA), with his own Mistral login. No API key.
 # One task at a time. When the computer or the runner window is off, the job waits in the queue.
 # Steps use Windows PowerShell (always present), not bash.
 # Mistral pushes and opens the PR with Yaroslav's own git and gh login on that computer (not GITHUB_TOKEN): a push with
@@ -16,7 +16,7 @@ concurrency:
 jobs:
   task:
     if: github.event.label.name == 'agent:mistral'
-    runs-on: [self-hosted, mistral]
+    runs-on: [self-hosted, Windows]
     timeout-minutes: 240
     permissions:
       contents: read
