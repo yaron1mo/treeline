@@ -1,0 +1,2359 @@
+field,wave,threat,cost,held_at_cost
+Balka and railway,1,40,100,8
+Balka and railway,2,60,200,8
+Balka and railway,3,80,200,8
+Balka and railway,4,100,200,8
+Balka and railway,5,120,200,8
+Balka and railway,6,160,200,8
+Balka and railway,7,200,200,8
+Balka and railway,8,300,300,8
+Balka and railway,9,60,200,8
+Balka and railway,10,90,400,8
+Balka and railway,11,120,700,8
+Balka and railway,12,150,800,8
+Balka and railway,13,180,1200,8
+Balka and railway,14,240,1600,8
+Balka and railway,15,300,2000,8
+Balka and railway,16,450,3100,8
+Balka and railway,17,320,700,8
+Balka and railway,18,480,1400,8
+Balka and railway,19,640,1900,8
+Balka and railway,20,800,2300,8
+Balka and railway,21,960,2700,8
+Balka and railway,22,1280,4200,8
+Balka and railway,111,555,NaN,0
+Balka and railway,112,1350,NaN,0
+Balka and railway,113,750,NaN,0
+Balka and railway,114,860,2300,8
+Balka and railway,115,460,1100,8
+Balka and railway,116,890,2300,8
+Balka and railway,117,490,1100,8
+Balka and railway,118,980,2400,8
+Balka and railway,119,580,1400,8
+Balka and railway,120,1120,NaN,0
+Balka and railway,121,720,NaN,0
+Forest belts,375,450,3525,8
+Forest belts,376,245,1325,8
+Forest belts,377,110,300,8
+Forest belts,378,70,300,8
+Forest belts,379,805,4225,8
+Forest belts,380,1770,9925,8
+Forest belts,381,75,300,8
+Forest belts,382,295,2675,8
+Forest belts,383,2170,9675,8
+Forest belts,384,1450,6725,8
+Forest belts,385,1770,6475,8
+Forest belts,386,95,300,8
+Forest belts,387,115,300,8
+Forest belts,388,365,1200,8
+Forest belts,389,990,7525,8
+Forest belts,390,540,4725,8
+Forest belts,391,1430,7525,8
+Forest belts,392,300,1400,8
+Forest belts,393,1450,6375,8
+Forest belts,394,440,2825,8
+Forest belts,395,95,300,8
+Forest belts,396,810,5825,8
+Forest belts,397,70,300,8
+Forest belts,398,305,1100,8
+Forest belts,399,300,1100,8
+Forest belts,400,245,1425,8
+Forest belts,401,140,500,8
+Forest belts,402,70,300,8
+Forest belts,403,985,5025,8
+Forest belts,404,110,300,8
+Forest belts,405,165,2125,8
+Forest belts,406,95,300,8
+Forest belts,407,300,1700,8
+Forest belts,408,70,300,8
+Forest belts,409,75,300,8
+Forest belts,410,300,900,8
+Forest belts,411,305,1225,8
+Forest belts,412,75,300,8
+Forest belts,413,110,400,8
+Forest belts,414,705,4475,8
+Forest belts,415,680,15475,8
+Forest belts,416,690,11025,8
+Forest belts,417,90,300,8
+Forest belts,418,700,3475,8
+Forest belts,419,195,1925,8
+Forest belts,420,445,2175,8
+Forest belts,421,70,300,8
+Forest belts,422,240,1325,8
+Forest belts,423,170,2075,8
+Forest belts,424,65,300,8
+Forest belts,425,140,400,8
+Forest belts,426,110,500,8
+Forest belts,427,245,1225,8
+Forest belts,428,990,4475,8
+Forest belts,429,440,2725,8
+Forest belts,430,70,300,8
+Forest belts,431,300,1200,8
+Forest belts,432,245,1225,8
+Forest belts,433,665,6075,8
+Forest belts,434,1440,6175,8
+Forest belts,435,205,1875,8
+Forest belts,436,70,300,8
+Forest belts,437,930,6175,8
+Forest belts,438,240,1225,8
+Forest belts,439,770,2125,8
+Forest belts,440,305,1225,8
+Forest belts,441,1720,7425,8
+Forest belts,442,540,3575,8
+Forest belts,443,305,3175,8
+Forest belts,444,1160,5425,8
+Forest belts,445,450,2575,8
+Forest belts,446,810,3975,8
+Forest belts,447,245,1325,8
+Forest belts,448,440,3325,8
+Forest belts,449,165,2075,8
+Forest belts,450,450,3525,8
+Forest belts,451,990,6875,8
+Forest belts,452,1790,9875,8
+Forest belts,453,960,3725,8
+Forest belts,454,365,2375,8
+Forest belts,455,170,2325,8
+Forest belts,456,135,300,8
+Forest belts,457,2180,8475,8
+Forest belts,458,245,1325,8
+Forest belts,459,2120,8675,8
+Forest belts,460,2170,8475,8
+Forest belts,461,440,2075,8
+Forest belts,462,365,2275,8
+Forest belts,463,1130,4175,8
+Forest belts,464,1430,4975,8
+Forest belts,465,450,3025,8
+Forest belts,466,360,2975,8
+Forest belts,467,450,2275,8
+Forest belts,468,245,1125,8
+Forest belts,469,195,2025,8
+Forest belts,470,980,5125,8
+Forest belts,471,70,300,8
+Forest belts,472,135,300,8
+Forest belts,473,305,2875,8
+Forest belts,474,2130,11225,8
+Forest belts,475,90,300,8
+Forest belts,476,1390,5275,8
+Forest belts,477,670,5975,8
+Forest belts,478,1200,5625,8
+Forest belts,479,1190,6875,8
+Forest belts,480,370,700,8
+Forest belts,481,960,4175,8
+Forest belts,482,50,200,8
+Forest belts,483,95,300,8
+Forest belts,484,980,3225,8
+Balka and railway,122,1400,NaN,0
+Balka and railway,123,1000,NaN,0
+Balka and railway,124,1160,NaN,0
+Balka and railway,125,760,NaN,0
+Balka and railway,126,1280,NaN,0
+Balka and railway,127,880,NaN,0
+Balka and railway,128,2000,NaN,0
+Balka and railway,129,1400,NaN,0
+Balka and railway,130,150,200,8
+Balka and railway,131,120,200,8
+Balka and railway,132,240,600,8
+Forest belts,485,165,2075,8
+Forest belts,486,90,300,8
+Forest belts,487,115,500,8
+Forest belts,488,810,2675,8
+Forest belts,489,750,6725,8
+Forest belts,490,195,1875,8
+Forest belts,491,660,6275,8
+Forest belts,492,305,1225,8
+Forest belts,493,195,2025,8
+Forest belts,494,300,3125,8
+Forest belts,495,445,2775,8
+Forest belts,496,140,400,8
+Forest belts,497,2130,8725,8
+Forest belts,498,665,6075,8
+Forest belts,499,50,200,8
+Forest belts,500,65,300,8
+Forest belts,501,95,300,8
+Forest belts,502,75,300,8
+Forest belts,503,195,2025,8
+Forest belts,504,115,300,8
+Forest belts,505,550,1800,8
+Forest belts,506,1410,6275,8
+Forest belts,507,195,2025,8
+Forest belts,508,545,2775,8
+Forest belts,509,980,4175,8
+Forest belts,510,815,3575,8
+Forest belts,511,95,300,8
+Forest belts,512,205,1875,8
+Forest belts,513,450,3575,8
+Forest belts,514,140,400,8
+Forest belts,515,985,5825,8
+Forest belts,516,370,2525,8
+Forest belts,517,545,2725,8
+Forest belts,518,160,2125,8
+Forest belts,519,245,1225,8
+Forest belts,520,450,2875,8
+Forest belts,521,2150,8575,8
+Forest belts,522,1140,8075,8
+Forest belts,523,245,1225,8
+Forest belts,524,540,5275,8
+Forest belts,525,2150,9625,8
+Forest belts,526,75,300,8
+Forest belts,527,245,1225,8
+Forest belts,528,445,2775,8
+Forest belts,529,1790,8475,8
+Forest belts,530,440,2275,8
+Forest belts,531,660,6275,8
+Forest belts,532,1440,5075,8
+Forest belts,533,2130,13175,8
+Forest belts,534,75,300,8
+Forest belts,535,980,5075,8
+Forest belts,536,770,2725,8
+Forest belts,537,550,3075,8
+Forest belts,538,1460,7125,8
+Forest belts,539,110,300,8
+Forest belts,540,165,2125,8
+Forest belts,541,130,300,8
+Forest belts,542,65,300,8
+Forest belts,543,1160,9475,8
+Forest belts,544,2160,8975,8
+Forest belts,545,450,3525,8
+Forest belts,546,1410,4225,8
+Forest belts,547,1160,4675,8
+Forest belts,548,65,300,8
+Forest belts,549,985,3975,8
+Forest belts,550,165,2125,8
+Forest belts,551,1780,7475,8
+Forest belts,552,300,2875,8
+Forest belts,553,50,200,8
+Forest belts,554,95,300,8
+Forest belts,555,790,2775,8
+Forest belts,556,980,3275,8
+Forest belts,557,195,2025,8
+Forest belts,558,545,3275,8
+Forest belts,559,810,7125,8
+Forest belts,560,370,1675,8
+Forest belts,561,1130,8525,8
+Forest belts,562,1150,7575,8
+Forest belts,563,95,300,8
+Forest belts,564,1760,4825,8
+Forest belts,565,135,300,8
+Forest belts,566,50,200,8
+Forest belts,567,1740,8075,8
+Forest belts,568,545,3025,8
+Forest belts,569,450,2625,8
+Forest belts,570,135,300,8
+Forest belts,571,165,2125,8
+Forest belts,572,1440,6625,8
+Forest belts,573,240,1225,8
+Forest belts,574,920,4225,8
+Forest belts,575,800,4475,8
+Forest belts,576,1770,7775,8
+Forest belts,577,1450,5975,8
+Forest belts,578,1760,7025,8
+Forest belts,579,245,1125,8
+Forest belts,580,300,1300,8
+Forest belts,581,805,2400,8
+Forest belts,582,305,1325,8
+Forest belts,583,1400,8525,8
+Forest belts,584,135,300,8
+Forest belts,585,135,300,8
+Forest belts,586,2170,8425,8
+Forest belts,587,960,6025,8
+Forest belts,588,75,300,8
+Forest belts,589,195,2025,8
+Forest belts,590,1400,6275,8
+Forest belts,591,440,2825,8
+Forest belts,592,90,300,8
+Forest belts,593,160,2075,8
+Forest belts,594,195,2025,8
+Balka and railway,133,210,600,8
+Balka and railway,134,380,NaN,0
+Balka and railway,135,350,NaN,0
+Balka and railway,136,660,NaN,0
+Balka and railway,137,630,NaN,0
+Balka and railway,138,420,NaN,0
+Balka and railway,139,390,NaN,0
+Balka and railway,140,540,NaN,0
+Balka and railway,141,510,NaN,0
+Balka and railway,142,1260,NaN,0
+Balka and railway,143,660,NaN,0
+Forest belts,595,245,1225,8
+Forest belts,596,660,6275,8
+Forest belts,597,805,5975,8
+Forest belts,598,245,1325,8
+Forest belts,599,305,1500,8
+Forest belts,600,115,300,8
+Forest belts,601,160,2075,8
+Forest belts,602,450,2625,8
+Forest belts,603,195,1875,8
+Forest belts,604,440,2075,8
+Forest belts,605,65,300,8
+Forest belts,606,165,2075,8
+Forest belts,607,780,3925,8
+Forest belts,608,65,300,8
+Forest belts,609,65,300,8
+Forest belts,610,1460,8525,8
+Forest belts,611,75,300,8
+Forest belts,612,1170,5725,8
+Forest belts,613,980,5425,8
+Forest belts,614,140,400,8
+Forest belts,615,195,2025,8
+Forest belts,616,450,3375,8
+Forest belts,617,1180,8075,8
+Forest belts,618,770,5425,8
+Forest belts,619,300,1100,8
+Forest belts,620,65,300,8
+Forest belts,621,130,300,8
+Forest belts,622,65,300,8
+Forest belts,623,65,300,8
+Forest belts,624,295,1325,8
+Forest belts,625,1730,6875,8
+Forest belts,626,140,400,8
+Forest belts,627,450,3275,8
+Forest belts,628,90,300,8
+Forest belts,629,1790,7525,8
+Forest belts,630,300,1000,8
+Forest belts,631,365,1525,8
+Forest belts,632,360,3525,8
+Forest belts,633,195,2025,8
+Forest belts,634,70,300,8
+Forest belts,635,95,300,8
+Forest belts,636,140,400,8
+Forest belts,637,365,1825,8
+Forest belts,638,365,1525,8
+Forest belts,639,110,500,8
+Forest belts,640,950,2400,8
+Forest belts,641,1140,4875,8
+Forest belts,642,165,2075,8
+Forest belts,643,245,1225,8
+Forest belts,644,110,300,8
+Forest belts,645,960,5125,8
+Forest belts,646,75,300,8
+Forest belts,647,970,3575,8
+Forest belts,648,440,2275,8
+Forest belts,649,1130,3575,8
+Forest belts,650,305,1625,8
+Forest belts,651,135,300,8
+Forest belts,652,70,300,8
+Forest belts,653,95,300,8
+Forest belts,654,2130,9525,8
+Forest belts,655,305,1500,8
+Forest belts,656,135,300,8
+Forest belts,657,50,200,8
+Forest belts,658,195,1875,8
+Forest belts,659,70,300,8
+Forest belts,660,135,300,8
+Forest belts,661,115,500,8
+Forest belts,662,245,1125,8
+Forest belts,663,1130,7525,8
+Forest belts,664,1190,6875,8
+Forest belts,665,1440,6125,8
+Forest belts,666,110,300,8
+Forest belts,667,90,300,8
+Forest belts,668,760,2925,8
+Forest belts,669,990,5675,8
+Forest belts,670,70,300,8
+Forest belts,671,1190,6875,8
+Forest belts,672,300,1400,8
+Forest belts,673,165,2075,8
+Forest belts,674,1720,6275,8
+Forest belts,675,360,900,8
+Forest belts,676,165,2075,8
+Forest belts,677,810,5825,8
+Forest belts,678,140,400,8
+Forest belts,679,440,2825,8
+Forest belts,680,95,300,8
+Forest belts,681,205,1875,8
+Forest belts,682,1160,3425,8
+Forest belts,683,50,200,8
+Forest belts,684,2140,12725,8
+Forest belts,685,2150,11525,8
+Forest belts,686,960,4125,8
+Forest belts,687,1720,10575,8
+Forest belts,688,130,300,8
+Forest belts,689,90,300,8
+Forest belts,690,1760,8425,8
+Forest belts,691,365,2525,8
+Forest belts,692,245,1125,8
+Forest belts,693,50,200,8
+Forest belts,694,200,1925,8
+Forest belts,695,165,2075,8
+Forest belts,696,540,2675,8
+Forest belts,697,780,3675,8
+Forest belts,698,110,300,8
+Forest belts,699,910,5875,8
+Forest belts,700,540,3075,8
+Forest belts,701,545,3125,8
+Forest belts,702,300,1100,8
+Forest belts,703,2130,9525,8
+Forest belts,704,245,1225,8
+Balka and railway,144,270,600,8
+Balka and railway,145,225,600,8
+Balka and railway,146,410,NaN,0
+Balka and railway,147,365,NaN,0
+Balka and railway,148,690,NaN,0
+Balka and railway,149,645,NaN,0
+Balka and railway,150,450,NaN,0
+Balka and railway,151,405,NaN,0
+Balka and railway,152,570,NaN,0
+Balka and railway,153,525,NaN,0
+Balka and railway,154,1290,NaN,0
+Forest belts,705,115,300,8
+Forest belts,706,660,6275,8
+Forest belts,707,540,3575,8
+Forest belts,708,1200,7525,8
+Forest belts,709,245,1225,8
+Forest belts,710,660,6275,8
+Forest belts,711,115,300,8
+Forest belts,712,90,300,8
+Forest belts,713,440,3325,8
+Forest belts,714,245,1625,8
+Forest belts,715,165,2075,8
+Forest belts,716,1780,6575,8
+Forest belts,717,2160,6625,8
+Forest belts,718,50,200,8
+Forest belts,719,1730,7175,8
+Forest belts,720,360,1400,8
+Forest belts,721,940,3575,8
+Forest belts,722,985,2900,8
+Forest belts,723,245,1225,8
+Forest belts,724,95,300,8
+Forest belts,725,75,300,8
+Forest belts,726,365,2275,8
+River crossing,1,40,100,8
+River crossing,2,60,200,8
+River crossing,3,80,200,8
+River crossing,4,100,300,8
+River crossing,5,120,300,8
+River crossing,6,160,300,8
+River crossing,7,200,300,8
+River crossing,8,300,400,8
+River crossing,9,60,200,8
+River crossing,10,90,500,8
+River crossing,11,120,900,8
+River crossing,12,150,1000,8
+River crossing,13,180,1300,8
+River crossing,14,240,1800,8
+River crossing,15,300,2600,8
+River crossing,16,450,3600,8
+River crossing,17,320,1600,8
+River crossing,18,480,2600,8
+River crossing,19,640,4600,8
+River crossing,20,800,5000,8
+River crossing,21,960,6100,8
+River crossing,22,1280,7000,8
+River crossing,23,1600,9000,8
+River crossing,24,2400,12200,8
+River crossing,25,10,25,8
+River crossing,26,20,25,8
+River crossing,27,30,25,8
+River crossing,28,40,100,8
+River crossing,29,60,100,8
+River crossing,30,80,200,8
+River crossing,31,100,200,8
+River crossing,32,120,200,8
+River crossing,33,15,25,8
+River crossing,34,30,25,8
+River crossing,35,45,25,8
+River crossing,36,60,200,8
+River crossing,37,90,200,8
+River crossing,38,120,200,8
+River crossing,39,150,200,8
+River crossing,40,180,200,8
+River crossing,41,30,200,8
+River crossing,42,60,400,8
+River crossing,43,90,400,8
+River crossing,44,120,500,8
+River crossing,45,180,600,8
+River crossing,46,240,800,8
+River crossing,47,300,800,8
+River crossing,48,360,800,8
+River crossing,49,80,1025,8
+River crossing,50,160,1025,8
+River crossing,51,240,1425,8
+River crossing,52,320,1475,8
+River crossing,53,480,1475,8
+River crossing,54,640,1475,8
+River crossing,55,150,1475,8
+River crossing,56,300,1475,8
+River crossing,57,450,2125,8
+River crossing,58,600,2225,8
+River crossing,59,900,2575,8
+River crossing,60,1200,2925,8
+River crossing,61,90,1475,8
+River crossing,62,180,1475,8
+River crossing,63,270,1475,8
+River crossing,64,360,1475,8
+River crossing,65,540,1775,8
+River crossing,66,720,2375,8
+River crossing,67,120,1475,8
+River crossing,68,240,1475,8
+River crossing,69,360,1775,8
+River crossing,70,480,1925,8
+River crossing,71,720,2325,8
+River crossing,72,960,3125,8
+River crossing,73,600,675,8
+River crossing,74,1200,29975,8
+River crossing,75,1800,NaN,0
+River crossing,76,250,1200,8
+River crossing,77,200,1200,8
+River crossing,78,900,5600,8
+River crossing,79,850,4900,8
+River crossing,80,160,300,8
+River crossing,81,110,200,8
+River crossing,82,190,300,8
+River crossing,83,140,200,8
+River crossing,84,280,700,8
+River crossing,85,230,600,8
+River crossing,86,420,1575,8
+River crossing,87,370,1475,8
+River crossing,88,700,2125,8
+Balka and railway,155,690,NaN,0
+Balka and railway,156,500,NaN,0
+Balka and railway,157,410,NaN,0
+Balka and railway,158,780,NaN,0
+Balka and railway,159,690,NaN,0
+Balka and railway,160,540,NaN,0
+Balka and railway,161,450,NaN,0
+Balka and railway,162,660,NaN,0
+Balka and railway,163,570,NaN,0
+Balka and railway,164,1380,NaN,0
+Balka and railway,165,780,NaN,0
+River crossing,89,650,2025,8
+River crossing,90,460,2225,8
+River crossing,91,410,1875,8
+River crossing,92,580,2025,8
+River crossing,93,530,1925,8
+River crossing,94,1300,NaN,0
+River crossing,95,700,3475,8
+River crossing,96,950,6900,8
+River crossing,97,875,6200,8
+River crossing,98,210,1000,8
+River crossing,99,135,400,8
+River crossing,100,240,1100,8
+River crossing,101,165,500,8
+River crossing,102,330,1300,8
+River crossing,103,255,800,8
+River crossing,104,470,2525,8
+River crossing,105,395,2225,8
+River crossing,106,750,2775,8
+River crossing,107,675,2775,8
+River crossing,108,510,4425,8
+River crossing,109,435,3125,8
+River crossing,110,630,3775,8
+River crossing,111,555,3225,8
+River crossing,112,1350,NaN,0
+River crossing,113,750,6175,8
+River crossing,114,860,4800,8
+River crossing,115,460,2000,8
+River crossing,116,890,4900,8
+River crossing,117,490,2000,8
+River crossing,118,980,4900,8
+River crossing,119,580,2400,8
+River crossing,120,1120,7425,8
+River crossing,121,720,4075,8
+River crossing,122,1400,5825,8
+River crossing,123,1000,5275,8
+River crossing,124,1160,7325,8
+River crossing,125,760,5125,8
+River crossing,126,1280,7175,8
+River crossing,127,880,6575,8
+River crossing,128,2000,18375,8
+River crossing,129,1400,6275,8
+River crossing,130,150,200,8
+River crossing,131,120,200,8
+River crossing,132,240,600,8
+River crossing,133,210,600,8
+River crossing,134,380,1475,8
+River crossing,135,350,1475,8
+River crossing,136,660,2225,8
+River crossing,137,630,1925,8
+River crossing,138,420,1575,8
+River crossing,139,390,1925,8
+River crossing,140,540,2225,8
+River crossing,141,510,1925,8
+River crossing,142,1260,29675,8
+River crossing,143,660,5275,8
+River crossing,144,270,600,8
+River crossing,145,225,600,8
+River crossing,146,410,1325,8
+River crossing,147,365,1425,8
+River crossing,148,690,1925,8
+River crossing,149,645,1925,8
+River crossing,150,450,1925,8
+River crossing,151,405,1575,8
+River crossing,152,570,2375,8
+River crossing,153,525,1925,8
+River crossing,154,1290,NaN,0
+River crossing,155,690,7375,8
+River crossing,156,500,1575,8
+River crossing,157,410,1475,8
+River crossing,158,780,2225,8
+River crossing,159,690,1925,8
+River crossing,160,540,2075,8
+River crossing,161,450,1575,8
+River crossing,162,660,2775,8
+River crossing,163,570,2225,8
+River crossing,164,1380,14475,8
+River crossing,165,780,5475,8
+River crossing,166,920,2125,8
+River crossing,167,760,1925,8
+River crossing,168,680,2025,8
+River crossing,169,520,1925,8
+River crossing,170,800,2375,8
+River crossing,171,640,1925,8
+River crossing,172,1520,NaN,0
+River crossing,173,920,4625,8
+River crossing,174,960,2775,8
+River crossing,175,660,2375,8
+River crossing,176,1080,3825,8
+River crossing,177,780,2375,8
+River crossing,178,1800,NaN,0
+River crossing,179,1200,7025,8
+River crossing,180,840,3125,8
+River crossing,181,660,2375,8
+River crossing,182,1560,NaN,0
+River crossing,183,960,6175,8
+River crossing,184,1680,NaN,0
+River crossing,185,1080,9375,8
+River crossing,186,1280,4825,8
+River crossing,187,1440,4375,8
+River crossing,188,1340,9125,8
+River crossing,189,1830,NaN,0
+River crossing,190,950,5100,8
+River crossing,191,1620,NaN,0
+River crossing,192,2600,NaN,0
+River crossing,193,980,3125,8
+River crossing,194,360,1600,8
+River crossing,195,75,200,8
+River crossing,196,1160,6875,8
+River crossing,197,450,3325,8
+River crossing,198,110,300,8
+Balka and railway,166,920,NaN,0
+Balka and railway,167,760,NaN,0
+Balka and railway,168,680,NaN,0
+Balka and railway,169,520,NaN,0
+Balka and railway,170,800,NaN,0
+Balka and railway,171,640,NaN,0
+Balka and railway,172,1520,NaN,0
+Balka and railway,173,920,NaN,0
+Balka and railway,174,960,NaN,0
+Balka and railway,175,660,NaN,0
+Balka and railway,176,1080,NaN,0
+River crossing,199,115,200,8
+River crossing,200,50,100,8
+River crossing,201,450,3575,8
+River crossing,202,660,6275,8
+River crossing,203,165,1475,8
+River crossing,204,2160,16075,8
+River crossing,205,195,1475,8
+River crossing,206,810,5225,8
+River crossing,207,960,4275,8
+River crossing,208,300,1700,8
+River crossing,209,115,300,8
+River crossing,210,1440,11225,8
+River crossing,211,540,3375,8
+River crossing,212,75,200,8
+River crossing,213,1740,14125,8
+River crossing,214,740,4900,8
+River crossing,215,440,2825,8
+River crossing,216,115,200,8
+River crossing,217,540,2975,8
+River crossing,218,245,1425,8
+River crossing,219,2180,21225,8
+River crossing,220,65,200,8
+River crossing,221,195,1475,8
+River crossing,222,195,1475,8
+River crossing,223,1780,10075,8
+River crossing,224,530,2025,8
+River crossing,225,75,200,8
+River crossing,226,165,1475,8
+River crossing,227,440,3475,8
+River crossing,228,65,200,8
+River crossing,229,540,3325,8
+River crossing,230,2170,11525,8
+River crossing,231,445,3525,8
+River crossing,232,450,3925,8
+River crossing,233,245,1625,8
+River crossing,234,1440,9775,8
+River crossing,235,50,100,8
+River crossing,236,810,6725,8
+River crossing,237,70,200,8
+River crossing,238,95,200,8
+River crossing,239,450,3525,8
+River crossing,240,115,200,8
+River crossing,241,75,200,8
+River crossing,242,810,4675,8
+River crossing,243,1180,11425,8
+River crossing,244,1150,5725,8
+River crossing,245,70,200,8
+River crossing,246,440,2825,8
+River crossing,247,1770,14675,8
+River crossing,248,660,6275,8
+River crossing,249,440,3475,8
+River crossing,250,195,1475,8
+River crossing,251,205,1475,8
+River crossing,252,660,6275,8
+River crossing,253,2110,25025,8
+River crossing,254,805,5975,8
+River crossing,255,660,6275,8
+River crossing,256,95,200,8
+River crossing,257,960,5025,8
+River crossing,258,1170,7125,8
+River crossing,259,1770,7625,8
+River crossing,260,95,200,8
+River crossing,261,1440,10525,8
+River crossing,262,1790,7475,8
+River crossing,263,1720,7875,8
+River crossing,264,50,100,8
+River crossing,265,170,1475,8
+River crossing,266,135,400,8
+River crossing,267,165,1675,8
+River crossing,268,205,1475,8
+River crossing,269,70,200,8
+River crossing,270,195,1475,8
+River crossing,271,110,300,8
+River crossing,272,50,100,8
+River crossing,273,1750,9225,8
+River crossing,274,50,100,8
+River crossing,275,360,3375,8
+River crossing,276,445,3525,8
+River crossing,277,1790,18825,8
+River crossing,278,1440,7175,8
+River crossing,279,65,200,8
+River crossing,280,110,300,8
+River crossing,281,50,100,8
+River crossing,282,130,200,8
+River crossing,283,1770,15425,8
+River crossing,284,1460,9425,8
+River crossing,285,2110,13075,8
+River crossing,286,305,2075,8
+River crossing,287,2120,15825,8
+River crossing,288,305,1725,8
+River crossing,289,65,200,8
+River crossing,290,1160,8375,8
+River crossing,291,800,5725,8
+River crossing,292,550,4225,8
+River crossing,293,365,2600,8
+River crossing,294,660,6275,8
+River crossing,295,545,3825,8
+River crossing,296,110,300,8
+River crossing,297,930,4325,8
+River crossing,298,2110,12325,8
+River crossing,299,660,6275,8
+River crossing,300,110,300,8
+River crossing,301,70,200,8
+River crossing,302,195,1475,8
+River crossing,303,1790,21075,8
+River crossing,304,170,1475,8
+River crossing,305,1770,NaN,0
+River crossing,306,50,100,8
+River crossing,307,245,1725,8
+River crossing,308,360,1825,8
+Balka and railway,177,780,NaN,0
+Balka and railway,178,1800,NaN,0
+Balka and railway,179,1200,NaN,0
+Balka and railway,180,840,NaN,0
+Balka and railway,181,660,NaN,0
+Balka and railway,182,1560,NaN,0
+Balka and railway,183,960,NaN,0
+Balka and railway,184,1680,NaN,0
+Balka and railway,185,1080,NaN,0
+Balka and railway,186,1280,NaN,0
+Balka and railway,187,1440,NaN,0
+River crossing,309,115,300,8
+River crossing,310,810,6175,8
+River crossing,311,165,1475,8
+River crossing,312,65,200,8
+River crossing,313,195,1475,8
+River crossing,314,300,2600,8
+River crossing,315,75,200,8
+River crossing,316,1730,13325,8
+River crossing,317,65,200,8
+River crossing,318,195,1475,8
+River crossing,319,960,3725,8
+River crossing,320,50,100,8
+River crossing,321,140,600,8
+River crossing,322,365,2275,8
+River crossing,323,140,300,8
+River crossing,324,75,200,8
+River crossing,325,360,1200,8
+River crossing,326,75,200,8
+River crossing,327,165,1675,8
+River crossing,328,660,6275,8
+River crossing,329,50,100,8
+River crossing,330,65,200,8
+River crossing,331,50,100,8
+River crossing,332,115,200,8
+River crossing,333,195,1475,8
+River crossing,334,545,3275,8
+River crossing,335,300,1800,8
+River crossing,336,1450,9625,8
+River crossing,337,660,6275,8
+River crossing,338,810,3475,8
+River crossing,339,1780,11275,8
+River crossing,340,50,100,8
+River crossing,341,365,2475,8
+River crossing,342,450,3675,8
+River crossing,343,1450,8675,8
+River crossing,344,1740,16025,8
+River crossing,345,245,1725,8
+River crossing,346,440,2775,8
+River crossing,347,305,2100,8
+River crossing,348,65,200,8
+River crossing,349,545,3275,8
+River crossing,350,65,200,8
+River crossing,351,810,5825,8
+River crossing,352,195,1475,8
+River crossing,353,450,3675,8
+River crossing,354,665,6675,8
+River crossing,355,660,6275,8
+River crossing,356,240,1875,8
+River crossing,357,970,9225,8
+River crossing,358,135,400,8
+River crossing,359,660,6275,8
+River crossing,360,365,2925,8
+River crossing,361,1430,9125,8
+River crossing,362,50,100,8
+River crossing,363,365,1400,8
+River crossing,364,1730,7675,8
+River crossing,365,545,4075,8
+River crossing,366,75,200,8
+River crossing,367,660,6275,8
+River crossing,368,205,1475,8
+River crossing,369,1460,NaN,0
+River crossing,370,205,1475,8
+River crossing,371,245,1725,8
+River crossing,372,800,5825,8
+River crossing,373,115,300,8
+River crossing,374,95,200,8
+River crossing,375,450,3525,8
+River crossing,376,245,1725,8
+River crossing,377,110,300,8
+River crossing,378,70,200,8
+River crossing,379,805,6075,8
+River crossing,380,1770,NaN,0
+River crossing,381,75,200,8
+River crossing,382,295,3725,8
+River crossing,383,2170,16375,8
+River crossing,384,1450,8675,8
+River crossing,385,1770,10625,8
+River crossing,386,95,200,8
+River crossing,387,115,200,8
+River crossing,388,365,1000,8
+River crossing,389,990,9675,8
+River crossing,390,540,6525,8
+River crossing,391,1430,10125,8
+River crossing,392,300,2600,8
+River crossing,393,1450,10625,8
+River crossing,394,440,2825,8
+River crossing,395,95,200,8
+River crossing,396,810,7525,8
+River crossing,397,70,200,8
+River crossing,398,305,1600,8
+River crossing,399,300,1700,8
+River crossing,400,245,1125,8
+River crossing,401,140,600,8
+River crossing,402,70,200,8
+River crossing,403,985,5575,8
+River crossing,404,110,200,8
+River crossing,405,165,1475,8
+River crossing,406,95,200,8
+River crossing,407,300,2100,8
+River crossing,408,70,200,8
+River crossing,409,75,200,8
+River crossing,410,300,1000,8
+River crossing,411,305,2075,8
+River crossing,412,75,200,8
+River crossing,413,110,300,8
+River crossing,414,705,3575,8
+River crossing,415,680,NaN,0
+River crossing,416,690,NaN,0
+River crossing,417,90,200,8
+River crossing,418,700,3475,8
+Balka and railway,188,1340,8525,8
+Balka and railway,189,1830,NaN,0
+Balka and railway,190,950,2200,8
+Balka and railway,191,1620,NaN,0
+Balka and railway,192,2600,NaN,0
+Balka and railway,193,980,NaN,0
+Balka and railway,194,360,1300,8
+Balka and railway,195,75,200,8
+Balka and railway,196,1160,NaN,0
+Balka and railway,197,450,2575,8
+Balka and railway,198,110,200,8
+River crossing,419,195,1475,8
+River crossing,420,445,3525,8
+River crossing,421,70,200,8
+River crossing,422,240,1225,8
+River crossing,423,170,1475,8
+River crossing,424,65,200,8
+River crossing,425,140,300,8
+River crossing,426,110,300,8
+River crossing,427,245,1425,8
+River crossing,428,990,5725,8
+River crossing,429,440,2525,8
+River crossing,430,70,200,8
+River crossing,431,300,1000,8
+River crossing,432,245,1425,8
+River crossing,433,665,6675,8
+River crossing,434,1440,8775,8
+River crossing,435,205,1475,8
+River crossing,436,70,200,8
+River crossing,437,930,5825,8
+River crossing,438,240,1875,8
+River crossing,439,770,3775,8
+River crossing,440,305,2075,8
+River crossing,441,1720,NaN,0
+River crossing,442,540,5125,8
+River crossing,443,305,4625,8
+River crossing,444,1160,9475,8
+River crossing,445,450,3525,8
+River crossing,446,810,6575,8
+River crossing,447,245,1425,8
+River crossing,448,440,2525,8
+River crossing,449,165,1475,8
+River crossing,450,450,3525,8
+River crossing,451,990,5975,8
+River crossing,452,1790,9275,8
+River crossing,453,960,5175,8
+River crossing,454,365,3525,8
+River crossing,455,170,1475,8
+River crossing,456,135,400,8
+River crossing,457,2180,12375,8
+River crossing,458,245,1725,8
+River crossing,459,2120,13975,8
+River crossing,460,2170,26075,8
+River crossing,461,440,3475,8
+River crossing,462,365,2675,8
+River crossing,463,1130,4525,8
+River crossing,464,1430,7325,8
+River crossing,465,450,3575,8
+River crossing,466,360,4625,8
+River crossing,467,450,3525,8
+River crossing,468,245,1425,8
+River crossing,469,195,1475,8
+River crossing,470,980,6425,8
+River crossing,471,70,200,8
+River crossing,472,135,200,8
+River crossing,473,305,3525,8
+River crossing,474,2130,29825,8
+River crossing,475,90,200,8
+River crossing,476,1390,7225,8
+River crossing,477,670,5975,8
+River crossing,478,1200,7825,8
+River crossing,479,1190,6775,8
+River crossing,480,370,1000,8
+River crossing,481,960,6775,8
+River crossing,482,50,100,8
+River crossing,483,95,200,8
+River crossing,484,980,4725,8
+River crossing,485,165,1575,8
+River crossing,486,90,200,8
+River crossing,487,115,200,8
+River crossing,488,810,5175,8
+River crossing,489,750,7575,8
+River crossing,490,195,1475,8
+River crossing,491,660,6275,8
+River crossing,492,305,2075,8
+River crossing,493,195,1475,8
+River crossing,494,300,1875,8
+River crossing,495,445,3525,8
+River crossing,496,140,300,8
+River crossing,497,2130,14775,8
+River crossing,498,665,6675,8
+River crossing,499,50,100,8
+River crossing,500,65,200,8
+River crossing,501,95,200,8
+River crossing,502,75,200,8
+River crossing,503,195,1475,8
+River crossing,504,115,200,8
+River crossing,505,550,2600,8
+River crossing,506,1410,8525,8
+River crossing,507,195,1475,8
+River crossing,508,545,3925,8
+River crossing,509,980,4425,8
+River crossing,510,815,3475,8
+River crossing,511,95,200,8
+River crossing,512,205,1475,8
+River crossing,513,450,3675,8
+River crossing,514,140,300,8
+River crossing,515,985,5525,8
+River crossing,516,370,2525,8
+River crossing,517,545,4075,8
+River crossing,518,160,1575,8
+River crossing,519,245,1425,8
+River crossing,520,450,3575,8
+River crossing,521,2150,14825,8
+River crossing,522,1140,9475,8
+River crossing,523,245,1425,8
+River crossing,524,540,4175,8
+River crossing,525,2150,11225,8
+River crossing,526,75,200,8
+River crossing,527,245,1425,8
+River crossing,528,445,3525,8
+Balka and railway,199,115,200,8
+Balka and railway,200,50,100,8
+Balka and railway,201,450,3175,8
+Balka and railway,202,660,NaN,0
+Balka and railway,203,165,1375,8
+Balka and railway,204,2160,NaN,0
+Balka and railway,205,195,1275,8
+Balka and railway,206,810,3375,8
+Balka and railway,207,960,NaN,0
+Balka and railway,208,300,1300,8
+Balka and railway,209,115,200,8
+River crossing,529,1790,16875,8
+River crossing,530,440,3575,8
+River crossing,531,660,6275,8
+River crossing,532,1440,7675,8
+River crossing,533,2130,NaN,0
+River crossing,534,75,200,8
+River crossing,535,980,5475,8
+River crossing,536,770,2725,8
+River crossing,537,550,3725,8
+River crossing,538,1460,9075,8
+River crossing,539,110,200,8
+River crossing,540,165,1475,8
+River crossing,541,130,200,8
+River crossing,542,65,200,8
+River crossing,543,1160,8275,8
+River crossing,544,2160,10775,8
+River crossing,545,450,3725,8
+River crossing,546,1410,5275,8
+River crossing,547,1160,6875,8
+River crossing,548,65,200,8
+River crossing,549,985,4175,8
+River crossing,550,165,1475,8
+River crossing,551,1780,8725,8
+River crossing,552,300,3325,8
+River crossing,553,50,100,8
+River crossing,554,95,200,8
+River crossing,555,790,3675,8
+River crossing,556,980,5675,8
+River crossing,557,195,1475,8
+River crossing,558,545,3275,8
+River crossing,559,810,5525,8
+River crossing,560,370,2525,8
+River crossing,561,1130,8325,8
+River crossing,562,1150,6725,8
+River crossing,563,95,200,8
+River crossing,564,1760,10225,8
+River crossing,565,135,200,8
+River crossing,566,50,100,8
+River crossing,567,1740,8875,8
+River crossing,568,545,3275,8
+River crossing,569,450,3375,8
+River crossing,570,135,200,8
+River crossing,571,165,1475,8
+River crossing,572,1440,8475,8
+River crossing,573,240,1875,8
+River crossing,574,920,5575,8
+River crossing,575,800,5725,8
+River crossing,576,1770,8425,8
+River crossing,577,1450,NaN,0
+River crossing,578,1760,10375,8
+River crossing,579,245,1425,8
+River crossing,580,300,1900,8
+River crossing,581,805,3500,8
+River crossing,582,305,2025,8
+River crossing,583,1400,10025,8
+River crossing,584,135,200,8
+River crossing,585,135,200,8
+River crossing,586,2170,9725,8
+River crossing,587,960,8725,8
+River crossing,588,75,200,8
+River crossing,589,195,1475,8
+River crossing,590,1400,10425,8
+River crossing,591,440,2825,8
+River crossing,592,90,200,8
+River crossing,593,160,1475,8
+River crossing,594,195,1475,8
+River crossing,595,245,1425,8
+River crossing,596,660,6275,8
+River crossing,597,805,6175,8
+River crossing,598,245,1725,8
+River crossing,599,305,2100,8
+River crossing,600,115,200,8
+River crossing,601,160,1475,8
+River crossing,602,450,3125,8
+River crossing,603,195,1475,8
+River crossing,604,440,3475,8
+River crossing,605,65,200,8
+River crossing,606,165,1475,8
+River crossing,607,780,5475,8
+River crossing,608,65,200,8
+River crossing,609,65,200,8
+River crossing,610,1460,14275,8
+River crossing,611,75,200,8
+River crossing,612,1170,6175,8
+River crossing,613,980,6825,8
+River crossing,614,140,300,8
+River crossing,615,195,1475,8
+River crossing,616,450,3275,8
+River crossing,617,1180,10225,8
+River crossing,618,770,4175,8
+River crossing,619,300,1300,8
+River crossing,620,65,200,8
+River crossing,621,130,200,8
+River crossing,622,65,200,8
+River crossing,623,65,200,8
+River crossing,624,295,2125,8
+River crossing,625,1730,9775,8
+River crossing,626,140,300,8
+River crossing,627,450,3475,8
+River crossing,628,90,200,8
+River crossing,629,1790,10125,8
+River crossing,630,300,1500,8
+River crossing,631,365,2275,8
+River crossing,632,360,4625,8
+River crossing,633,195,1475,8
+River crossing,634,70,200,8
+River crossing,635,95,200,8
+River crossing,636,140,300,8
+River crossing,637,365,1725,8
+River crossing,638,365,2275,8
+Balka and railway,210,1440,NaN,0
+Balka and railway,211,540,NaN,0
+Balka and railway,212,75,200,8
+Balka and railway,213,1740,NaN,0
+Balka and railway,214,740,3300,8
+Balka and railway,215,440,NaN,0
+Balka and railway,216,115,200,8
+Balka and railway,217,540,NaN,0
+Balka and railway,218,245,1325,8
+Balka and railway,219,2180,NaN,0
+Balka and railway,220,65,200,8
+River crossing,639,110,300,8
+River crossing,640,950,4700,8
+River crossing,641,1140,4625,8
+River crossing,642,165,1575,8
+River crossing,643,245,1725,8
+River crossing,644,110,200,8
+River crossing,645,960,4675,8
+River crossing,646,75,200,8
+River crossing,647,970,5675,8
+River crossing,648,440,3575,8
+River crossing,649,1130,5275,8
+River crossing,650,305,2275,8
+River crossing,651,135,200,8
+River crossing,652,70,200,8
+River crossing,653,95,200,8
+River crossing,654,2130,24175,8
+River crossing,655,305,2100,8
+River crossing,656,135,400,8
+River crossing,657,50,100,8
+River crossing,658,195,1475,8
+River crossing,659,70,200,8
+River crossing,660,135,200,8
+River crossing,661,115,300,8
+River crossing,662,245,1625,8
+River crossing,663,1130,8925,8
+River crossing,664,1190,6775,8
+River crossing,665,1440,8375,8
+River crossing,666,110,200,8
+River crossing,667,90,200,8
+River crossing,668,760,2725,8
+River crossing,669,990,5575,8
+River crossing,670,70,200,8
+River crossing,671,1190,6375,8
+River crossing,672,300,2600,8
+River crossing,673,165,1675,8
+River crossing,674,1720,10525,8
+River crossing,675,360,1200,8
+River crossing,676,165,1675,8
+River crossing,677,810,7625,8
+River crossing,678,140,300,8
+River crossing,679,440,2825,8
+River crossing,680,95,200,8
+River crossing,681,205,1475,8
+River crossing,682,1160,9525,8
+River crossing,683,50,100,8
+River crossing,684,2140,29725,8
+River crossing,685,2150,15775,8
+River crossing,686,960,5975,8
+River crossing,687,1720,NaN,0
+River crossing,688,130,200,8
+River crossing,689,90,200,8
+River crossing,690,1760,12725,8
+River crossing,691,365,2525,8
+River crossing,692,245,1625,8
+River crossing,693,50,100,8
+River crossing,694,200,1475,8
+River crossing,695,165,1675,8
+River crossing,696,540,3325,8
+River crossing,697,780,5275,8
+River crossing,698,110,200,8
+River crossing,699,910,7575,8
+River crossing,700,540,3525,8
+River crossing,701,545,3725,8
+River crossing,702,300,1500,8
+River crossing,703,2130,15975,8
+River crossing,704,245,1425,8
+River crossing,705,115,200,8
+River crossing,706,660,6275,8
+River crossing,707,540,5125,8
+River crossing,708,1200,7425,8
+River crossing,709,245,1425,8
+River crossing,710,660,6275,8
+River crossing,711,115,200,8
+River crossing,712,90,200,8
+River crossing,713,440,2525,8
+River crossing,714,245,2025,8
+River crossing,715,165,1575,8
+River crossing,716,1780,9925,8
+River crossing,717,2160,9325,8
+River crossing,718,50,100,8
+River crossing,719,1730,9775,8
+River crossing,720,360,2200,8
+River crossing,721,940,6525,8
+River crossing,722,985,4100,8
+River crossing,723,245,1425,8
+River crossing,724,95,200,8
+River crossing,725,75,200,8
+River crossing,726,365,2675,8
+Balka and railway,23,1600,4800,8
+Balka and railway,24,2400,6400,8
+Balka and railway,25,10,25,8
+Balka and railway,26,20,25,8
+Balka and railway,27,30,25,8
+Balka and railway,28,40,100,8
+Balka and railway,29,60,100,8
+Balka and railway,30,80,200,8
+Balka and railway,31,100,200,8
+Balka and railway,32,120,200,8
+Balka and railway,33,15,25,8
+Balka and railway,221,195,NaN,0
+Balka and railway,222,195,NaN,0
+Balka and railway,223,1780,NaN,0
+Balka and railway,224,530,2775,8
+Balka and railway,225,75,200,8
+Balka and railway,226,165,1375,8
+Balka and railway,227,440,2775,8
+Balka and railway,228,65,200,8
+Balka and railway,229,540,NaN,0
+Balka and railway,230,2170,NaN,0
+Balka and railway,231,445,15125,8
+Balka and railway,232,450,NaN,0
+Balka and railway,233,245,1025,8
+Balka and railway,234,1440,NaN,0
+Balka and railway,235,50,100,8
+Balka and railway,236,810,NaN,0
+Balka and railway,237,70,100,8
+Balka and railway,238,95,200,8
+Balka and railway,239,450,3425,8
+Balka and railway,240,115,200,8
+Balka and railway,241,75,200,8
+Balka and railway,242,810,NaN,0
+Balka and railway,243,1180,NaN,0
+Balka and railway,244,1150,NaN,0
+Balka and railway,245,70,100,8
+Balka and railway,246,440,NaN,0
+Balka and railway,247,1770,NaN,0
+Balka and railway,248,660,NaN,0
+Balka and railway,249,440,2775,8
+Balka and railway,250,195,1275,8
+Balka and railway,251,205,1275,8
+Balka and railway,252,660,NaN,0
+Balka and railway,253,2110,NaN,0
+Balka and railway,254,805,NaN,0
+Balka and railway,255,660,NaN,0
+Balka and railway,256,95,200,8
+Balka and railway,257,960,NaN,0
+Balka and railway,258,1170,NaN,0
+Balka and railway,259,1770,7525,8
+Balka and railway,260,95,200,8
+Balka and railway,261,1440,NaN,0
+Balka and railway,262,1790,NaN,0
+Balka and railway,263,1720,NaN,0
+Balka and railway,264,50,100,8
+Balka and railway,265,170,1675,8
+Balka and railway,266,135,200,8
+Balka and railway,267,165,1375,8
+Balka and railway,268,205,1275,8
+Balka and railway,269,70,100,8
+Balka and railway,270,195,NaN,0
+Balka and railway,271,110,300,8
+Balka and railway,272,50,100,8
+Balka and railway,273,1750,NaN,0
+Balka and railway,274,50,100,8
+Balka and railway,275,360,3075,8
+Balka and railway,276,445,3275,8
+Balka and railway,277,1790,NaN,0
+Balka and railway,278,1440,NaN,0
+Balka and railway,279,65,200,8
+Balka and railway,280,110,300,8
+Balka and railway,281,50,100,8
+Balka and railway,282,130,200,8
+Balka and railway,283,1770,NaN,0
+Balka and railway,284,1460,NaN,0
+Balka and railway,285,2110,NaN,0
+Balka and railway,286,305,1725,8
+Balka and railway,287,2120,NaN,0
+Balka and railway,288,305,1325,8
+Balka and railway,289,65,200,8
+Balka and railway,290,1160,NaN,0
+Balka and railway,291,800,NaN,0
+Balka and railway,292,550,NaN,0
+Balka and railway,293,365,1900,8
+Balka and railway,294,660,NaN,0
+Balka and railway,295,545,NaN,0
+Balka and railway,296,110,300,8
+Balka and railway,297,930,NaN,0
+Balka and railway,298,2110,NaN,0
+Balka and railway,299,660,NaN,0
+Balka and railway,300,110,200,8
+Balka and railway,301,70,100,8
+Balka and railway,302,195,NaN,0
+Balka and railway,303,1790,NaN,0
+Balka and railway,304,170,1675,8
+Balka and railway,305,1770,NaN,0
+Balka and railway,306,50,100,8
+Balka and railway,307,245,1325,8
+Balka and railway,308,360,2375,8
+Balka and railway,309,115,300,8
+Balka and railway,310,810,NaN,0
+Balka and railway,311,165,1375,8
+Balka and railway,312,65,200,8
+Balka and railway,313,195,1275,8
+Balka and railway,314,300,2000,8
+Balka and railway,315,75,200,8
+Balka and railway,316,1730,NaN,0
+Balka and railway,317,65,200,8
+Balka and railway,318,195,1275,8
+Balka and railway,319,960,NaN,0
+Balka and railway,320,50,100,8
+Balka and railway,321,140,400,8
+Balka and railway,322,365,1925,8
+Balka and railway,323,140,300,8
+Balka and railway,324,75,200,8
+Balka and railway,325,360,1100,8
+Balka and railway,326,75,200,8
+Balka and railway,327,165,1375,8
+Balka and railway,328,660,NaN,0
+Balka and railway,329,50,100,8
+Balka and railway,330,65,200,8
+Balka and railway,34,30,25,8
+Balka and railway,35,45,25,8
+Balka and railway,36,60,200,8
+Balka and railway,37,90,200,8
+Balka and railway,38,120,200,8
+Balka and railway,39,150,200,8
+Balka and railway,40,180,200,8
+Balka and railway,41,30,200,8
+Balka and railway,42,60,300,8
+Balka and railway,43,90,300,8
+Balka and railway,44,120,400,8
+Balka and railway,331,50,100,8
+Balka and railway,332,115,200,8
+Balka and railway,333,195,1275,8
+Balka and railway,334,545,2625,8
+Balka and railway,335,300,1400,8
+Balka and railway,336,1450,NaN,0
+Balka and railway,337,660,NaN,0
+Balka and railway,338,810,NaN,0
+Balka and railway,339,1780,NaN,0
+Balka and railway,340,50,100,8
+Balka and railway,341,365,1825,8
+Balka and railway,342,450,NaN,0
+Balka and railway,343,1450,NaN,0
+Balka and railway,344,1740,NaN,0
+Balka and railway,345,245,1225,8
+Balka and railway,346,440,NaN,0
+Balka and railway,347,305,1600,8
+Balka and railway,348,65,200,8
+Balka and railway,349,545,3125,8
+Balka and railway,350,65,200,8
+Balka and railway,351,810,NaN,0
+Balka and railway,352,195,1275,8
+Balka and railway,353,450,NaN,0
+Balka and railway,354,665,NaN,0
+Balka and railway,355,660,NaN,0
+Balka and railway,356,240,NaN,0
+Balka and railway,357,970,6475,8
+Balka and railway,358,135,200,8
+Balka and railway,359,660,NaN,0
+Balka and railway,360,365,NaN,0
+Balka and railway,361,1430,NaN,0
+Balka and railway,362,50,100,8
+Balka and railway,363,365,1200,8
+Balka and railway,364,1730,NaN,0
+Balka and railway,365,545,NaN,0
+Balka and railway,366,75,200,8
+Balka and railway,367,660,NaN,0
+Balka and railway,368,205,1275,8
+Balka and railway,369,1460,NaN,0
+Balka and railway,370,205,1275,8
+Balka and railway,371,245,1325,8
+Balka and railway,372,800,5425,8
+Balka and railway,373,115,300,8
+Balka and railway,374,95,200,8
+Balka and railway,375,450,3425,8
+Balka and railway,376,245,1325,8
+Balka and railway,377,110,200,8
+Balka and railway,378,70,100,8
+Balka and railway,379,805,5675,8
+Balka and railway,380,1770,NaN,0
+Balka and railway,381,75,200,8
+Balka and railway,382,295,3225,8
+Balka and railway,383,2170,NaN,0
+Balka and railway,384,1450,NaN,0
+Balka and railway,385,1770,NaN,0
+Balka and railway,386,95,200,8
+Balka and railway,387,115,200,8
+Balka and railway,388,365,1100,8
+Balka and railway,389,990,NaN,0
+Balka and railway,390,540,4575,8
+Balka and railway,391,1430,NaN,0
+Balka and railway,392,300,2000,8
+Balka and railway,393,1450,NaN,0
+Balka and railway,394,440,NaN,0
+Balka and railway,395,95,200,8
+Balka and railway,396,810,4475,8
+Balka and railway,397,70,100,8
+Balka and railway,398,305,1300,8
+Balka and railway,399,300,1300,8
+Balka and railway,400,245,NaN,0
+Balka and railway,401,140,400,8
+Balka and railway,402,70,100,8
+Balka and railway,403,985,NaN,0
+Balka and railway,404,110,200,8
+Balka and railway,405,165,1375,8
+Balka and railway,406,95,200,8
+Balka and railway,407,300,1900,8
+Balka and railway,408,70,100,8
+Balka and railway,409,75,200,8
+Balka and railway,410,300,1100,8
+Balka and railway,411,305,1725,8
+Balka and railway,412,75,200,8
+Balka and railway,413,110,300,8
+Balka and railway,414,705,NaN,0
+Balka and railway,415,680,NaN,0
+Balka and railway,416,690,NaN,0
+Balka and railway,417,90,200,8
+Balka and railway,418,700,NaN,0
+Balka and railway,419,195,1175,8
+Balka and railway,420,445,2375,8
+Balka and railway,421,70,200,8
+Balka and railway,422,240,NaN,0
+Balka and railway,423,170,1375,8
+Balka and railway,424,65,200,8
+Balka and railway,425,140,500,8
+Balka and railway,426,110,200,8
+Balka and railway,427,245,1325,8
+Balka and railway,428,990,3275,8
+Balka and railway,429,440,NaN,0
+Balka and railway,430,70,100,8
+Balka and railway,431,300,1100,8
+Balka and railway,432,245,1325,8
+Balka and railway,433,665,NaN,0
+Balka and railway,434,1440,NaN,0
+Balka and railway,435,205,1275,8
+Balka and railway,436,70,100,8
+Balka and railway,437,930,NaN,0
+Balka and railway,438,240,NaN,0
+Balka and railway,439,770,NaN,0
+Balka and railway,440,305,1725,8
+Balka and railway,45,180,600,8
+Balka and railway,46,240,800,8
+Balka and railway,47,300,800,8
+Balka and railway,48,360,800,8
+Balka and railway,49,80,725,8
+Balka and railway,50,160,NaN,0
+Balka and railway,51,240,NaN,0
+Balka and railway,52,320,NaN,0
+Balka and railway,53,480,NaN,0
+Balka and railway,54,640,NaN,0
+Balka and railway,55,150,1175,8
+Balka and railway,441,1720,NaN,0
+Balka and railway,442,540,4375,8
+Balka and railway,443,305,3375,8
+Balka and railway,444,1160,NaN,0
+Balka and railway,445,450,3375,8
+Balka and railway,446,810,NaN,0
+Balka and railway,447,245,1125,8
+Balka and railway,448,440,NaN,0
+Balka and railway,449,165,1375,8
+Balka and railway,450,450,3425,8
+Balka and railway,451,990,NaN,0
+Balka and railway,452,1790,NaN,0
+Balka and railway,453,960,5375,8
+Balka and railway,454,365,NaN,0
+Balka and railway,455,170,1675,8
+Balka and railway,456,135,200,8
+Balka and railway,457,2180,NaN,0
+Balka and railway,458,245,1325,8
+Balka and railway,459,2120,NaN,0
+Balka and railway,460,2170,NaN,0
+Balka and railway,461,440,2775,8
+Balka and railway,462,365,2375,8
+Balka and railway,463,1130,NaN,0
+Balka and railway,464,1430,NaN,0
+Balka and railway,465,450,NaN,0
+Balka and railway,466,360,2675,8
+Balka and railway,467,450,2975,8
+Balka and railway,468,245,NaN,0
+Balka and railway,469,195,1275,8
+Balka and railway,470,980,NaN,0
+Balka and railway,471,70,100,8
+Balka and railway,472,135,200,8
+Balka and railway,473,305,3225,8
+Balka and railway,474,2130,NaN,0
+Balka and railway,475,90,200,8
+Balka and railway,476,1390,NaN,0
+Balka and railway,477,670,NaN,0
+Balka and railway,478,1200,NaN,0
+Balka and railway,479,1190,NaN,0
+Balka and railway,480,370,900,8
+Balka and railway,481,960,5625,8
+Balka and railway,482,50,100,8
+Balka and railway,483,95,200,8
+Balka and railway,484,980,NaN,0
+Balka and railway,485,165,1375,8
+Balka and railway,486,90,200,8
+Balka and railway,487,115,300,8
+Balka and railway,488,810,NaN,0
+Balka and railway,489,750,5225,8
+Balka and railway,490,195,NaN,0
+Balka and railway,491,660,NaN,0
+Balka and railway,492,305,1725,8
+Balka and railway,493,195,1275,8
+Balka and railway,494,300,2475,8
+Balka and railway,495,445,3275,8
+Balka and railway,496,140,300,8
+Balka and railway,497,2130,NaN,0
+Balka and railway,498,665,NaN,0
+Balka and railway,499,50,100,8
+Balka and railway,500,65,200,8
+Balka and railway,501,95,200,8
+Balka and railway,502,75,200,8
+Balka and railway,503,195,1275,8
+Balka and railway,504,115,200,8
+Balka and railway,505,550,2200,8
+Balka and railway,506,1410,NaN,0
+Balka and railway,507,195,1275,8
+Balka and railway,508,545,2775,8
+Balka and railway,509,980,NaN,0
+Balka and railway,510,815,NaN,0
+Balka and railway,511,95,200,8
+Balka and railway,512,205,1275,8
+Balka and railway,513,450,NaN,0
+Balka and railway,514,140,300,8
+Balka and railway,515,985,NaN,0
+Balka and railway,516,370,3275,8
+Balka and railway,517,545,NaN,0
+Balka and railway,518,160,1475,8
+Balka and railway,519,245,1325,8
+Balka and railway,520,450,3175,8
+Balka and railway,521,2150,NaN,0
+Balka and railway,522,1140,NaN,0
+Balka and railway,523,245,1325,8
+Balka and railway,524,540,NaN,0
+Balka and railway,525,2150,NaN,0
+Balka and railway,526,75,200,8
+Balka and railway,527,245,1325,8
+Balka and railway,528,445,3275,8
+Balka and railway,529,1790,NaN,0
+Balka and railway,530,440,2175,8
+Balka and railway,531,660,NaN,0
+Balka and railway,532,1440,NaN,0
+Balka and railway,533,2130,NaN,0
+Balka and railway,534,75,200,8
+Balka and railway,535,980,4675,8
+Balka and railway,536,770,NaN,0
+Balka and railway,537,550,3225,8
+Balka and railway,538,1460,6775,8
+Balka and railway,539,110,300,8
+Balka and railway,540,165,1375,8
+Balka and railway,541,130,200,8
+Balka and railway,542,65,200,8
+Balka and railway,543,1160,NaN,0
+Balka and railway,544,2160,NaN,0
+Balka and railway,545,450,NaN,0
+Balka and railway,546,1410,NaN,0
+Balka and railway,547,1160,3775,8
+Balka and railway,548,65,200,8
+Balka and railway,549,985,NaN,0
+Balka and railway,550,165,1375,8
+Balka and railway,56,300,NaN,0
+Balka and railway,57,450,NaN,0
+Balka and railway,58,600,NaN,0
+Balka and railway,59,900,NaN,0
+Balka and railway,60,1200,NaN,0
+Balka and railway,61,90,1175,8
+Balka and railway,62,180,NaN,0
+Balka and railway,63,270,NaN,0
+Balka and railway,64,360,NaN,0
+Balka and railway,65,540,NaN,0
+Balka and railway,66,720,NaN,0
+Balka and railway,551,1780,11575,8
+Balka and railway,552,300,3225,8
+Balka and railway,553,50,100,8
+Balka and railway,554,95,200,8
+Balka and railway,555,790,3875,8
+Balka and railway,556,980,4375,8
+Balka and railway,557,195,1275,8
+Balka and railway,558,545,2625,8
+Balka and railway,559,810,5175,8
+Balka and railway,560,370,NaN,0
+Balka and railway,561,1130,NaN,0
+Balka and railway,562,1150,NaN,0
+Balka and railway,563,95,200,8
+Balka and railway,564,1760,NaN,0
+Balka and railway,565,135,200,8
+Balka and railway,566,50,100,8
+Balka and railway,567,1740,NaN,0
+Balka and railway,568,545,3125,8
+Balka and railway,569,450,NaN,0
+Balka and railway,570,135,200,8
+Balka and railway,571,165,1375,8
+Balka and railway,572,1440,NaN,0
+Balka and railway,573,240,NaN,0
+Balka and railway,574,920,NaN,0
+Balka and railway,575,800,NaN,0
+Balka and railway,576,1770,NaN,0
+Balka and railway,577,1450,NaN,0
+Balka and railway,578,1760,NaN,0
+Balka and railway,579,245,NaN,0
+Balka and railway,580,300,1700,8
+Balka and railway,581,805,2800,8
+Balka and railway,582,305,1425,8
+Balka and railway,583,1400,NaN,0
+Balka and railway,584,135,200,8
+Balka and railway,585,135,200,8
+Balka and railway,586,2170,NaN,0
+Balka and railway,587,960,5475,8
+Balka and railway,588,75,200,8
+Balka and railway,589,195,1275,8
+Balka and railway,590,1400,NaN,0
+Balka and railway,591,440,NaN,0
+Balka and railway,592,90,200,8
+Balka and railway,593,160,1375,8
+Balka and railway,594,195,1275,8
+Balka and railway,595,245,1325,8
+Balka and railway,596,660,NaN,0
+Balka and railway,597,805,NaN,0
+Balka and railway,598,245,1325,8
+Balka and railway,599,305,1600,8
+Balka and railway,600,115,200,8
+Balka and railway,601,160,1375,8
+Balka and railway,602,450,NaN,0
+Balka and railway,603,195,NaN,0
+Balka and railway,604,440,2775,8
+Balka and railway,605,65,200,8
+Balka and railway,606,165,1375,8
+Balka and railway,607,780,6275,8
+Balka and railway,608,65,200,8
+Balka and railway,609,65,200,8
+Balka and railway,610,1460,NaN,0
+Balka and railway,611,75,200,8
+Balka and railway,612,1170,6575,8
+Balka and railway,613,980,NaN,0
+Balka and railway,614,140,300,8
+Balka and railway,615,195,1275,8
+Balka and railway,616,450,NaN,0
+Balka and railway,617,1180,NaN,0
+Balka and railway,618,770,NaN,0
+Balka and railway,619,300,1300,8
+Balka and railway,620,65,200,8
+Balka and railway,621,130,200,8
+Balka and railway,622,65,200,8
+Balka and railway,623,65,200,8
+Balka and railway,624,295,1225,8
+Balka and railway,625,1730,NaN,0
+Balka and railway,626,140,300,8
+Balka and railway,627,450,NaN,0
+Balka and railway,628,90,200,8
+Balka and railway,629,1790,NaN,0
+Balka and railway,630,300,1300,8
+Balka and railway,631,365,1925,8
+Balka and railway,632,360,3375,8
+Balka and railway,633,195,1275,8
+Balka and railway,634,70,100,8
+Balka and railway,635,95,200,8
+Balka and railway,636,140,300,8
+Balka and railway,637,365,1625,8
+Balka and railway,638,365,1925,8
+Balka and railway,639,110,300,8
+Balka and railway,640,950,3900,8
+Balka and railway,641,1140,NaN,0
+Balka and railway,642,165,1375,8
+Balka and railway,643,245,1225,8
+Balka and railway,644,110,200,8
+Balka and railway,645,960,NaN,0
+Balka and railway,646,75,200,8
+Balka and railway,647,970,NaN,0
+Balka and railway,648,440,2175,8
+Balka and railway,649,1130,NaN,0
+Balka and railway,650,305,1425,8
+Balka and railway,651,135,200,8
+Balka and railway,652,70,100,8
+Balka and railway,653,95,200,8
+Balka and railway,654,2130,NaN,0
+Balka and railway,655,305,1600,8
+Balka and railway,656,135,200,8
+Balka and railway,657,50,100,8
+Balka and railway,658,195,NaN,0
+Balka and railway,659,70,100,8
+Balka and railway,660,135,200,8
+Balka and railway,67,120,1175,8
+Balka and railway,68,240,NaN,0
+Balka and railway,69,360,NaN,0
+Balka and railway,70,480,NaN,0
+Balka and railway,71,720,NaN,0
+Balka and railway,72,960,NaN,0
+Balka and railway,73,600,NaN,0
+Balka and railway,74,1200,NaN,0
+Balka and railway,75,1800,NaN,0
+Balka and railway,76,250,1000,8
+Balka and railway,77,200,1100,8
+Balka and railway,661,115,300,8
+Balka and railway,662,245,1225,8
+Balka and railway,663,1130,NaN,0
+Balka and railway,664,1190,NaN,0
+Balka and railway,665,1440,NaN,0
+Balka and railway,666,110,300,8
+Balka and railway,667,90,200,8
+Balka and railway,668,760,NaN,0
+Balka and railway,669,990,18575,8
+Balka and railway,670,70,100,8
+Balka and railway,671,1190,7225,8
+Balka and railway,672,300,2000,8
+Balka and railway,673,165,1375,8
+Balka and railway,674,1720,NaN,0
+Balka and railway,675,360,1100,8
+Balka and railway,676,165,1375,8
+Balka and railway,677,810,NaN,0
+Balka and railway,678,140,300,8
+Balka and railway,679,440,NaN,0
+Balka and railway,680,95,200,8
+Balka and railway,681,205,1275,8
+Balka and railway,682,1160,4775,8
+Balka and railway,683,50,100,8
+Balka and railway,684,2140,NaN,0
+Balka and railway,685,2150,NaN,0
+Balka and railway,686,960,25925,8
+Balka and railway,687,1720,NaN,0
+Balka and railway,688,130,200,8
+Balka and railway,689,90,200,8
+Balka and railway,690,1760,NaN,0
+Balka and railway,691,365,NaN,0
+Balka and railway,692,245,1225,8
+Balka and railway,693,50,100,8
+Balka and railway,694,200,1175,8
+Balka and railway,695,165,1375,8
+Balka and railway,696,540,2475,8
+Balka and railway,697,780,NaN,0
+Balka and railway,698,110,300,8
+Balka and railway,699,910,NaN,0
+Balka and railway,700,540,3375,8
+Balka and railway,701,545,NaN,0
+Balka and railway,702,300,1300,8
+Balka and railway,703,2130,NaN,0
+Balka and railway,704,245,1325,8
+Balka and railway,705,115,200,8
+Balka and railway,706,660,NaN,0
+Balka and railway,707,540,4375,8
+Balka and railway,708,1200,NaN,0
+Balka and railway,709,245,1325,8
+Balka and railway,710,660,NaN,0
+Balka and railway,711,115,200,8
+Balka and railway,712,90,200,8
+Balka and railway,713,440,NaN,0
+Balka and railway,714,245,NaN,0
+Balka and railway,715,165,1375,8
+Balka and railway,716,1780,7975,8
+Balka and railway,717,2160,NaN,0
+Balka and railway,718,50,100,8
+Balka and railway,719,1730,7475,8
+Balka and railway,720,360,1900,8
+Balka and railway,721,940,5575,8
+Balka and railway,722,985,3300,8
+Balka and railway,723,245,1325,8
+Balka and railway,724,95,200,8
+Balka and railway,725,75,200,8
+Balka and railway,726,365,2375,8
+Forest belts,1,40,200,8
+Forest belts,2,60,300,8
+Forest belts,3,80,300,8
+Forest belts,4,100,300,8
+Forest belts,5,120,500,8
+Forest belts,6,160,500,8
+Forest belts,7,200,600,8
+Forest belts,8,300,600,8
+Forest belts,9,60,300,8
+Forest belts,10,90,400,8
+Forest belts,11,120,600,8
+Forest belts,12,150,900,8
+Forest belts,13,180,900,8
+Forest belts,14,240,1300,8
+Forest belts,15,300,1400,8
+Forest belts,16,450,1800,8
+Forest belts,17,320,700,8
+Forest belts,18,480,800,8
+Forest belts,19,640,1200,8
+Forest belts,20,800,1500,8
+Forest belts,21,960,1500,8
+Forest belts,22,1280,2400,8
+Forest belts,23,1600,3000,8
+Forest belts,24,2400,3500,8
+Forest belts,25,10,25,8
+Forest belts,26,20,25,8
+Forest belts,27,30,25,8
+Forest belts,28,40,100,8
+Forest belts,29,60,100,8
+Forest belts,30,80,300,8
+Forest belts,31,100,300,8
+Forest belts,32,120,300,8
+Forest belts,33,15,25,8
+Forest belts,34,30,25,8
+Forest belts,35,45,25,8
+Forest belts,36,60,100,8
+Forest belts,37,90,200,8
+Forest belts,38,120,200,8
+Forest belts,39,150,200,8
+Forest belts,40,180,200,8
+Forest belts,41,30,500,8
+Forest belts,42,60,500,8
+Forest belts,43,90,500,8
+Forest belts,44,120,800,8
+Balka and railway,78,900,2900,8
+Balka and railway,79,850,3000,8
+Balka and railway,80,160,200,8
+Balka and railway,81,110,200,8
+Balka and railway,82,190,200,8
+Balka and railway,83,140,200,8
+Balka and railway,84,280,600,8
+Balka and railway,85,230,600,8
+Balka and railway,86,420,NaN,0
+Balka and railway,87,370,NaN,0
+Balka and railway,88,700,NaN,0
+Forest belts,45,180,1000,8
+Forest belts,46,240,1000,8
+Forest belts,47,300,1200,8
+Forest belts,48,360,1200,8
+Forest belts,49,80,1025,8
+Forest belts,50,160,1025,8
+Forest belts,51,240,1225,8
+Forest belts,52,320,1475,8
+Forest belts,53,480,1925,8
+Forest belts,54,640,1925,8
+Forest belts,55,150,1925,8
+Forest belts,56,300,2125,8
+Forest belts,57,450,2575,8
+Forest belts,58,600,4275,8
+Forest belts,59,900,5725,8
+Forest belts,60,1200,6725,8
+Forest belts,61,90,1925,8
+Forest belts,62,180,1675,8
+Forest belts,63,270,1925,8
+Forest belts,64,360,1925,8
+Forest belts,65,540,2825,8
+Forest belts,66,720,2825,8
+Forest belts,67,120,1675,8
+Forest belts,68,240,1925,8
+Forest belts,69,360,2375,8
+Forest belts,70,480,2375,8
+Forest belts,71,720,2825,8
+Forest belts,72,960,3375,8
+Forest belts,73,600,6375,8
+Forest belts,74,1200,13775,8
+Forest belts,75,1800,17875,8
+Forest belts,76,250,1100,8
+Forest belts,77,200,700,8
+Forest belts,78,900,1800,8
+Forest belts,79,850,1400,8
+Forest belts,80,160,300,8
+Forest belts,81,110,300,8
+Forest belts,82,190,400,8
+Forest belts,83,140,200,8
+Forest belts,84,280,1000,8
+Forest belts,85,230,600,8
+Forest belts,86,420,2325,8
+Forest belts,87,370,1875,8
+Forest belts,88,700,3475,8
+Forest belts,89,650,3475,8
+Forest belts,90,460,2475,8
+Forest belts,91,410,2375,8
+Forest belts,92,580,3775,8
+Forest belts,93,530,2825,8
+Forest belts,94,1300,6475,8
+Forest belts,95,700,3475,8
+Forest belts,96,950,2400,8
+Forest belts,97,875,2200,8
+Forest belts,98,210,900,8
+Forest belts,99,135,400,8
+Forest belts,100,240,900,8
+Forest belts,101,165,400,8
+Forest belts,102,330,1100,8
+Forest belts,103,255,1000,8
+Forest belts,104,470,2325,8
+Forest belts,105,395,2375,8
+Forest belts,106,750,4475,8
+Forest belts,107,675,4125,8
+Forest belts,108,510,3225,8
+Forest belts,109,435,3925,8
+Forest belts,110,630,4425,8
+Forest belts,111,555,3375,8
+Forest belts,112,1350,6475,8
+Forest belts,113,750,3575,8
+Forest belts,114,860,1600,8
+Forest belts,115,460,700,8
+Forest belts,116,890,1400,8
+Forest belts,117,490,800,8
+Forest belts,118,980,1700,8
+Forest belts,119,580,1200,8
+Forest belts,120,1120,3975,8
+Forest belts,121,720,3125,8
+Forest belts,122,1400,4175,8
+Forest belts,123,1000,3475,8
+Forest belts,124,1160,5175,8
+Forest belts,125,760,3575,8
+Forest belts,126,1280,4975,8
+Forest belts,127,880,4025,8
+Forest belts,128,2000,4275,8
+Forest belts,129,1400,1875,8
+Forest belts,130,150,300,8
+Forest belts,131,120,200,8
+Forest belts,132,240,1100,8
+Forest belts,133,210,1000,8
+Forest belts,134,380,1675,8
+Forest belts,135,350,1425,8
+Forest belts,136,660,3475,8
+Forest belts,137,630,3475,8
+Forest belts,138,420,1925,8
+Forest belts,139,390,2375,8
+Forest belts,140,540,2575,8
+Forest belts,141,510,2825,8
+Forest belts,142,1260,15075,8
+Forest belts,143,660,5475,8
+Forest belts,144,270,900,8
+Forest belts,145,225,900,8
+Forest belts,146,410,1475,8
+Forest belts,147,365,1675,8
+Forest belts,148,690,3125,8
+Forest belts,149,645,2575,8
+Forest belts,150,450,2375,8
+Forest belts,151,405,2375,8
+Forest belts,152,570,2375,8
+Forest belts,153,525,2575,8
+Forest belts,154,1290,9975,8
+Balka and railway,89,650,NaN,0
+Balka and railway,90,460,NaN,0
+Balka and railway,91,410,NaN,0
+Balka and railway,92,580,NaN,0
+Balka and railway,93,530,NaN,0
+Balka and railway,94,1300,NaN,0
+Balka and railway,95,700,NaN,0
+Balka and railway,96,950,3900,8
+Balka and railway,97,875,3300,8
+Balka and railway,98,210,800,8
+Balka and railway,99,135,300,8
+Forest belts,155,690,4075,8
+Forest belts,156,500,2525,8
+Forest belts,157,410,1925,8
+Forest belts,158,780,3675,8
+Forest belts,159,690,3375,8
+Forest belts,160,540,2775,8
+Forest belts,161,450,2375,8
+Forest belts,162,660,3525,8
+Forest belts,163,570,2575,8
+Forest belts,164,1380,7275,8
+Forest belts,165,780,4375,8
+Forest belts,166,920,4275,8
+Forest belts,167,760,7525,8
+Forest belts,168,680,2375,8
+Forest belts,169,520,2325,8
+Forest belts,170,800,2575,8
+Forest belts,171,640,2375,8
+Forest belts,172,1520,9975,8
+Forest belts,173,920,9575,8
+Forest belts,174,960,6625,8
+Forest belts,175,660,5725,8
+Forest belts,176,1080,7525,8
+Forest belts,177,780,4825,8
+Forest belts,178,1800,14775,8
+Forest belts,179,1200,9775,8
+Forest belts,180,840,3275,8
+Forest belts,181,660,2825,8
+Forest belts,182,1560,15025,8
+Forest belts,183,960,7125,8
+Forest belts,184,1680,12975,8
+Forest belts,185,1080,7925,8
+Forest belts,186,1280,5725,8
+Forest belts,187,1440,5825,8
+Forest belts,188,1340,5775,8
+Forest belts,189,1830,12925,8
+Forest belts,190,950,1500,8
+Forest belts,191,1620,11925,8
+Forest belts,192,2600,7775,8
+Forest belts,193,980,2575,8
+Forest belts,194,360,1100,8
+Forest belts,195,75,300,8
+Forest belts,196,1160,6575,8
+Forest belts,197,450,2675,8
+Forest belts,198,110,300,8
+Forest belts,199,115,300,8
+Forest belts,200,50,200,8
+Forest belts,201,450,2875,8
+Forest belts,202,660,6275,8
+Forest belts,203,165,2125,8
+Forest belts,204,2160,9175,8
+Forest belts,205,195,2025,8
+Forest belts,206,810,3675,8
+Forest belts,207,960,6275,8
+Forest belts,208,300,1300,8
+Forest belts,209,115,500,8
+Forest belts,210,1440,6725,8
+Forest belts,211,540,3175,8
+Forest belts,212,75,300,8
+Forest belts,213,1740,6375,8
+Forest belts,214,740,2900,8
+Forest belts,215,440,2825,8
+Forest belts,216,115,500,8
+Forest belts,217,540,3925,8
+Forest belts,218,245,1225,8
+Forest belts,219,2180,9475,8
+Forest belts,220,65,300,8
+Forest belts,221,195,1875,8
+Forest belts,222,195,1875,8
+Forest belts,223,1780,7575,8
+Forest belts,224,530,1625,8
+Forest belts,225,75,300,8
+Forest belts,226,165,2075,8
+Forest belts,227,440,2075,8
+Forest belts,228,65,300,8
+Forest belts,229,540,2475,8
+Forest belts,230,2170,6925,8
+Forest belts,231,445,3375,8
+Forest belts,232,450,3375,8
+Forest belts,233,245,1425,8
+Forest belts,234,1440,8025,8
+Forest belts,235,50,200,8
+Forest belts,236,810,5775,8
+Forest belts,237,70,300,8
+Forest belts,238,95,300,8
+Forest belts,239,450,3525,8
+Forest belts,240,115,300,8
+Forest belts,241,75,300,8
+Forest belts,242,810,5925,8
+Forest belts,243,1180,4875,8
+Forest belts,244,1150,5075,8
+Forest belts,245,70,300,8
+Forest belts,246,440,2825,8
+Forest belts,247,1770,10875,8
+Forest belts,248,660,6275,8
+Forest belts,249,440,2075,8
+Forest belts,250,195,2025,8
+Forest belts,251,205,1875,8
+Forest belts,252,660,6275,8
+Forest belts,253,2110,9825,8
+Forest belts,254,805,5475,8
+Forest belts,255,660,6275,8
+Forest belts,256,95,300,8
+Forest belts,257,960,4775,8
+Forest belts,258,1170,6975,8
+Forest belts,259,1770,5875,8
+Forest belts,260,95,300,8
+Forest belts,261,1440,5325,8
+Forest belts,262,1790,6725,8
+Forest belts,263,1720,6925,8
+Forest belts,264,50,200,8
+Balka and railway,100,240,800,8
+Balka and railway,101,165,300,8
+Balka and railway,102,330,1200,8
+Balka and railway,103,255,800,8
+Balka and railway,104,470,NaN,0
+Balka and railway,105,395,NaN,0
+Balka and railway,106,750,NaN,0
+Balka and railway,107,675,NaN,0
+Balka and railway,108,510,NaN,0
+Balka and railway,109,435,NaN,0
+Balka and railway,110,630,NaN,0
+Forest belts,265,170,2325,8
+Forest belts,266,135,300,8
+Forest belts,267,165,2075,8
+Forest belts,268,205,1875,8
+Forest belts,269,70,300,8
+Forest belts,270,195,1875,8
+Forest belts,271,110,500,8
+Forest belts,272,50,200,8
+Forest belts,273,1750,6925,8
+Forest belts,274,50,200,8
+Forest belts,275,360,2375,8
+Forest belts,276,445,2775,8
+Forest belts,277,1790,8575,8
+Forest belts,278,1440,6225,8
+Forest belts,279,65,300,8
+Forest belts,280,110,500,8
+Forest belts,281,50,200,8
+Forest belts,282,130,300,8
+Forest belts,283,1770,5725,8
+Forest belts,284,1460,6625,8
+Forest belts,285,2110,9675,8
+Forest belts,286,305,1225,8
+Forest belts,287,2120,7425,8
+Forest belts,288,305,1325,8
+Forest belts,289,65,300,8
+Forest belts,290,1160,7325,8
+Forest belts,291,800,4475,8
+Forest belts,292,550,3825,8
+Forest belts,293,365,1500,8
+Forest belts,294,660,6275,8
+Forest belts,295,545,1825,8
+Forest belts,296,110,500,8
+Forest belts,297,930,2675,8
+Forest belts,298,2110,9175,8
+Forest belts,299,660,6275,8
+Forest belts,300,110,300,8
+Forest belts,301,70,300,8
+Forest belts,302,195,1875,8
+Forest belts,303,1790,9375,8
+Forest belts,304,170,2325,8
+Forest belts,305,1770,12025,8
+Forest belts,306,50,200,8
+Forest belts,307,245,1325,8
+Forest belts,308,360,1425,8
+Forest belts,309,115,500,8
+Forest belts,310,810,4025,8
+Forest belts,311,165,2125,8
+Forest belts,312,65,300,8
+Forest belts,313,195,2025,8
+Forest belts,314,300,1400,8
+Forest belts,315,75,300,8
+Forest belts,316,1730,6575,8
+Forest belts,317,65,300,8
+Forest belts,318,195,2025,8
+Forest belts,319,960,5125,8
+Forest belts,320,50,200,8
+Forest belts,321,140,500,8
+Forest belts,322,365,1525,8
+Forest belts,323,140,400,8
+Forest belts,324,75,300,8
+Forest belts,325,360,1100,8
+Forest belts,326,75,300,8
+Forest belts,327,165,2075,8
+Forest belts,328,660,6275,8
+Forest belts,329,50,200,8
+Forest belts,330,65,300,8
+Forest belts,331,50,200,8
+Forest belts,332,115,300,8
+Forest belts,333,195,2025,8
+Forest belts,334,545,3275,8
+Forest belts,335,300,1300,8
+Forest belts,336,1450,6725,8
+Forest belts,337,660,6275,8
+Forest belts,338,810,4675,8
+Forest belts,339,1780,7525,8
+Forest belts,340,50,200,8
+Forest belts,341,365,1225,8
+Forest belts,342,450,3575,8
+Forest belts,343,1450,6725,8
+Forest belts,344,1740,8925,8
+Forest belts,345,245,1225,8
+Forest belts,346,440,3575,8
+Forest belts,347,305,1500,8
+Forest belts,348,65,300,8
+Forest belts,349,545,3025,8
+Forest belts,350,65,300,8
+Forest belts,351,810,6025,8
+Forest belts,352,195,2025,8
+Forest belts,353,450,3575,8
+Forest belts,354,665,6075,8
+Forest belts,355,660,6275,8
+Forest belts,356,240,1225,8
+Forest belts,357,970,4875,8
+Forest belts,358,135,300,8
+Forest belts,359,660,6275,8
+Forest belts,360,365,2175,8
+Forest belts,361,1430,4975,8
+Forest belts,362,50,200,8
+Forest belts,363,365,1000,8
+Forest belts,364,1730,6625,8
+Forest belts,365,545,2725,8
+Forest belts,366,75,300,8
+Forest belts,367,660,6275,8
+Forest belts,368,205,1875,8
+Forest belts,369,1460,10025,8
+Forest belts,370,205,1875,8
+Forest belts,371,245,1325,8
+Forest belts,372,800,7025,8
+Forest belts,373,115,500,8
+Forest belts,374,95,300,8
+Balka and railway,10001,50,100,8
+Balka and railway,10002,65,200,8
+Balka and railway,10011,200,500,8
+Balka and railway,10012,435,1200,8
+Balka and railway,10013,520,1400,8
+Balka and railway,10014,480,1400,8
+Balka and railway,10015,520,2500,8
+Balka and railway,10016,570,2500,8
+Balka and railway,10017,800,2700,8
+Balka and railway,10018,740,2300,8
+Balka and railway,10019,1270,3700,8
+Balka and railway,10020,1065,3200,8
+Balka and railway,10003,60,200,8
+Balka and railway,10021,1340,8675,8
+Balka and railway,10022,2090,9725,8
+Balka and railway,10023,2140,10075,8
+Balka and railway,10024,1835,7875,8
+Balka and railway,10025,1845,9075,8
+Balka and railway,10026,1870,10525,8
+Balka and railway,10027,2885,NaN,0
+Balka and railway,10028,2820,NaN,0
+Balka and railway,10029,2535,9625,8
+Balka and railway,10030,2765,NaN,0
+Balka and railway,10004,25,25,8
+Forest belts,10001,50,200,8
+Forest belts,10002,65,300,8
+Forest belts,10003,60,300,8
+Forest belts,10004,25,25,8
+Forest belts,10005,120,300,8
+Forest belts,10006,135,500,8
+Forest belts,10007,205,800,8
+Forest belts,10008,215,500,8
+Forest belts,10009,205,400,8
+Forest belts,10010,240,500,8
+Balka and railway,10005,120,300,8
+Forest belts,10011,200,500,8
+Forest belts,10012,435,1300,8
+Forest belts,10013,520,1100,8
+Forest belts,10014,480,1300,8
+Forest belts,10015,520,1400,8
+Forest belts,10016,570,1400,8
+Forest belts,10017,800,2300,8
+Forest belts,10018,740,2000,8
+Forest belts,10019,1270,2700,8
+Forest belts,10020,1065,2300,8
+Balka and railway,10006,135,300,8
+Forest belts,10021,1340,6625,8
+Forest belts,10022,2090,8275,8
+Forest belts,10023,2140,7225,8
+Forest belts,10024,1835,5625,8
+Forest belts,10025,1845,4375,8
+Forest belts,10026,1870,4725,8
+Forest belts,10027,2885,9475,8
+Forest belts,10028,2820,7925,8
+Forest belts,10029,2535,7025,8
+Forest belts,10030,2765,7025,8
+Balka and railway,10007,205,600,8
+River crossing,10001,50,100,8
+River crossing,10002,65,200,8
+River crossing,10003,60,200,8
+River crossing,10004,25,25,8
+River crossing,10005,120,200,8
+River crossing,10006,135,400,8
+River crossing,10007,205,600,8
+River crossing,10008,215,500,8
+River crossing,10009,205,400,8
+River crossing,10010,240,600,8
+Balka and railway,10008,215,500,8
+River crossing,10011,200,600,8
+River crossing,10012,435,2700,8
+River crossing,10013,520,2800,8
+River crossing,10014,480,2300,8
+River crossing,10015,520,4900,8
+River crossing,10016,570,4900,8
+River crossing,10017,800,4500,8
+River crossing,10018,740,3500,8
+River crossing,10019,1270,6300,8
+River crossing,10020,1065,5700,8
+Balka and railway,10009,205,400,8
+River crossing,10021,1340,10175,8
+River crossing,10022,2090,11975,8
+River crossing,10023,2140,NaN,0
+River crossing,10024,1835,8675,8
+River crossing,10025,1845,6475,8
+River crossing,10026,1870,6725,8
+River crossing,10027,2885,NaN,0
+River crossing,10028,2820,11775,8
+River crossing,10029,2535,NaN,0
+River crossing,10030,2765,NaN,0
+Balka and railway,10010,240,400,8
+Balka and railway,10031,50,100,8
+Balka and railway,10032,65,200,8
+Balka and railway,10041,395,1200,8
+Balka and railway,10042,520,1400,8
+Balka and railway,10043,520,1400,8
+Balka and railway,10044,480,1400,8
+Balka and railway,10045,520,1400,8
+Balka and railway,10046,570,2500,8
+Balka and railway,10047,730,2300,8
+Balka and railway,10048,740,2300,8
+Balka and railway,10049,800,2700,8
+Balka and railway,10050,1065,3200,8
+Balka and railway,10033,60,200,8
+Balka and railway,10051,520,3425,8
+Balka and railway,10052,240,NaN,0
+Balka and railway,10053,550,2725,8
+Balka and railway,10054,1870,10525,8
+Balka and railway,10055,1845,9075,8
+Balka and railway,10056,1835,7875,8
+Balka and railway,10057,1835,7875,8
+Balka and railway,10058,1340,8675,8
+Balka and railway,10059,2090,9725,8
+Balka and railway,10060,2140,10075,8
+Balka and railway,10034,75,200,8
+Forest belts,10031,50,200,8
+Forest belts,10032,65,300,8
+Forest belts,10033,60,300,8
+Forest belts,10034,75,300,8
+Forest belts,10035,120,300,8
+Forest belts,10036,135,500,8
+Forest belts,10037,135,500,8
+Forest belts,10038,215,500,8
+Forest belts,10039,150,400,8
+Forest belts,10040,230,600,8
+Balka and railway,10035,120,300,8
+Forest belts,10041,395,1000,8
+Forest belts,10042,520,1100,8
+Forest belts,10043,520,1100,8
+Forest belts,10044,480,1300,8
+Forest belts,10045,520,1100,8
+Forest belts,10046,570,1400,8
+Forest belts,10047,730,2300,8
+Forest belts,10048,740,2000,8
+Forest belts,10049,800,2300,8
+Forest belts,10050,1065,2300,8
+Balka and railway,10036,135,300,8
+Forest belts,10051,520,3125,8
+Forest belts,10052,240,2325,8
+Forest belts,10053,550,3325,8
+Forest belts,10054,1870,4725,8
+Forest belts,10055,1845,4375,8
+Forest belts,10056,1835,5625,8
+Forest belts,10057,1835,5625,8
+Forest belts,10058,1340,6625,8
+Forest belts,10059,2090,8275,8
+Forest belts,10060,2140,7225,8
+Balka and railway,10037,135,300,8
+River crossing,10031,50,100,8
+River crossing,10032,65,200,8
+River crossing,10033,60,200,8
+River crossing,10034,75,200,8
+River crossing,10035,120,200,8
+River crossing,10036,135,400,8
+River crossing,10037,135,400,8
+River crossing,10038,215,500,8
+River crossing,10039,150,500,8
+River crossing,10040,230,800,8
+Balka and railway,10038,215,500,8
+River crossing,10041,395,2100,8
+River crossing,10042,520,2800,8
+River crossing,10043,520,2800,8
+River crossing,10044,480,2300,8
+River crossing,10045,520,2800,8
+River crossing,10046,570,4900,8
+River crossing,10047,730,3700,8
+River crossing,10048,740,3500,8
+River crossing,10049,800,4500,8
+River crossing,10050,1065,5700,8
+Balka and railway,10039,150,300,8
+River crossing,10051,520,4375,8
+River crossing,10052,240,1475,8
+River crossing,10053,550,3475,8
+River crossing,10054,1870,6725,8
+River crossing,10055,1845,6475,8
+River crossing,10056,1835,8675,8
+River crossing,10057,1835,8675,8
+River crossing,10058,1340,10175,8
+River crossing,10059,2090,11975,8
+River crossing,10060,2140,NaN,0
+Balka and railway,10040,230,600,8

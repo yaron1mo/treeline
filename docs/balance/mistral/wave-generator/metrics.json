@@ -1,0 +1,1321 @@
+{
+ "summary": {
+  "Forest belts": {
+   "n": 80,
+   "mape": 0.11671310730340814,
+   "within_20pct": 0.7875
+  },
+  "Balka and railway": {
+   "n": 54,
+   "mape": 0.126383631713631,
+   "within_20pct": 0.7962962962962963
+  },
+  "River crossing": {
+   "n": 79,
+   "mape": 0.13755400700209516,
+   "within_20pct": 0.7974683544303798
+  },
+  "pooled": {
+   "n": 213,
+   "mape": 0.1268945129106772,
+   "within_20pct": 0.7934272300469484
+  },
+  "measured_wave_generator_waves": {
+   "Forest belts": {
+    "n": 60,
+    "mape": 0.21966328291973217,
+    "within_20pct": 0.7833333333333333
+   },
+   "Balka and railway": {
+    "n": 56,
+    "mape": 0.12830764980348752,
+    "within_20pct": 0.9107142857142857
+   },
+   "River crossing": {
+    "n": 55,
+    "mape": 0.25082212890170896,
+    "within_20pct": 0.8181818181818182
+   }
+  }
+ },
+ "predictions": [
+  {
+   "field": "Forest belts",
+   "wave": 647,
+   "measured": 3575.0,
+   "predicted": 5610.8
+  },
+  {
+   "field": "Forest belts",
+   "wave": 648,
+   "measured": 2275.0,
+   "predicted": 2389.8
+  },
+  {
+   "field": "Forest belts",
+   "wave": 649,
+   "measured": 3575.0,
+   "predicted": 5154.9
+  },
+  {
+   "field": "Forest belts",
+   "wave": 650,
+   "measured": 1625.0,
+   "predicted": 1388.3
+  },
+  {
+   "field": "Forest belts",
+   "wave": 651,
+   "measured": 300.0,
+   "predicted": 280.5
+  },
+  {
+   "field": "Forest belts",
+   "wave": 652,
+   "measured": 300.0,
+   "predicted": 292.2
+  },
+  {
+   "field": "Forest belts",
+   "wave": 653,
+   "measured": 300.0,
+   "predicted": 290.8
+  },
+  {
+   "field": "Forest belts",
+   "wave": 654,
+   "measured": 9525.0,
+   "predicted": 9605.9
+  },
+  {
+   "field": "Forest belts",
+   "wave": 655,
+   "measured": 1500.0,
+   "predicted": 1160.9
+  },
+  {
+   "field": "Forest belts",
+   "wave": 656,
+   "measured": 300.0,
+   "predicted": 292.4
+  },
+  {
+   "field": "Forest belts",
+   "wave": 657,
+   "measured": 200.0,
+   "predicted": 198.7
+  },
+  {
+   "field": "Forest belts",
+   "wave": 658,
+   "measured": 1875.0,
+   "predicted": 1790.7
+  },
+  {
+   "field": "Forest belts",
+   "wave": 659,
+   "measured": 300.0,
+   "predicted": 292.2
+  },
+  {
+   "field": "Forest belts",
+   "wave": 660,
+   "measured": 300.0,
+   "predicted": 280.5
+  },
+  {
+   "field": "Forest belts",
+   "wave": 661,
+   "measured": 500.0,
+   "predicted": 397.4
+  },
+  {
+   "field": "Forest belts",
+   "wave": 662,
+   "measured": 1125.0,
+   "predicted": 1350.1
+  },
+  {
+   "field": "Forest belts",
+   "wave": 663,
+   "measured": 7525.0,
+   "predicted": 6911.5
+  },
+  {
+   "field": "Forest belts",
+   "wave": 664,
+   "measured": 6875.0,
+   "predicted": 6623.9
+  },
+  {
+   "field": "Forest belts",
+   "wave": 665,
+   "measured": 6125.0,
+   "predicted": 6568.2
+  },
+  {
+   "field": "Forest belts",
+   "wave": 666,
+   "measured": 300.0,
+   "predicted": 398.3
+  },
+  {
+   "field": "Forest belts",
+   "wave": 667,
+   "measured": 300.0,
+   "predicted": 301.6
+  },
+  {
+   "field": "Forest belts",
+   "wave": 668,
+   "measured": 2925.0,
+   "predicted": 3561.8
+  },
+  {
+   "field": "Forest belts",
+   "wave": 669,
+   "measured": 5675.0,
+   "predicted": 6078.1
+  },
+  {
+   "field": "Forest belts",
+   "wave": 670,
+   "measured": 300.0,
+   "predicted": 292.2
+  },
+  {
+   "field": "Forest belts",
+   "wave": 671,
+   "measured": 6875.0,
+   "predicted": 6394.1
+  },
+  {
+   "field": "Forest belts",
+   "wave": 672,
+   "measured": 1400.0,
+   "predicted": 1257.6
+  },
+  {
+   "field": "Forest belts",
+   "wave": 673,
+   "measured": 2075.0,
+   "predicted": 2184.7
+  },
+  {
+   "field": "Forest belts",
+   "wave": 674,
+   "measured": 6275.0,
+   "predicted": 7033.4
+  },
+  {
+   "field": "Forest belts",
+   "wave": 675,
+   "measured": 900.0,
+   "predicted": 1206.2
+  },
+  {
+   "field": "Forest belts",
+   "wave": 676,
+   "measured": 2075.0,
+   "predicted": 2184.7
+  },
+  {
+   "field": "Forest belts",
+   "wave": 677,
+   "measured": 5825.0,
+   "predicted": 4705.9
+  },
+  {
+   "field": "Forest belts",
+   "wave": 678,
+   "measured": 400.0,
+   "predicted": 369.7
+  },
+  {
+   "field": "Forest belts",
+   "wave": 679,
+   "measured": 2825.0,
+   "predicted": 2620.0
+  },
+  {
+   "field": "Forest belts",
+   "wave": 680,
+   "measured": 300.0,
+   "predicted": 290.8
+  },
+  {
+   "field": "Forest belts",
+   "wave": 681,
+   "measured": 1875.0,
+   "predicted": 1890.7
+  },
+  {
+   "field": "Forest belts",
+   "wave": 682,
+   "measured": 3425.0,
+   "predicted": 3070.8
+  },
+  {
+   "field": "Forest belts",
+   "wave": 683,
+   "measured": 200.0,
+   "predicted": 198.7
+  },
+  {
+   "field": "Forest belts",
+   "wave": 684,
+   "measured": 12725.0,
+   "predicted": 10930.8
+  },
+  {
+   "field": "Forest belts",
+   "wave": 685,
+   "measured": 11525.0,
+   "predicted": 10662.3
+  },
+  {
+   "field": "Forest belts",
+   "wave": 686,
+   "measured": 4125.0,
+   "predicted": 4688.6
+  },
+  {
+   "field": "Forest belts",
+   "wave": 687,
+   "measured": 10575.0,
+   "predicted": 9819.3
+  },
+  {
+   "field": "Forest belts",
+   "wave": 688,
+   "measured": 300.0,
+   "predicted": 291.5
+  },
+  {
+   "field": "Forest belts",
+   "wave": 689,
+   "measured": 300.0,
+   "predicted": 301.6
+  },
+  {
+   "field": "Forest belts",
+   "wave": 690,
+   "measured": 8425.0,
+   "predicted": 7940.1
+  },
+  {
+   "field": "Forest belts",
+   "wave": 691,
+   "measured": 2525.0,
+   "predicted": 2191.0
+  },
+  {
+   "field": "Forest belts",
+   "wave": 692,
+   "measured": 1125.0,
+   "predicted": 1350.1
+  },
+  {
+   "field": "Forest belts",
+   "wave": 693,
+   "measured": 200.0,
+   "predicted": 198.7
+  },
+  {
+   "field": "Forest belts",
+   "wave": 694,
+   "measured": 1925.0,
+   "predicted": 1788.3
+  },
+  {
+   "field": "Forest belts",
+   "wave": 695,
+   "measured": 2075.0,
+   "predicted": 2184.7
+  },
+  {
+   "field": "Forest belts",
+   "wave": 696,
+   "measured": 2675.0,
+   "predicted": 3320.9
+  },
+  {
+   "field": "Forest belts",
+   "wave": 697,
+   "measured": 3675.0,
+   "predicted": 5005.8
+  },
+  {
+   "field": "Forest belts",
+   "wave": 698,
+   "measured": 300.0,
+   "predicted": 398.3
+  },
+  {
+   "field": "Forest belts",
+   "wave": 699,
+   "measured": 5875.0,
+   "predicted": 4509.6
+  },
+  {
+   "field": "Forest belts",
+   "wave": 700,
+   "measured": 3075.0,
+   "predicted": 2616.6
+  },
+  {
+   "field": "Forest belts",
+   "wave": 701,
+   "measured": 3125.0,
+   "predicted": 3436.7
+  },
+  {
+   "field": "Forest belts",
+   "wave": 702,
+   "measured": 1100.0,
+   "predicted": 1089.0
+  },
+  {
+   "field": "Forest belts",
+   "wave": 703,
+   "measured": 9525.0,
+   "predicted": 9441.4
+  },
+  {
+   "field": "Forest belts",
+   "wave": 704,
+   "measured": 1225.0,
+   "predicted": 1332.5
+  },
+  {
+   "field": "Forest belts",
+   "wave": 705,
+   "measured": 300.0,
+   "predicted": 320.7
+  },
+  {
+   "field": "Forest belts",
+   "wave": 706,
+   "measured": 6275.0,
+   "predicted": 6433.5
+  },
+  {
+   "field": "Forest belts",
+   "wave": 707,
+   "measured": 3575.0,
+   "predicted": 3708.2
+  },
+  {
+   "field": "Forest belts",
+   "wave": 708,
+   "measured": 7525.0,
+   "predicted": 6371.3
+  },
+  {
+   "field": "Forest belts",
+   "wave": 709,
+   "measured": 1225.0,
+   "predicted": 1332.5
+  },
+  {
+   "field": "Forest belts",
+   "wave": 710,
+   "measured": 6275.0,
+   "predicted": 6433.5
+  },
+  {
+   "field": "Forest belts",
+   "wave": 711,
+   "measured": 300.0,
+   "predicted": 320.7
+  },
+  {
+   "field": "Forest belts",
+   "wave": 712,
+   "measured": 300.0,
+   "predicted": 301.6
+  },
+  {
+   "field": "Forest belts",
+   "wave": 713,
+   "measured": 3325.0,
+   "predicted": 2538.7
+  },
+  {
+   "field": "Forest belts",
+   "wave": 714,
+   "measured": 1625.0,
+   "predicted": 1182.5
+  },
+  {
+   "field": "Forest belts",
+   "wave": 715,
+   "measured": 2075.0,
+   "predicted": 1958.7
+  },
+  {
+   "field": "Forest belts",
+   "wave": 716,
+   "measured": 6575.0,
+   "predicted": 5740.2
+  },
+  {
+   "field": "Forest belts",
+   "wave": 717,
+   "measured": 6625.0,
+   "predicted": 7316.9
+  },
+  {
+   "field": "Forest belts",
+   "wave": 718,
+   "measured": 200.0,
+   "predicted": 198.7
+  },
+  {
+   "field": "Forest belts",
+   "wave": 719,
+   "measured": 7175.0,
+   "predicted": 6724.7
+  },
+  {
+   "field": "Forest belts",
+   "wave": 720,
+   "measured": 1400.0,
+   "predicted": 1363.5
+  },
+  {
+   "field": "Forest belts",
+   "wave": 721,
+   "measured": 3575.0,
+   "predicted": 5921.7
+  },
+  {
+   "field": "Forest belts",
+   "wave": 722,
+   "measured": 2900.0,
+   "predicted": 3112.5
+  },
+  {
+   "field": "Forest belts",
+   "wave": 723,
+   "measured": 1225.0,
+   "predicted": 1332.5
+  },
+  {
+   "field": "Forest belts",
+   "wave": 724,
+   "measured": 300.0,
+   "predicted": 290.8
+  },
+  {
+   "field": "Forest belts",
+   "wave": 725,
+   "measured": 300.0,
+   "predicted": 285.8
+  },
+  {
+   "field": "Forest belts",
+   "wave": 726,
+   "measured": 2275.0,
+   "predicted": 3136.9
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 648,
+   "measured": 2175.0,
+   "predicted": 2538.8
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 650,
+   "measured": 1425.0,
+   "predicted": 1358.7
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 651,
+   "measured": 200.0,
+   "predicted": 201.0
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 652,
+   "measured": 100.0,
+   "predicted": 109.3
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 653,
+   "measured": 200.0,
+   "predicted": 198.4
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 655,
+   "measured": 1600.0,
+   "predicted": 1443.1
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 656,
+   "measured": 200.0,
+   "predicted": 214.2
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 657,
+   "measured": 100.0,
+   "predicted": 113.3
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 659,
+   "measured": 100.0,
+   "predicted": 109.3
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 660,
+   "measured": 200.0,
+   "predicted": 201.0
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 661,
+   "measured": 300.0,
+   "predicted": 339.9
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 662,
+   "measured": 1225.0,
+   "predicted": 842.7
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 666,
+   "measured": 300.0,
+   "predicted": 287.7
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 667,
+   "measured": 200.0,
+   "predicted": 159.7
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 669,
+   "measured": 18575.0,
+   "predicted": 5135.8
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 670,
+   "measured": 100.0,
+   "predicted": 109.3
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 671,
+   "measured": 7225.0,
+   "predicted": 7193.8
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 672,
+   "measured": 2000.0,
+   "predicted": 1848.9
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 673,
+   "measured": 1375.0,
+   "predicted": 1557.4
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 675,
+   "measured": 1100.0,
+   "predicted": 1193.1
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 676,
+   "measured": 1375.0,
+   "predicted": 1557.4
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 678,
+   "measured": 300.0,
+   "predicted": 268.9
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 680,
+   "measured": 200.0,
+   "predicted": 198.4
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 681,
+   "measured": 1275.0,
+   "predicted": 1309.1
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 682,
+   "measured": 4775.0,
+   "predicted": 5091.9
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 683,
+   "measured": 100.0,
+   "predicted": 113.3
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 686,
+   "measured": 25925.0,
+   "predicted": 4757.5
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 688,
+   "measured": 200.0,
+   "predicted": 183.2
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 689,
+   "measured": 200.0,
+   "predicted": 159.7
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 692,
+   "measured": 1225.0,
+   "predicted": 842.7
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 693,
+   "measured": 100.0,
+   "predicted": 113.3
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 694,
+   "measured": 1175.0,
+   "predicted": 1206.9
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 695,
+   "measured": 1375.0,
+   "predicted": 1557.4
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 696,
+   "measured": 2475.0,
+   "predicted": 3099.1
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 698,
+   "measured": 300.0,
+   "predicted": 287.7
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 700,
+   "measured": 3375.0,
+   "predicted": 2620.4
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 702,
+   "measured": 1300.0,
+   "predicted": 1286.3
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 704,
+   "measured": 1325.0,
+   "predicted": 1255.6
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 705,
+   "measured": 200.0,
+   "predicted": 199.9
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 707,
+   "measured": 4375.0,
+   "predicted": 3953.0
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 709,
+   "measured": 1325.0,
+   "predicted": 1255.6
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 711,
+   "measured": 200.0,
+   "predicted": 199.9
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 712,
+   "measured": 200.0,
+   "predicted": 159.7
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 715,
+   "measured": 1375.0,
+   "predicted": 1479.8
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 716,
+   "measured": 7975.0,
+   "predicted": 6317.0
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 718,
+   "measured": 100.0,
+   "predicted": 113.3
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 719,
+   "measured": 7475.0,
+   "predicted": 7549.6
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 720,
+   "measured": 1900.0,
+   "predicted": 2062.6
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 721,
+   "measured": 5575.0,
+   "predicted": 6545.7
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 722,
+   "measured": 3300.0,
+   "predicted": 3923.1
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 723,
+   "measured": 1325.0,
+   "predicted": 1255.6
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 724,
+   "measured": 200.0,
+   "predicted": 198.4
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 725,
+   "measured": 200.0,
+   "predicted": 197.2
+  },
+  {
+   "field": "Balka and railway",
+   "wave": 726,
+   "measured": 2375.0,
+   "predicted": 2958.9
+  },
+  {
+   "field": "River crossing",
+   "wave": 647,
+   "measured": 5675.0,
+   "predicted": 5774.1
+  },
+  {
+   "field": "River crossing",
+   "wave": 648,
+   "measured": 3575.0,
+   "predicted": 3280.4
+  },
+  {
+   "field": "River crossing",
+   "wave": 649,
+   "measured": 5275.0,
+   "predicted": 6321.8
+  },
+  {
+   "field": "River crossing",
+   "wave": 650,
+   "measured": 2275.0,
+   "predicted": 1905.3
+  },
+  {
+   "field": "River crossing",
+   "wave": 651,
+   "measured": 200.0,
+   "predicted": 172.6
+  },
+  {
+   "field": "River crossing",
+   "wave": 652,
+   "measured": 200.0,
+   "predicted": 188.4
+  },
+  {
+   "field": "River crossing",
+   "wave": 653,
+   "measured": 200.0,
+   "predicted": 202.5
+  },
+  {
+   "field": "River crossing",
+   "wave": 654,
+   "measured": 24175.0,
+   "predicted": 20243.5
+  },
+  {
+   "field": "River crossing",
+   "wave": 655,
+   "measured": 2100.0,
+   "predicted": 1786.3
+  },
+  {
+   "field": "River crossing",
+   "wave": 656,
+   "measured": 400.0,
+   "predicted": 299.4
+  },
+  {
+   "field": "River crossing",
+   "wave": 657,
+   "measured": 100.0,
+   "predicted": 109.3
+  },
+  {
+   "field": "River crossing",
+   "wave": 658,
+   "measured": 1475.0,
+   "predicted": 1410.1
+  },
+  {
+   "field": "River crossing",
+   "wave": 659,
+   "measured": 200.0,
+   "predicted": 188.4
+  },
+  {
+   "field": "River crossing",
+   "wave": 660,
+   "measured": 200.0,
+   "predicted": 172.6
+  },
+  {
+   "field": "River crossing",
+   "wave": 661,
+   "measured": 300.0,
+   "predicted": 237.3
+  },
+  {
+   "field": "River crossing",
+   "wave": 662,
+   "measured": 1625.0,
+   "predicted": 1522.9
+  },
+  {
+   "field": "River crossing",
+   "wave": 663,
+   "measured": 8925.0,
+   "predicted": 7074.5
+  },
+  {
+   "field": "River crossing",
+   "wave": 664,
+   "measured": 6775.0,
+   "predicted": 6857.0
+  },
+  {
+   "field": "River crossing",
+   "wave": 665,
+   "measured": 8375.0,
+   "predicted": 7249.9
+  },
+  {
+   "field": "River crossing",
+   "wave": 666,
+   "measured": 200.0,
+   "predicted": 232.6
+  },
+  {
+   "field": "River crossing",
+   "wave": 667,
+   "measured": 200.0,
+   "predicted": 256.8
+  },
+  {
+   "field": "River crossing",
+   "wave": 668,
+   "measured": 2725.0,
+   "predicted": 4319.0
+  },
+  {
+   "field": "River crossing",
+   "wave": 669,
+   "measured": 5575.0,
+   "predicted": 6362.6
+  },
+  {
+   "field": "River crossing",
+   "wave": 670,
+   "measured": 200.0,
+   "predicted": 188.4
+  },
+  {
+   "field": "River crossing",
+   "wave": 671,
+   "measured": 6375.0,
+   "predicted": 7083.3
+  },
+  {
+   "field": "River crossing",
+   "wave": 672,
+   "measured": 2600.0,
+   "predicted": 2088.2
+  },
+  {
+   "field": "River crossing",
+   "wave": 673,
+   "measured": 1675.0,
+   "predicted": 1671.9
+  },
+  {
+   "field": "River crossing",
+   "wave": 674,
+   "measured": 10525.0,
+   "predicted": 11710.0
+  },
+  {
+   "field": "River crossing",
+   "wave": 675,
+   "measured": 1200.0,
+   "predicted": 1534.4
+  },
+  {
+   "field": "River crossing",
+   "wave": 676,
+   "measured": 1675.0,
+   "predicted": 1671.9
+  },
+  {
+   "field": "River crossing",
+   "wave": 677,
+   "measured": 7625.0,
+   "predicted": 7618.6
+  },
+  {
+   "field": "River crossing",
+   "wave": 678,
+   "measured": 300.0,
+   "predicted": 315.5
+  },
+  {
+   "field": "River crossing",
+   "wave": 679,
+   "measured": 2825.0,
+   "predicted": 3056.7
+  },
+  {
+   "field": "River crossing",
+   "wave": 680,
+   "measured": 200.0,
+   "predicted": 202.5
+  },
+  {
+   "field": "River crossing",
+   "wave": 681,
+   "measured": 1475.0,
+   "predicted": 1483.7
+  },
+  {
+   "field": "River crossing",
+   "wave": 682,
+   "measured": 9525.0,
+   "predicted": 5206.0
+  },
+  {
+   "field": "River crossing",
+   "wave": 683,
+   "measured": 100.0,
+   "predicted": 109.3
+  },
+  {
+   "field": "River crossing",
+   "wave": 684,
+   "measured": 29725.0,
+   "predicted": 13296.8
+  },
+  {
+   "field": "River crossing",
+   "wave": 685,
+   "measured": 15775.0,
+   "predicted": 19614.3
+  },
+  {
+   "field": "River crossing",
+   "wave": 686,
+   "measured": 5975.0,
+   "predicted": 7357.2
+  },
+  {
+   "field": "River crossing",
+   "wave": 688,
+   "measured": 200.0,
+   "predicted": 284.3
+  },
+  {
+   "field": "River crossing",
+   "wave": 689,
+   "measured": 200.0,
+   "predicted": 256.8
+  },
+  {
+   "field": "River crossing",
+   "wave": 690,
+   "measured": 12725.0,
+   "predicted": 11378.3
+  },
+  {
+   "field": "River crossing",
+   "wave": 691,
+   "measured": 2525.0,
+   "predicted": 2079.7
+  },
+  {
+   "field": "River crossing",
+   "wave": 692,
+   "measured": 1625.0,
+   "predicted": 1522.9
+  },
+  {
+   "field": "River crossing",
+   "wave": 693,
+   "measured": 100.0,
+   "predicted": 109.3
+  },
+  {
+   "field": "River crossing",
+   "wave": 694,
+   "measured": 1475.0,
+   "predicted": 1495.7
+  },
+  {
+   "field": "River crossing",
+   "wave": 695,
+   "measured": 1675.0,
+   "predicted": 1671.9
+  },
+  {
+   "field": "River crossing",
+   "wave": 696,
+   "measured": 3325.0,
+   "predicted": 3666.4
+  },
+  {
+   "field": "River crossing",
+   "wave": 697,
+   "measured": 5275.0,
+   "predicted": 4608.9
+  },
+  {
+   "field": "River crossing",
+   "wave": 698,
+   "measured": 200.0,
+   "predicted": 232.6
+  },
+  {
+   "field": "River crossing",
+   "wave": 699,
+   "measured": 7575.0,
+   "predicted": 6462.3
+  },
+  {
+   "field": "River crossing",
+   "wave": 700,
+   "measured": 3525.0,
+   "predicted": 3398.8
+  },
+  {
+   "field": "River crossing",
+   "wave": 701,
+   "measured": 3725.0,
+   "predicted": 3699.0
+  },
+  {
+   "field": "River crossing",
+   "wave": 702,
+   "measured": 1500.0,
+   "predicted": 1655.9
+  },
+  {
+   "field": "River crossing",
+   "wave": 703,
+   "measured": 15975.0,
+   "predicted": 14011.8
+  },
+  {
+   "field": "River crossing",
+   "wave": 704,
+   "measured": 1425.0,
+   "predicted": 1673.5
+  },
+  {
+   "field": "River crossing",
+   "wave": 705,
+   "measured": 200.0,
+   "predicted": 226.4
+  },
+  {
+   "field": "River crossing",
+   "wave": 706,
+   "measured": 6275.0,
+   "predicted": 6192.8
+  },
+  {
+   "field": "River crossing",
+   "wave": 707,
+   "measured": 5125.0,
+   "predicted": 4172.0
+  },
+  {
+   "field": "River crossing",
+   "wave": 708,
+   "measured": 7425.0,
+   "predicted": 7278.5
+  },
+  {
+   "field": "River crossing",
+   "wave": 709,
+   "measured": 1425.0,
+   "predicted": 1673.5
+  },
+  {
+   "field": "River crossing",
+   "wave": 710,
+   "measured": 6275.0,
+   "predicted": 6192.8
+  },
+  {
+   "field": "River crossing",
+   "wave": 711,
+   "measured": 200.0,
+   "predicted": 226.4
+  },
+  {
+   "field": "River crossing",
+   "wave": 712,
+   "measured": 200.0,
+   "predicted": 256.8
+  },
+  {
+   "field": "River crossing",
+   "wave": 713,
+   "measured": 2525.0,
+   "predicted": 2608.0
+  },
+  {
+   "field": "River crossing",
+   "wave": 714,
+   "measured": 2025.0,
+   "predicted": 1200.4
+  },
+  {
+   "field": "River crossing",
+   "wave": 715,
+   "measured": 1575.0,
+   "predicted": 1499.3
+  },
+  {
+   "field": "River crossing",
+   "wave": 716,
+   "measured": 9925.0,
+   "predicted": 8108.1
+  },
+  {
+   "field": "River crossing",
+   "wave": 717,
+   "measured": 9325.0,
+   "predicted": 12830.1
+  },
+  {
+   "field": "River crossing",
+   "wave": 718,
+   "measured": 100.0,
+   "predicted": 109.3
+  },
+  {
+   "field": "River crossing",
+   "wave": 719,
+   "measured": 9775.0,
+   "predicted": 9140.3
+  },
+  {
+   "field": "River crossing",
+   "wave": 720,
+   "measured": 2200.0,
+   "predicted": 2105.3
+  },
+  {
+   "field": "River crossing",
+   "wave": 721,
+   "measured": 6525.0,
+   "predicted": 7355.0
+  },
+  {
+   "field": "River crossing",
+   "wave": 722,
+   "measured": 4100.0,
+   "predicted": 4408.0
+  },
+  {
+   "field": "River crossing",
+   "wave": 723,
+   "measured": 1425.0,
+   "predicted": 1673.5
+  },
+  {
+   "field": "River crossing",
+   "wave": 724,
+   "measured": 200.0,
+   "predicted": 202.5
+  },
+  {
+   "field": "River crossing",
+   "wave": 725,
+   "measured": 200.0,
+   "predicted": 192.7
+  },
+  {
+   "field": "River crossing",
+   "wave": 726,
+   "measured": 2675.0,
+   "predicted": 3335.1
+  }
+ ]
+}
