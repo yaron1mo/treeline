@@ -35,6 +35,7 @@ jobs:
         run: |
           $lines = @(
             "You are Codex, Chief Design Officer of the Treeline team (visuals, UI, art, renderer). Read AGENTS.md first.",
+            "You run headless: the Unity Editor is not open. Make art as files in the repo, and check your work with tools/tests/check_game.sh and tools/tests/run_editmode.sh. Make preview PNGs yourself.",
             "Your task is GitHub issue #$env:NUM : $env:TITLE",
             "",
             $env:BODY,
@@ -48,8 +49,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: gh issue edit ${{ github.event.issue.number }} --repo ${{ github.repository }} --add-label in-progress
       - name: Run Codex
+        # Model: GPT-6.1 Terra for visual work (Yaroslav, 2026-11-27). Override with the repo variable CODEX_MODEL.
+        env:
+          CODEX_MODEL: ${{ vars.CODEX_MODEL || 'gpt-6.1-terra' }}
         run: |
-          Get-Content "$env:RUNNER_TEMP\codex-task.md" -Raw | codex exec --dangerously-bypass-approvals-and-sandbox --json - | Tee-Object -FilePath "$env:RUNNER_TEMP\codex-events.jsonl" | Out-Null
+          Get-Content "$env:RUNNER_TEMP\codex-task.md" -Raw | codex exec -m $env:CODEX_MODEL --dangerously-bypass-approvals-and-sandbox --json - | Tee-Object -FilePath "$env:RUNNER_TEMP\codex-events.jsonl" | Out-Null
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Report
         if: always()
