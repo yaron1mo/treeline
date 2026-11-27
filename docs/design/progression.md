@@ -55,6 +55,7 @@ Write all text in ASD-STE100. Mark each item as **Decided** (with date and who) 
 - **Campaign structure:** chapters, levels per chapter, what each level introduces.
 - **Monetisation model** (Yaroslav, 2026-11-25, not decided): (a) free first chapters + one purchase of the full campaign, (b) paid game, (c) free with rewarded ads and purchases.
 - **Campaign length for release:** proposal 10–15 hours, the rest as updates.
+- **Map design** (proposal, issue #41): grammar and 20 designed maps; open: how many new elements to build first, burned belt and sunflower rules, campaign chapter frame, build order, naming. See [maps.md](maps.md).
 - **Story:** the tutorial character, advisors, the ending.
 
 ## 3. The player's goal (Yaroslav, 2026-11-24)
