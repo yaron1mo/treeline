@@ -23,6 +23,10 @@ namespace Treeline.Render
             public float MotionAge;
             public int WalkVariant;
             public float ShotUntil;
+            public float PreviousHp;
+            public bool HasHp;
+            public float HitUntil;
+            public Vector2 HitDirection;
             public SpriteRenderer MuzzleFlash;
             public Vector2 BloodDirection;
             public float DeathStarted;
@@ -263,7 +267,17 @@ namespace Treeline.Render
             foreach (int key in live.Keys) missing.Add(key);
 
             foreach (var a in battle.Attackers)
+            {
                 Sync(a.Id, a.Def.Id, new Vector2(a.X, a.Y), true);
+                if (!live.TryGetValue(a.Id, out var visual)) continue;
+                if (visual.HasHp && a.Hp < visual.PreviousHp && a.Alive && a.Class == UnitClass.Infantry)
+                {
+                    visual.HitUntil = Time.time + 0.14f;
+                    visual.HitDirection = FindImpactDirection(a);
+                }
+                visual.PreviousHp = a.Hp;
+                visual.HasHp = true;
+            }
             foreach (var d in battle.Defenders)
                 Sync(d.Id, d.Def.Id, new Vector2(d.X, d.Y), false);
             foreach (var drone in battle.Drones)
@@ -369,6 +383,7 @@ namespace Treeline.Render
         void BeginFall(Visual fallen, int key)
         {
             if (fallen.MuzzleFlash != null) fallen.MuzzleFlash.enabled = false;
+            fallen.Body.color = Color.white;
             fallen.DeathStarted = Time.time;
             fallen.DeathVariant = (key & int.MaxValue) % 2;
             uint helmetChoice = unchecked((uint)key * 2654435761u);
@@ -552,6 +567,10 @@ namespace Treeline.Render
                         visual.MuzzleFlash.enabled = shotElapsed < 0.14f;
                 }
                 else if (visual.MuzzleFlash != null) visual.MuzzleFlash.enabled = false;
+                float hitRemaining = visual.HitUntil - Time.time;
+                visual.Body.color = hitRemaining > 0f ? new Color(1f, 0.55f, 0.55f, 1f) : Color.white;
+                if (hitRemaining > 0f)
+                    visual.Body.transform.localPosition += (Vector3)(visual.HitDirection * (0.45f * hitRemaining / 0.14f));
             }
             if (!infantry && velocity.sqrMagnitude > 0.04f)
             {
@@ -585,8 +604,8 @@ namespace Treeline.Render
         {
             killStreak = time - lastKillTime <= 4f ? killStreak + 1 : 1;
             lastKillTime = time;
-            if (killStreak < 3) return;
-            streakLabel = killStreak == 3 ? "TRIPLE KILL" : killStreak == 4 ? "MULTI KILL" : "ULTRA KILL";
+            if (killStreak < 2) return;
+            streakLabel = killStreak == 2 ? "DOUBLE KILL" : killStreak == 3 ? "TRIPLE KILL" : killStreak == 4 ? "MULTI KILL" : "ULTRA KILL";
             streakDisplayUntil = time + 1.8f;
         }
 
