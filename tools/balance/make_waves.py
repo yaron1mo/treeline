@@ -44,7 +44,9 @@ UNLOCK = [(1, "recruit"), (2, "regular"), (3, "motorbike"), (4, "buggy"), (5, "v
           (6, "special_forces"), (7, "old_tank"), (8, "ifv"), (9, "mrap"),
           (12, "modern_tank"), (14, "helicopter")]
 UNLOCK = [(k, u) for (k, u) in UNLOCK if u not in EXCLUDE]
-TYPES = [u for _, u in UNLOCK]
+# Feature order of the model (model.json "types"), not the unlock order: the model
+# bins and trees index the features by this list.
+TYPES = list(model_all["types"])
 CLASS_OF = {u: (2 if u == "helicopter" else 1 if u in ("mrap", "ifv", "old_tank", "modern_tank") else 0)
             for u in TYPES}
 
