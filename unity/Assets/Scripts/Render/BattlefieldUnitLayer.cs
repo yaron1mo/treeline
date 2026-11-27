@@ -56,6 +56,8 @@ namespace Treeline.Render
         readonly List<GameObject> corpses = new List<GameObject>();
         readonly List<BloodMark> bloodMarks = new List<BloodMark>();
         readonly List<DetachedSnout> detachedSnouts = new List<DetachedSnout>();
+        const int MaxBloodMarks = 128;
+        const int MaxCorpses = 128;
         const string BloodSetting = "Treeline.BloodEnabled";
         bool bloodEnabled;
         Texture2D bloodTexture;
@@ -210,7 +212,7 @@ namespace Treeline.Render
             {
                 BloodMark mark = bloodMarks[i];
                 float age = Time.time - mark.CreatedAt;
-                if (!bloodEnabled || age >= 15f)
+                if (!bloodEnabled)
                 {
                     Destroy(mark.Root);
                     bloodMarks.RemoveAt(i);
@@ -240,6 +242,11 @@ namespace Treeline.Render
                 if (elapsed >= 2f)
                 {
                     Destroy(fallen.Spirit.gameObject);
+                    if (corpses.Count >= MaxCorpses)
+                    {
+                        if (corpses[0] != null) Destroy(corpses[0]);
+                        corpses.RemoveAt(0);
+                    }
                     corpses.Add(fallen.Root);
                     falling.RemoveAt(i);
                 }
@@ -640,6 +647,11 @@ namespace Treeline.Render
                 var renderer = drop.AddComponent<SpriteRenderer>();
                 renderer.sprite = bloodSprite;
                 renderer.sortingOrder = 17;
+            }
+            if (bloodMarks.Count >= MaxBloodMarks)
+            {
+                if (bloodMarks[0].Root != null) Destroy(bloodMarks[0].Root);
+                bloodMarks.RemoveAt(0);
             }
             bloodMarks.Add(new BloodMark { Root = mark, CreatedAt = Time.time, Drops = drops, Targets = targets, Scales = scales });
         }
