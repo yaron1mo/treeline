@@ -56,6 +56,8 @@ namespace Treeline.Render
         readonly List<GameObject> corpses = new List<GameObject>();
         readonly List<BloodMark> bloodMarks = new List<BloodMark>();
         readonly List<DetachedSnout> detachedSnouts = new List<DetachedSnout>();
+        const int MaxBloodMarks = 100;
+        const int MaxCorpses = 100;
         const string BloodSetting = "Treeline.BloodEnabled";
         bool bloodEnabled;
         Texture2D bloodTexture;
@@ -210,7 +212,7 @@ namespace Treeline.Render
             {
                 BloodMark mark = bloodMarks[i];
                 float age = Time.time - mark.CreatedAt;
-                if (!bloodEnabled || age >= 15f)
+                if (!bloodEnabled)
                 {
                     Destroy(mark.Root);
                     bloodMarks.RemoveAt(i);
@@ -241,6 +243,11 @@ namespace Treeline.Render
                 {
                     Destroy(fallen.Spirit.gameObject);
                     corpses.Add(fallen.Root);
+                    if (corpses.Count > MaxCorpses)
+                    {
+                        if (corpses[0] != null) Destroy(corpses[0]);
+                        corpses.RemoveAt(0);
+                    }
                     falling.RemoveAt(i);
                 }
             }
@@ -571,8 +578,8 @@ namespace Treeline.Render
         {
             killStreak = time - lastKillTime <= 4f ? killStreak + 1 : 1;
             lastKillTime = time;
-            if (killStreak < 3) return;
-            streakLabel = killStreak == 3 ? "TRIPLE KILL" : killStreak == 4 ? "MULTI KILL" : "ULTRA KILL";
+            if (killStreak < 2) return;
+            streakLabel = killStreak == 2 ? "DOUBLE KILL" : killStreak == 3 ? "TRIPLE KILL" : killStreak == 4 ? "MULTI KILL" : "ULTRA KILL";
             streakDisplayUntil = time + 1.8f;
         }
 
@@ -613,6 +620,11 @@ namespace Treeline.Render
                 bloodTexture.SetPixels32(pixels);
                 bloodTexture.Apply();
                 bloodSprite = Sprite.Create(bloodTexture, new Rect(0, 0, 8, 8), new Vector2(0.5f, 0.5f), 2f);
+            }
+            if (bloodMarks.Count >= MaxBloodMarks)
+            {
+                if (bloodMarks[0].Root != null) Destroy(bloodMarks[0].Root);
+                bloodMarks.RemoveAt(0);
             }
             var mark = new GameObject("Blood effect");
             mark.transform.SetParent(transform, false);

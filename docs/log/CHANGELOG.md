@@ -1,3 +1,5 @@
+2026-11-27 ? [Codex] Render ? Keep blood marks until the battle ends, with a limit. Show DOUBLE KILL for 2 kills. Limit corpses to protect performance.
+
 # Change log
 
 - 2026-11-27 — [claude] sim/maps — Houses (Yaroslav: Ukrainian village streets, one-storey houses). `obstacles.csv`: `house` (blocks sight and movement, cover behind it), `house_inside` (cover of the one defender inside, from every side), `ruin`, `fence`, `sunflower` (hides, no cover), `burned_belt` (no cover). Sim: a defender sent to a house runs to its door cell and stands inside; one defender per house; moving out, selling or death frees it (`Battle.HouseAt`, `HouseOccupant`, `Defender.House`; `VisionMap.Houses`). 4 new tests (93 pass). Two prototype maps by `tools/maps/make_villages.py`: `village-street`, `village-crossroads` (waves 1–8 held; cost 0.4–0.9 × Forest belts; the scripted player does not use houses yet).
