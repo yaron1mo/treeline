@@ -1,0 +1,46 @@
+name: Notify
+# Agent office (2026-11-27). Telegram messages to Yaroslav: an issue or PR gets "needs:yaroslav", a PR merges, an agent
+# run fails. Secrets TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID; without them this does nothing.
+on:
+  issues:
+    types: [labeled]
+  pull_request:
+    types: [labeled, closed]
+  workflow_run:
+    workflows: ["Mistral task", "Codex task", "Auto-merge", "Dispatcher"]
+    types: [completed]
+
+jobs:
+  telegram:
+    if: >-
+      (github.event.action == 'labeled' && github.event.label.name == 'needs:yaroslav') ||
+      (github.event.action == 'closed' && github.event.pull_request.merged) ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'failure')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Send
+        env:
+          TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+          EVENT: ${{ github.event_name }}
+          ACTION: ${{ github.event.action }}
+          ISSUE_TITLE: ${{ github.event.issue.title || github.event.pull_request.title }}
+          ISSUE_URL: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}
+          RUN_NAME: ${{ github.event.workflow_run.name }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+        run: |
+          [ -z "$TG_TOKEN" ] || [ -z "$TG_CHAT" ] && { echo "No Telegram secrets"; exit 0; }
+          if [ "$EVENT" = "workflow_run" ]; then
+            msg="❌ Збій: $RUN_NAME
+          $RUN_URL"
+          elif [ "$ACTION" = "closed" ]; then
+            msg="✅ Змержено: $ISSUE_TITLE
+          $ISSUE_URL"
+          else
+            msg="🟠 Потрібне твоє рішення: $ISSUE_TITLE
+          $ISSUE_URL"
+          fi
+          curl -s -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${TG_CHAT}" --data-urlencode "text=${msg}" \
+            --data-urlencode "disable_web_page_preview=true" > /dev/null

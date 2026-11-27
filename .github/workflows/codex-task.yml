@@ -56,7 +56,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh issue edit ${{ github.event.issue.number }} --repo ${{ github.repository }} --remove-label in-progress
+          gh issue edit ${{ github.event.issue.number }} --repo ${{ github.repository }} --remove-label in-progress --remove-label agent:codex
           $usage = "{}"
           $f = "$env:RUNNER_TEMP\codex-events.jsonl"
           if (Test-Path $f) { $u = Get-Content $f | Where-Object { $_ -match '"usage"' } | Select-Object -Last 1; if ($u) { try { $usage = (($u | ConvertFrom-Json).usage | ConvertTo-Json -Compress) } catch {} } }

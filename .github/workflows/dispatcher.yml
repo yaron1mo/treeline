@@ -1,0 +1,70 @@
+name: Dispatcher
+# Agent office, stage 3 (2026-11-27). Every 3 hours: Sonnet gives ready tasks to free agents and finds stuck work
+# (docs/agents/dispatcher.md). Then, if open issues have "needs-spec", Opus writes the specs.
+on:
+  schedule:
+    - cron: '17 */3 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: dispatcher
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            You are the Treeline dispatcher in ${{ github.repository }}. Follow docs/agents/dispatcher.md exactly.
+          claude_args: |
+            --model claude-sonnet-5-5
+            --max-turns 25
+            --allowedTools "Bash(gh:*),Read,Grep,Glob"
+
+  specs:
+    needs: dispatch
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Find issues that need a spec
+        id: find
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          n=$(gh issue list --repo ${{ github.repository }} --state open --label needs-spec --json number --jq 'length')
+          echo "count=$n" >> "$GITHUB_OUTPUT"
+      - uses: anthropics/claude-code-action@v1
+        if: steps.find.outputs.count != '0'
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            You are Claude, CTO of the Treeline team, in ${{ github.repository }}. Open issues with the label needs-spec
+            need a full task spec. For each one (at most 2 in this run): read AGENTS.md, docs/agents/office.md, the
+            agent spec file, and the issue. Write the full spec in the issue body (goal, files the agent can change,
+            steps, check, deliverables), in ASD-STE100, as in docs/agents/mistral.md. Then remove needs-spec and add
+            queue:mistral or queue:codex. If the spec needs information that only Yaroslav has (story, names, art
+            direction, money), do not guess: add needs:yaroslav and write "@yaron1mo" and the exact question.
+          claude_args: |
+            --model claude-opus-5-5
+            --max-turns 40
+            --allowedTools "Bash(gh:*),Bash(git:*),Read,Grep,Glob"

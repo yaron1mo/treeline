@@ -58,7 +58,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh issue edit ${{ github.event.issue.number }} --repo ${{ github.repository }} --remove-label in-progress
+          gh issue edit ${{ github.event.issue.number }} --repo ${{ github.repository }} --remove-label in-progress --remove-label agent:mistral
           $usage = "{}"
           $f = "$env:RUNNER_TEMP\vibe-out\export.json"
           if (Test-Path $f) { try { $usage = ((Get-Content $f -Raw | ConvertFrom-Json).usage | ConvertTo-Json -Compress) } catch {} }
