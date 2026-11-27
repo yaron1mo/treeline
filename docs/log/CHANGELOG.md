@@ -1,5 +1,7 @@
 # Change log
 
+- 2026-11-27 ? [codex] design ? Add a later wave capture to the visual audit.
+
 - 2026-11-27 ? [codex] editor and design ? Stage an explosion for the visual audit capture.
 
 - 2026-11-27 ? [codex] design ? Audit the current visuals and compare 3 art directions for phone readability.

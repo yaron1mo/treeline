@@ -18,7 +18,7 @@ These costs are relative estimates, not schedules. A needs a production test bef
 
 ## Current game
 
-[Start](visual/current-start.png) · [Wave 1](visual/current-wave.png) · [Later in wave](visual/current-late.png) ? [Staged explosion](visual/current-explosion.png). These are Unity camera captures at 1280 × 720. The camera capture omits the IMGUI panel. It cannot prove how the full HUD reads or responds to touch. The capture setup places 2 rifle squads and starts wave 1. The third placement fails because the budget is too low. The wave contains 5 recruits, so it is not a dense late wave. The editor triggers the explosion effect at an attacker for the staged image. It is difficult to see at this scale. A fixed-time capture can miss short effects.
+[Start](visual/current-start.png) · [Wave 1](visual/current-wave.png) · [Later in wave](visual/current-late.png) ? [Staged explosion](visual/current-explosion.png) ? [Wave at 120 s](visual/current-120s.png). These are Unity camera captures at 1280 × 720. The camera capture omits the IMGUI panel. It cannot prove how the full HUD reads or responds to touch. The capture setup places 2 rifle squads and starts wave 1. The third placement fails because the budget is too low. The wave contains 5 recruits, so it is not a dense late wave. The editor triggers the explosion effect at an attacker for the staged image. It is difficult to see at this scale. The 120 s capture does not show a clearly identifiable death at this scale. A fixed-time capture can miss short effects.
 
 **Keep:** the open field, tree belts, paths, and changes in crop colour give the map a distinct place. The top-down view supports route reading. The belt gaps suggest useful movement routes.
 
