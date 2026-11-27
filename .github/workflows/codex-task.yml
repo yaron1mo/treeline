@@ -27,6 +27,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+          clean: false   # keep unity/Library between runs (Unity import takes 5-20 minutes)
       - name: Write the task file
         env:
           TITLE: ${{ github.event.issue.title }}
@@ -35,7 +36,8 @@ jobs:
         run: |
           $lines = @(
             "You are Codex, Chief Design Officer of the Treeline team (visuals, UI, art, renderer). Read AGENTS.md first.",
-            "You run headless: the Unity Editor is not open. Make art as files in the repo, and check your work with tools/tests/check_game.sh and tools/tests/run_editmode.sh. Make preview PNGs yourself.",
+            "You run headless. Make art as files in the repo. Check your work with tools/tests/check_game.sh and tools/tests/run_editmode.sh.",
+            "You can run the Unity Editor without a window: powershell -File tools/unity/unity.ps1 -Method AgentTools.Ping (import and compile), -Method AgentTools.CapturePlay -Extra '-agentOut','build/shots/x.png','-agentWait','8' (screenshot in play mode), -Tests EditMode. Read the header of tools/unity/unity.ps1 and unity/Assets/Editor/AgentTools.cs. Put screenshots in the PR body.",
             "Your task is GitHub issue #$env:NUM : $env:TITLE",
             "",
             $env:BODY,
@@ -49,9 +51,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: gh issue edit ${{ github.event.issue.number }} --repo ${{ github.repository }} --add-label in-progress
       - name: Run Codex
+        # Unity 6000.3.28f1 on Yaroslav's computer (local Personal licence; batch mode costs nothing).
         # Model: GPT-6.1 Terra for visual work (Yaroslav, 2026-11-27). Override with the repo variable CODEX_MODEL.
         env:
           CODEX_MODEL: ${{ vars.CODEX_MODEL || 'gpt-6.1-terra' }}
+          UNITY_EXE: C:\Program Files\Unity\Hub\Editor\6000.3.28f1\Editor\Unity.exe
         run: |
           Get-Content "$env:RUNNER_TEMP\codex-task.md" -Raw | codex exec -m $env:CODEX_MODEL --dangerously-bypass-approvals-and-sandbox --json - | Tee-Object -FilePath "$env:RUNNER_TEMP\codex-events.jsonl" | Out-Null
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
