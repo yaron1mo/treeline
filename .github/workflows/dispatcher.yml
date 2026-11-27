@@ -4,6 +4,7 @@ name: Dispatcher
 on:
   schedule:
     - cron: '17 */3 * * *'
+    - cron: '7 8 * * *'    # morning digest 08:07 UTC
   workflow_dispatch:
 
 concurrency:
@@ -68,3 +69,28 @@ jobs:
             --model claude-opus-5-5
             --max-turns 40
             --allowedTools "Bash(gh:*),Bash(git:*),Read,Grep,Glob"
+
+  digest:
+    # Telegram digest after each dispatcher run, 08:00-23:59 London time only (Yaroslav, 2026-11-27).
+    needs: [dispatch, specs]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Send the digest
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+          MANUAL: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          h=$(TZ=Europe/London date +%H)
+          if [ "$MANUAL" != "true" ] && [ "$h" -lt 8 ]; then echo "Night: no digest"; exit 0; fi
+          if [ -z "$TG_TOKEN" ] || [ -z "$TG_CHAT" ]; then echo "No Telegram secrets"; exit 1; fi
+          msg=$(python3 tools/office/digest.py "${{ github.repository }}" 3)
+          echo "$msg"
+          resp=$(curl -s -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${TG_CHAT}" --data-urlencode "text=${msg}" --data-urlencode "disable_web_page_preview=true")
+          echo "$resp" | python3 -c 'import json,sys; d=json.load(sys.stdin); print("telegram ok:", d.get("ok"), d.get("description", "")); sys.exit(0 if d.get("ok") else 1)'
+
