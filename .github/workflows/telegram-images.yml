@@ -50,6 +50,7 @@ jobs:
           while read -r f; do
             [ -f "$f" ] || continue
             case "$f" in
+              *.gif|*.GIF) method=sendAnimation; field=animation ;;
               docs/design/visual/*) method=sendDocument; field=document ;;
               *) method=sendPhoto; field=photo ;;
             esac
