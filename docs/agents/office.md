@@ -13,7 +13,7 @@ The agents do not call each other directly. They write on GitHub (issues, labels
 | Claude (any request) | `@claude` in an issue, a PR comment or a PR review | GitHub servers | Same |
 | Mistral | Label `agent:mistral` on an issue | Yaroslav's Windows computer (self-hosted runner, label `mistral`, Windows PowerShell) | Yaroslav's Mistral login in Vibe CLI (no API key) |
 | Codex | Label `agent:codex` on an issue | Yaroslav's Windows computer (second self-hosted runner, Windows PowerShell) | Yaroslav's ChatGPT login in Codex CLI (`codex login`, no API key) |
-| Yaroslav | Label `needs:yaroslav`, label `ready-to-merge` | GitHub Mobile notifications | — |
+| Yaroslav | A comment with `@yaron1mo` (with the label `needs:yaroslav` or `ready-to-merge`) | GitHub Mobile, e-mail, the bell on github.com | — |
 
 ## 2. Labels
 
@@ -32,11 +32,12 @@ Do these steps for each review:
 
 1. Read the PR, the diff and the task spec (`docs/agents/mistral.md` for Mistral; the linked issue for Codex).
 2. Check the CI results of the PR (`gh pr checks`). Run `bash tools/tests/run_editmode.sh` when the PR changes code in `unity/Assets/Scripts`.
-3. Count your earlier reviews on this PR. If there are 3 or more, add `needs:yaroslav`, write why, and stop.
+3. Count your earlier reviews on this PR. If there are 3 or more, add `needs:yaroslav`, write `@yaron1mo` and why, and stop.
 4. Write one review comment: verdict (approve or changes), the findings, and what to do next.
 5. If you ask for changes: write the changes as a numbered list. For Mistral, add the label `agent:mistral` to the task issue again (remove it first), so that Mistral starts on the changes. For Codex, do the same with the label `agent:codex`.
 6. If you approve: add `ready-to-merge` to the PR. Write a summary for Yaroslav in 5 lines or fewer. Then find the next task of this agent in its spec or in the open issues. If the next task is not blocked, open an issue for it with the agent label.
 7. If a design decision is necessary, add `needs:yaroslav` and write the question with 2–4 options.
+8. Each time you add `needs:yaroslav` or `ready-to-merge`, start your comment with `@yaron1mo`. A label alone does not send a notification; a mention does.
 
 Do not merge. Do not change the PR branch in a review. Do not read or print secrets.
 
