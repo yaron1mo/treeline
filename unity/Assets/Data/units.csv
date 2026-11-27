@@ -2,7 +2,7 @@ id,name,side,type,subtype,hp,armour,speed_mps,adaptation_lag_waves,damage_type,d
 recruit,Recruit,attack,troops,infantry,10,none,4.5,5,small_arms,7,1,67,0.35,TRUE,1,30,never,,FALSE,,1,,,,,,,,,,ground,15000,,,,,,,infantry,,,800,,0.5,,,,10,,100,
 regular,Regular soldier,attack,troops,infantry,10,low,4.5,3,small_arms,7,1,83,0.65,TRUE,1,40,sometimes,0.15,FALSE,,1,,,,,,,,,,ground,40000,,,,,,,infantry,,,800,,0.5,,,,15,,125,
 special_forces,Special forces,attack,troops,infantry,15,low,6,2,small_arms,7,1.2,100,0.8,TRUE,1,50,always,,TRUE,,1,,,,,,,,,,ground,150000,,,,,,,infantry,,,850,,0.5,,,,80,,150,
-old_tank,Old Soviet-era tank,attack,vehicle,armoured,100,medium,4.5,4,explosive,20,1,200,0.4,TRUE,1,30,never,,FALSE,5,5,,,,,,4,,,,ground,1000000,,,,,,,heavy,,,900,,3,,,,90,,300,
+old_tank,Old Soviet-era tank,attack,vehicle,armoured,120,medium,4.5,4,explosive,20,1,200,0.4,TRUE,1,30,never,,FALSE,5,5,,,,,,4,,,,ground,1000000,,,,,,,heavy,,,900,,3,,,,90,,300,
 modern_tank,Modern tank,attack,vehicle,armoured,100,high,6,3,explosive,12,1,267,0.7,TRUE,1,30,sometimes,0.5,TRUE,5,8,,,,,,4,,,,ground,4000000,,,,,,,heavy,,,1000,,3,,,,120,,400,
 ifv,Infantry fighting vehicle,attack,vehicle,armoured,100,medium,6,3,heavy,2,1,167,0.5,TRUE,1,30,sometimes,0.3,FALSE,5,4,regular,8,0.2,0.7,8,4,,carrier,,ground,800000,,,,,,,heavy,,,1000,,2.5,,,,150,,250,
 mrap,Armoured patrol vehicle (Tigr type),attack,vehicle,armoured,60,medium,8.5,2,small_arms,2,1,100,0.45,TRUE,1,30,sometimes,0.3,FALSE,5,3,special_forces,4,0.2,0.7,6,3,,carrier,,ground,250000,,,,,,,heavy,,,800,,2,,,,80,,150,
