@@ -12,6 +12,7 @@ The agents do not call each other directly. They write on GitHub (issues, labels
 | Claude (review) | A PR from `mistral/**` or `codex/**` opens or becomes ready | GitHub servers | Secret `CLAUDE_CODE_OAUTH_TOKEN` (Claude subscription) |
 | Claude (any request) | `@claude` in an issue, a PR comment or a PR review | GitHub servers | Same |
 | Mistral | Label `agent:mistral` on an issue | Yaroslav's Windows computer (self-hosted runner, label `mistral`, Windows PowerShell) | Yaroslav's Mistral login in Vibe CLI (no API key) |
+| Designer (Sonnet) | Label `agent:design` on an issue | GitHub servers | Secret `CLAUDE_CODE_OAUTH_TOKEN`; rules `docs/agents/designer.md` |
 | Codex | Label `agent:codex` on an issue | Yaroslav's Windows computer (second self-hosted runner, Windows PowerShell) | Yaroslav's ChatGPT login in Codex CLI (`codex login`, no API key) |
 | Yaroslav | A comment with `@yaron1mo` (with the label `needs:yaroslav` or `ready-to-merge`) | GitHub Mobile, e-mail, the bell on github.com | — |
 
@@ -21,6 +22,7 @@ The agents do not call each other directly. They write on GitHub (issues, labels
 | --- | --- | --- |
 | `queue:mistral`, `queue:codex` | The task is ready (full spec). It waits for a free agent | Claude (Opus) or Yaroslav |
 | `agent:mistral`, `agent:codex` | Start the agent on this issue now. The workflow removes the label when the run ends | Dispatcher, Claude, Yaroslav |
+| `agent:design` | Start the designer agent (Sonnet) on this issue | Claude, dispatcher, Yaroslav |
 | `agent:claude` | This issue is for Claude | Anyone |
 | `needs-spec` | The task has no full spec yet. Claude (Opus) writes it in the next dispatcher run | Dispatcher, Yaroslav |
 | `in-progress` | An agent works on this issue now | The workflow |
