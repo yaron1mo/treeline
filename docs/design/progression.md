@@ -42,7 +42,7 @@ Write all text in ASD-STE100. Mark each item as **Decided** (with date and who) 
 
 - **Roster decisions on PR #28** (Yaroslav, 2026-11-27): keep motorbike, van, MRAP and helicopter (each needs a role). EW stations of both sides work until destroyed; they show small waves from time to time. EW does not stop fibre-optic FPV. The player does not see the EW zone; the player sees the station work and its effect on drones (shake, smoke, an electric layer). EW belongs to the Drone forces branch. Support calls at release: howitzer, rocket salvo, air strike.
 - **Shahed-type drone (attacker), added now** (Yaroslav, 2026-11-27): no damage to units; flies slowly past the defence and takes health from the base; makes the player spend a slot on air defence.
-- **Art:** `docs/design/art-brief.md` (world, references, open axes). Defenders: a low-level unit is a human, a veteran is a skeleton in uniform.
+- **Art:** `docs/design/art-brief.md`. A satire, not realism or horror. Pigs are ridiculous, not scary. No zombies on the defence side: human → experienced human → veteran skeleton with black humour and sarcasm (Yaroslav, 2026-11-27).
 
 ## 2. Open
 
