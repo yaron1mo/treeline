@@ -30,6 +30,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+          clean: false   # do not delete unity/Library of the Codex runs on the same runner
       - name: Write the task file
         env:
           TITLE: ${{ github.event.issue.title }}
@@ -43,6 +44,7 @@ jobs:
             $env:BODY,
             "",
             "When you finish: push your branch and open the pull request with gh (section 7 of docs/agents/mistral.md).",
+            "If a branch for this task already exists on origin, continue from it (an earlier run may have stopped at the turn limit). Push after each step.",
             "Then write a comment on issue #$env:NUM with the PR link. If you need a design decision, add the label needs:yaroslav to the issue and stop."
           )
           [System.IO.File]::WriteAllLines("$env:RUNNER_TEMP\task.md", $lines, (New-Object System.Text.UTF8Encoding $false))
@@ -52,7 +54,7 @@ jobs:
         run: gh issue edit ${{ github.event.issue.number }} --repo ${{ github.repository }} --add-label in-progress
       - name: Run Mistral Vibe
         run: |
-          vibe --prompt-file "$env:RUNNER_TEMP\task.md" --auto-approve --max-turns 200 --time-limit 13800 --output-dir "$env:RUNNER_TEMP\vibe-out"
+          vibe --prompt-file "$env:RUNNER_TEMP\task.md" --auto-approve --max-turns 400 --time-limit 13800 --output-dir "$env:RUNNER_TEMP\vibe-out"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Report
         if: always()
