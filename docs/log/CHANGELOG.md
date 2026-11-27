@@ -1,5 +1,7 @@
 # Change log
 
+- 2026-11-27 ? [codex] art ? Add a GIF of the current recruit walk for review.
+
 - 2026-11-27 ? [codex] data, sim, game, render ? Move display scales to units.csv. Pass the table to the renderer. This change touches Claude-owned areas.
 
 - 2026-11-27 ? [codex] render ? Keep blood marks until the battle ends. Limit blood marks and corpses to 128 each.
