@@ -1,0 +1,46 @@
+name: Unity check
+# Opens the project in Unity without a window on the self-hosted Windows runner (2026-11-27): import, compile, and
+# optionally the EditMode tests and a play-mode screenshot. Use it by hand to warm unity/Library on a new runner copy.
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Branch to check'
+        default: 'codex/playable-steppe-patch-integration'
+      tests:
+        description: 'Run EditMode tests (true/false)'
+        default: 'false'
+      screenshot:
+        description: 'Play-mode screenshot (true/false)'
+        default: 'true'
+
+jobs:
+  unity:
+    runs-on: [self-hosted, Windows]
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: powershell
+    env:
+      UNITY_EXE: C:\Program Files\Unity\Hub\Editor\6000.3.28f1\Editor\Unity.exe
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref }}
+          clean: false
+      - name: Import and compile
+        run: powershell -File tools/unity/unity.ps1 -Method AgentTools.Ping
+      - name: EditMode tests
+        if: github.event.inputs.tests == 'true'
+        run: powershell -File tools/unity/unity.ps1 -Tests EditMode
+      - name: Play-mode screenshot
+        if: github.event.inputs.screenshot == 'true'
+        run: powershell -File tools/unity/unity.ps1 -Method AgentTools.CapturePlay -Extra "-agentOut","build/shots/play.png","-agentWait","8"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unity-check
+          path: |
+            build/shots
+            build/unity
+          retention-days: 7

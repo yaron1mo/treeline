@@ -1,0 +1,80 @@
+name: Codex task
+# Agent office, stage 2 (2026-11-27). The label "agent:codex" on an issue starts Codex CLI on Yaroslav's Windows computer
+# (a self-hosted Windows runner), with his own ChatGPT login (codex login). No API key. One Codex task at a time.
+# Two runners on the same computer let Codex and Mistral work at the same time.
+# Codex pushes and opens the PR with Yaroslav's own git and gh login (not GITHUB_TOKEN), so Claude sees the PR.
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  task:
+    if: github.event.label.name == 'agent:codex'
+    runs-on: [self-hosted, Windows]
+    # Job-level concurrency: only runs that pass the label check wait in line (a workflow-level group
+    # would also queue the skipped runs of other issues and cancel a real pending run).
+    concurrency:
+      group: codex
+      cancel-in-progress: false
+    timeout-minutes: 240
+    permissions:
+      contents: read
+      issues: write
+    defaults:
+      run:
+        shell: powershell
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          clean: false   # keep unity/Library between runs (Unity import takes 5-20 minutes)
+      - name: Write the task file
+        env:
+          TITLE: ${{ github.event.issue.title }}
+          BODY: ${{ github.event.issue.body }}
+          NUM: ${{ github.event.issue.number }}
+        run: |
+          $lines = @(
+            "You are Codex, Chief Design Officer of the Treeline team (visuals, UI, art, renderer). Read AGENTS.md first.",
+            "You run headless on Windows. Make art as files in the repo. Start your branch from codex/playable-steppe-patch-integration (PR #8 is merged into it).",
+            "mcs (Mono) is not installed on this computer, so tools/tests/*.sh do not run here; GitHub CI runs them on your PR. Check compile and tests with Unity instead: tools/unity/unity.ps1 -Method AgentTools.Ping and -Tests EditMode.",
+            "A missing check tool is never a reason to stop. Do the work, commit and push after each unit, open the PR, and write in the PR what you could not check.",
+            "You can run the Unity Editor without a window: powershell -File tools/unity/unity.ps1 -Method AgentTools.Ping (import and compile), -Method AgentTools.CapturePlay -Extra '-agentOut','build/shots/x.png','-agentWait','8' (screenshot in play mode), -Tests EditMode. Read the header of tools/unity/unity.ps1 and unity/Assets/Editor/AgentTools.cs. Put screenshots in the PR body.",
+            "Your task is GitHub issue #$env:NUM : $env:TITLE",
+            "",
+            $env:BODY,
+            "",
+            "Work on a branch codex/<topic>. When you finish: push the branch and open a pull request into codex/playable-steppe-patch-integration with gh.",
+            "Then write a comment on issue #$env:NUM with the PR link. If you need a design decision, add the label needs:yaroslav to the issue and stop."
+          )
+          [System.IO.File]::WriteAllLines("$env:RUNNER_TEMP\codex-task.md", $lines, (New-Object System.Text.UTF8Encoding $false))
+      - name: Mark in progress
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh issue edit ${{ github.event.issue.number }} --repo ${{ github.repository }} --add-label in-progress
+      - name: Run Codex
+        # Unity 6000.3.28f1 on Yaroslav's computer (local Personal licence; batch mode costs nothing).
+        # Model: GPT-6.1 Terra for visual work (Yaroslav, 2026-11-27). Override with the repo variable CODEX_MODEL.
+        env:
+          CODEX_MODEL: ${{ vars.CODEX_MODEL || 'gpt-6.1-terra' }}
+          UNITY_EXE: C:\Program Files\Unity\Hub\Editor\6000.3.28f1\Editor\Unity.exe
+        run: |
+          Get-Content "$env:RUNNER_TEMP\codex-task.md" -Raw | codex exec -m $env:CODEX_MODEL --dangerously-bypass-approvals-and-sandbox --json --output-last-message "$env:RUNNER_TEMP\codex-last.md" - | Tee-Object -FilePath "$env:RUNNER_TEMP\codex-events.jsonl" | Out-Null
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Report
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue edit ${{ github.event.issue.number }} --repo ${{ github.repository }} --remove-label in-progress --remove-label agent:codex
+          $usage = "{}"
+          $f = "$env:RUNNER_TEMP\codex-events.jsonl"
+          if (Test-Path $f) { $u = Get-Content $f | Where-Object { $_ -match '"usage"' } | Select-Object -Last 1; if ($u) { try { $usage = (($u | ConvertFrom-Json).usage | ConvertTo-Json -Compress) } catch {} } }
+          $last = ""
+          if (Test-Path "$env:RUNNER_TEMP\codex-last.md") { $last = Get-Content "$env:RUNNER_TEMP\codex-last.md" -Raw }
+          if ($last.Length -gt 3000) { $last = $last.Substring(0, 3000) + " ..." }
+          $body = "Codex run finished: ${{ job.status }}. Usage: $usage. Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`n`n**Last message of Codex:**`n`n$last"
+          [System.IO.File]::WriteAllText("$env:RUNNER_TEMP\codex-comment.md", $body, (New-Object System.Text.UTF8Encoding $false))
+          gh issue comment ${{ github.event.issue.number }} --repo ${{ github.repository }} --body-file "$env:RUNNER_TEMP\codex-comment.md"
+          exit 0
