@@ -66,6 +66,10 @@ Do not merge by hand. Do not change the PR branch in a review. Do not read or pr
 The `Dispatcher` workflow runs every 3 hours (and by hand). Model: Sonnet. Rules: `docs/agents/dispatcher.md`.
 When open issues have `needs-spec`, the same workflow then starts Claude (Opus) to write the specs.
 
+## 6a. Watchdog
+
+The `Watchdog` workflow runs every 20 minutes without an AI model. It restarts a Mistral or Codex run that failed, or that runs for more than 70 minutes with no push to the agent branch for 50 minutes (cancel, then start again with `workflow_dispatch`). At most 3 restarts per issue in 24 hours; then `needs:yaroslav`. Inside a Mistral run, Vibe is retried up to 4 times with a 3-minute pause when it fails (high demand).
+
 ## 7. Auto-merge
 
 The `Auto-merge` workflow merges a PR when all these conditions are true:

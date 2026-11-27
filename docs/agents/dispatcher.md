@@ -23,8 +23,7 @@ Give one task per agent per run.
 
 ## 3. Find stuck work
 
-0. **Failed agent runs: restart once.** For each open issue whose last comment is "Mistral run finished: failure" or "Codex run finished: failure" (or whose last Codex message says the task is "not complete") and that has no `agent:*`, `queue:*` or `needs:yaroslav` label: if the issue has only one such failure comment, write "Dispatcher: restart after a failed run." and add the agent label again (the agent continues from its branch). If it has two or more, add `needs:yaroslav` with `@yaron1mo` and the reason from the last comment.
-
+0. **Failed or stalled agent runs:** do nothing. The `Watchdog` workflow (every 20 minutes, no AI model) restarts them, at most 3 times in 24 hours, then adds `needs:yaroslav`.
 1. An issue with `in-progress` that was not updated for 5 hours: write a comment "Dispatcher: no progress for 5 hours. The runner computer may be off." and add `needs:yaroslav` with `@yaron1mo`.
 2. A PR with `ready-to-merge` that is open for more than 2 hours: write a comment with the reason that you see in `gh pr checks`, and add `needs:yaroslav` with `@yaron1mo`.
 3. A PR from `mistral/**` or `codex/**` with no Claude review comment for 2 hours: write a comment `@claude review`.
