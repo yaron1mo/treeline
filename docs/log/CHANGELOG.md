@@ -1,5 +1,7 @@
 # Change log
 
+- 2026-11-27 — [codex] art — Add GIFs of the existing recruit shooting and fall frames for review.
+
 - 2026-11-27 — [codex] render — Add a short flash and knockback when an infantry pig takes damage.
 
 - 2026-11-27 — [codex] art — Add a GIF of the existing recruit walk for review.
