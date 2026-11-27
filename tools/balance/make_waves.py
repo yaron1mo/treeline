@@ -56,7 +56,10 @@ if targets_arg:
         sys.exit(f"targets gives {len(tl)} values, but waves={N}")
     targets = {i + 1: v for i, v in enumerate(tl)}
 else:
-    with open(os.path.join(root, "tools", "balance", "target_costs.csv"), newline="", encoding="utf-8") as fh:
+    tc_path = os.path.join(root, "tools", "balance", "target_costs.csv")
+    if not os.path.exists(tc_path):
+        sys.exit("no targets: pass targets=250,275,... or create tools/balance/target_costs.csv")
+    with open(tc_path, newline="", encoding="utf-8") as fh:
         for r in csv.DictReader(fh):
             targets[int(r["wave"])] = float(r["target_cost"])
 model_all = json.load(open(os.path.join(root, "docs", "balance", "mistral", "wave-generator-2", "model.json"),

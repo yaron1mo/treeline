@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Draw the wave-generator chart: target cost vs measured cost per wave.
+"""Draw the wave-generator-2 chart: target cost vs measured cost per wave.
 
-Best run after review 1: Balance run 45916087929 (run 4, 23 of 30 waves within 20%).
-Input: report.json from the run artifact. Output: target-vs-measured.png.
+Best run: Balance run 45926887097 (run 3, 25 of 30 waves within 20%, verdict pass).
+Every 5th wave is a relief wave (target x 0.8). Input: report.json from the run
+artifact. Output: target-vs-measured.png.
 """
 import json
 import os
