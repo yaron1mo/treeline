@@ -34,12 +34,23 @@ Write all text in ASD-STE100. Mark each item as **Decided** (with date and who) 
 - **Visual target** (Yaroslav, 2026-11-27): the game must feel like a tasty candy: clear, bright, satisfying feedback.
 - **Real maps** (Yaroslav, 2026-11-27): 20 map prototypes (at least 15) from real terrain (OpenStreetMap data, fictional sector names). Each map can later get a winter and a night version.
 
+- **Squad slots** (Yaroslav, 2026-11-27): 3 slots. Recon drones have a separate slot with their own count.
+- **Wounds only** (Yaroslav, 2026-11-27): no fatigue.
+- **Forecast by intelligence level** (Yaroslav, 2026-11-27): each intelligence upgrade opens one item: number of waves; attacker types on the level; composition of the next wave; the optimal attacker route.
+- **Endless** (Yaroslav, 2026-11-27): many different levels of different length (7, 10, 20 waves …); each level is a different map.
+- **No pair bonus and no pair hint** (Yaroslav, 2026-11-27): players find good pairs alone.
+
+- **Roster decisions on PR #28** (Yaroslav, 2026-11-27): keep motorbike, van, MRAP and helicopter (each needs a role). EW stations of both sides work until destroyed; they show small waves from time to time. EW does not stop fibre-optic FPV. The player does not see the EW zone; the player sees the station work and its effect on drones (shake, smoke, an electric layer). EW belongs to the Drone forces branch. Support calls at release: howitzer, rocket salvo, air strike.
+- **Shahed-type drone (attacker), added now** (Yaroslav, 2026-11-27): no damage to units; flies slowly past the defence and takes health from the base; makes the player spend a slot on air defence.
+- **Art:** `docs/design/art-brief.md`. A satire, not realism or horror. Pigs are ridiculous, not scary. No zombies on the defence side: human → experienced human → veteran skeleton with black humour and sarcasm (Yaroslav, 2026-11-27).
+
 ## 2. Open
 
 - **Death or wounded:** a unit at 0 HP is wounded ("300") or killed ("200"); proposal 50/50; what evacuation costs; recovery time.
 - **Barracks size** and units per level.
 - **Slots:** how many at start, how they open.
-- **Squad rules** for the weekly challenge (fixed squad or own) and for endless.
+- **Veteran slots and general slots** (Yaroslav's idea, 2026-11-27): if all upgraded veterans die, where do new units come from? Separate veteran slots and general slots; effect on the weekly challenge (nothing is carried over). To design together.
+- **Weekly challenge squad:** later (separate balance).
 - **In-battle progression:** upgrades during a battle and their costs.
 - **Campaign structure:** chapters, levels per chapter, what each level introduces.
 - **Monetisation model** (Yaroslav, 2026-11-25, not decided): (a) free first chapters + one purchase of the full campaign, (b) paid game, (c) free with rewarded ads and purchases.

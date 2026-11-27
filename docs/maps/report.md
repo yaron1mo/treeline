@@ -37,9 +37,12 @@ part of this task.
 
 ## Balance check
 
-Balance run 45942152079 on this branch (`tools/balance/run.json` limited the
-run to the new maps + Forest belts, the current 20 waves of
-`unity/Assets/Data/waves.csv`, max budget 12000, 3 playtest seeds per style).
+Balance runs on this branch (`tools/balance/run.json` limited the runs to the
+new maps + Forest belts, the current 20 waves of `unity/Assets/Data/waves.csv`,
+max budget 12000, 3 playtest seeds per style). Run 45942152079 measured all 24
+candidate maps and ranked them; run 45981527608 re-measured the 20 kept maps
+(conclusion success, all 20 waves measured per map, costs identical to run 1 -
+the wave-cost measurement is deterministic).
 Cost = the smallest budget with which the scripted player holds the wave on at
 least 8 of 10 seeds. Ratio = cost on the map / cost on Forest belts.
 
@@ -57,7 +60,7 @@ between 0.6 and 1.6 x the cost on Forest belts, at least 2 different lanes.
 | Sector 18 | E. Poland farmland plain | 3.0 | 8 | 2 | 2 | 8.6 | 1.17 (0.60-2.10) | 17/20 | - |
 | Sector 20 | E. Poland farmland plain | 3.0 | 15 | 2 | 3 | 8.6 | 1.12 (0.47-2.50) | 14/20 | 14 |
 | Sector 21 | C. Moldova farmland plain | 3.0 | 3 | 3 | 3 | 9.3 | 1.13 (0.40-1.69) | 16/20 | 14 |
-| Sector 22 | C. Moldova farmland plain | 3.0 | 5 | 3 | 3 | 8.3 | 1.14 (0.75-1.69) | 17/20 | - |
+| Sector 22 | C. Moldova farmland plain | 3.0 | 5 | 3 | 3 | 8.3 | 1.13 (0.75-1.69) | 19/20 | - |
 | Sector 23 | C. Ukraine farmland steppe | 3.0 | 2 | 3 | 3 | 9.0 | 1.27 (0.37-2.81) | 16/20 | - |
 | Sector 24 | C. Moldova farmland plain | 3.0 | 3 | 2 | 2 | 8.8 | 0.88 (0.33-1.37) | 18/20 | 14 |
 | Sector 25 | C. Ukraine farmland steppe | 3.0 | 0 | 2 | 2 | 9.4 | 1.02 (0.23-1.77) | 15/20 | 19 |
