@@ -1,5 +1,7 @@
 # Change log
 
+- 2026-11-27 ? [codex] art ? Add diagonal shooting poses for recruits with and without a crutch.
+
 - 2026-11-27 ? [codex] render ? Add diagonal walk frames and view selection for recruits.
 
 - 2026-11-27 ? [codex] art ? Add a diagonal view of the recruit for the new movement views.

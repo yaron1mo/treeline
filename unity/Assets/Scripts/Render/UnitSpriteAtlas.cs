@@ -263,9 +263,11 @@ namespace Treeline.Render
         readonly Dictionary<string, Sprite[]> infantryFallFrames = new Dictionary<string, Sprite[]>();
         readonly Dictionary<string, Sprite[]> infantryShootFrames = new Dictionary<string, Sprite[]>();
 
-        public Sprite GetInfantryShootFrame(string unitId, int frame, int variant)
+        public Sprite GetInfantryShootFrame(string unitId, int frame, int variant, bool diagonal = false)
         {
-            string artId = unitId == "recruit" && variant == 0 ? "recruit_crutch" : unitId;
+            string artId = unitId == "recruit" && diagonal
+                ? (variant == 0 ? "recruit_diagonal_crutch" : "recruit_diagonal")
+                : unitId == "recruit" && variant == 0 ? "recruit_crutch" : unitId;
             if (!infantryShootFrames.TryGetValue(artId, out var frames))
             {
                 Texture2D texture = LoadInfantryTexture(artId, "shoot");

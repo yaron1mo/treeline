@@ -565,12 +565,20 @@ namespace Treeline.Render
                 {
                     float shotElapsed = 0.3f - (visual.ShotUntil - Time.time);
                     int shotFrame = shotElapsed < 0.08f ? 0 : shotElapsed < 0.18f ? 1 : 2;
-                    visual.Body.sprite = sprites.GetInfantryShootFrame(type, shotFrame, visual.WalkVariant);
-                    visual.Body.flipX = false;
+                    bool diagonal = type == "recruit" && visual.DirectionView != 0;
+                    visual.Body.sprite = sprites.GetInfantryShootFrame(type, shotFrame, visual.WalkVariant, diagonal);
+                    visual.Body.flipX = diagonal && visual.DirectionView > 0;
                     visual.Body.transform.localRotation = Quaternion.identity;
                     visual.Body.transform.localPosition = Vector3.zero;
                     if (visual.MuzzleFlash != null)
+                    {
+                        if (diagonal)
+                            visual.MuzzleFlash.transform.localPosition = new Vector3(visual.DirectionView > 0 ? 4.4f : -4.4f, -2.9f, 0f);
+                        else if (type == "recruit")
+                            visual.MuzzleFlash.transform.localPosition = visual.WalkVariant == 0
+                                ? new Vector3(-1.5f, -1.5f, 0f) : new Vector3(-2.2f, -3.7f, 0f);
                         visual.MuzzleFlash.enabled = shotElapsed < 0.14f;
+                    }
                 }
                 else if (visual.MuzzleFlash != null) visual.MuzzleFlash.enabled = false;
                 if (Time.time < visual.HitUntil)
