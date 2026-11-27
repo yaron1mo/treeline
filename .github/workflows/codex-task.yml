@@ -40,6 +40,7 @@ jobs:
             "You run headless on Windows. Make art as files in the repo. Start your branch from codex/playable-steppe-patch-integration (PR #8 is merged into it).",
             "mcs (Mono) is not installed on this computer, so tools/tests/*.sh do not run here; GitHub CI runs them on your PR. Check compile and tests with Unity instead: tools/unity/unity.ps1 -Method AgentTools.Ping and -Tests EditMode.",
             "A missing check tool is never a reason to stop. Do the work, commit and push after each unit, open the PR, and write in the PR what you could not check.",
+            "No human will continue this work after you. Finish the whole task in this run: draw, commit, push, open the PR. Stop early only for a design decision (then add needs:yaroslav). Two earlier runs stopped after reading the files and produced nothing; do not do that.",
             "You can run the Unity Editor without a window: powershell -File tools/unity/unity.ps1 -Method AgentTools.Ping (import and compile), -Method AgentTools.CapturePlay -Extra '-agentOut','build/shots/x.png','-agentWait','8' (screenshot in play mode), -Tests EditMode. Read the header of tools/unity/unity.ps1 and unity/Assets/Editor/AgentTools.cs. Put screenshots in the PR body.",
             "Your task is GitHub issue #$env:NUM : $env:TITLE",
             "",
@@ -60,7 +61,7 @@ jobs:
           CODEX_MODEL: ${{ vars.CODEX_MODEL || 'gpt-6.1-terra' }}
           UNITY_EXE: C:\Program Files\Unity\Hub\Editor\6000.3.28f1\Editor\Unity.exe
         run: |
-          Get-Content "$env:RUNNER_TEMP\codex-task.md" -Raw | codex exec -m $env:CODEX_MODEL --dangerously-bypass-approvals-and-sandbox --json --output-last-message "$env:RUNNER_TEMP\codex-last.md" - | Tee-Object -FilePath "$env:RUNNER_TEMP\codex-events.jsonl" | Out-Null
+          Get-Content "$env:RUNNER_TEMP\codex-task.md" -Raw | codex exec -m $env:CODEX_MODEL -c model_reasoning_effort=high --dangerously-bypass-approvals-and-sandbox --json --output-last-message "$env:RUNNER_TEMP\codex-last.md" - | Tee-Object -FilePath "$env:RUNNER_TEMP\codex-events.jsonl" | Out-Null
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Report
         if: always()
