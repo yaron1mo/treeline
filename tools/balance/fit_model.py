@@ -38,7 +38,8 @@ TEST = {"mixed", "mixed-test2"}   # held-out tags, unchanged since the attacker-
 NB = 16                            # bins per feature
 FLOOR = 100.0                      # small-wave floor: one rifle squad, measured; never above 2x this
 SEED = 7                           # fixed seed: the same input gives the same model
-PASS_WITHIN = 0.80                 # pass rule: share within 20% on every field
+PASS_WITHIN = 0.80                 # pass rule: share within 20% on the gate field
+GATE_FIELD = "Forest belts"        # Yaroslav 2026-11-27: Forest belts is the reference map; other fields are reported only
 
 
 class Node:
@@ -225,8 +226,9 @@ def main(root, probe_path, wc_path, out_dir):
     pooled = {"n": len(pooled_v),
               "mean_error": (sum(abs(p - v) / v for p, v in zip(pooled_p, pooled_v)) / len(pooled_v)) if pooled_v else None,
               "within_20pct": (sum(1 for p, v in zip(pooled_p, pooled_v) if abs(p - v) / v <= 0.2) / len(pooled_v)) if pooled_v else 0.0}
-    passed = bool(per_field) and all(v["within_20pct"] >= PASS_WITHIN and v["n"] > 0 for v in per_field.values())
-    metrics = {"pass_rule": f"within_20pct >= {PASS_WITHIN} on every field, held-out mixed waves (tags {sorted(TEST)})",
+    gate = per_field.get(GATE_FIELD)
+    passed = bool(gate) and gate["n"] > 0 and gate["within_20pct"] >= PASS_WITHIN
+    metrics = {"pass_rule": f"within_20pct >= {PASS_WITHIN} on {GATE_FIELD} (other fields reported), held-out mixed waves (tags {sorted(TEST)})",
                "pass": passed, "per_field": per_field, "pooled": pooled,
                "train_tags": model["train_tags"], "test_tags": sorted(TEST), "seed": SEED,
                "predictions": predictions}
