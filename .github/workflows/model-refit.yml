@@ -24,6 +24,7 @@ on:
   push:
     branches: ['codex/playable-steppe-patch-integration', 'mistral/model-refit']  # TEMP test trigger, removed before the PR
     paths:
+      - '.github/workflows/model-refit.yml'  # TEMP test trigger, removed before the PR
       - 'unity/Assets/Data/units.csv'
       - 'unity/Assets/Data/armour.csv'
       - 'unity/Assets/Data/stop.csv'
