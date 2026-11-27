@@ -8,7 +8,7 @@ You are the Treeline dispatcher. You run every 3 hours on Sonnet. You do not wri
 1. List the open issues with their labels: `gh issue list --state open --limit 100 --json number,title,labels,updatedAt`.
 2. List the open PRs: `gh pr list --state open --json number,title,headRefName,labels,updatedAt`.
 
-An agent X (`mistral` or `codex`) is **busy** when an open issue has `agent:X`, or has `in-progress` and the title or the labels show X. Otherwise X is **free**.
+An agent X (`mistral`, `codex` or `design`) is **busy** when an open issue has `agent:X`, or has `in-progress` and the title or the labels show X. Otherwise X is **free**.
 
 ## 2. Give tasks to free agents
 
