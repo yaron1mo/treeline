@@ -87,7 +87,7 @@ public static class AgentTools
             var go = new GameObject("Density comparison " + names[i]);
             var renderer = go.AddComponent<SpriteRenderer>();
             renderer.sortingOrder = 200;
-            Vector3 pos = cam.ViewportToWorldPoint(new Vector3(0.30f + i * 0.13f, 0.50f, -cam.transform.position.z));
+            Vector3 pos = new Vector3(cam.transform.position.x + (i - 1.5f) * cam.orthographicSize * 0.23f, cam.transform.position.y, 0f);
             go.transform.position = new Vector3(pos.x, pos.y, 0);
             densityRenderers[i] = renderer;
         }
@@ -126,7 +126,7 @@ public static class AgentTools
         if (EditorApplication.timeSinceStartup - playStart < waitSeconds) return;
         EditorApplication.update -= PlayTick;
         int code = 0;
-        try { Save(FindCamera(), Arg("-agentOut", "capture.png")); }
+        try { var cam = FindCamera(); if (densityReady) cam.rect = new Rect(0, 0, 1, 1); Save(cam, Arg("-agentOut", "capture.png")); }
         catch (Exception e) { Debug.LogError("[AgentTools] " + e); code = 1; }
         EditorApplication.Exit(code);
     }
