@@ -1,5 +1,7 @@
 # Change log
 
+- 2026-11-27 — [codex] art — Add a GIF of the existing recruit walk for review.
+
 - 2026-11-27 — [codex] render — Keep blood marks until the battle ends. Limit marks and corpses to 64 each. Show DOUBLE KILL after 2 kills.
 
 - 2026-11-27 — [codex] data, game, render — Move unit display scales to `units.csv`. Keep the current sizes. This also changes Claude's data, Sim and Game areas.
