@@ -3,6 +3,8 @@
 //   AgentTools.Ping          opens the project (imports and compiles), prints the version and the scenes.
 //   AgentTools.CaptureEdit   renders a scene in edit mode to a PNG.
 //   AgentTools.CapturePlay   enters play mode, waits, then renders the main camera to a PNG.
+//     Battle options for CapturePlay: -agentDefenders "machine_gun:60:350,rifle_squad:140:350" places defenders,
+//     -agentWave starts that many waves (default 0), -agentTimeScale speeds up the battle (default 1).
 //   AgentTools.Showroom      lays out PNG sprites (pixel-perfect) on a background and renders a phone-size PNG.
 //     -agentImages <folder of PNGs> -agentBackground <png, optional> -agentScale <screen px per sprite px, default 3>
 //     -agentOut <png> -agentWidth 1080 -agentHeight 2340. Sprites are placed left to right, top to bottom, in name order.
@@ -60,6 +62,7 @@ public static class AgentTools
             EditorSceneManager.OpenScene(Arg("-agentScene", "Assets/Scenes/SampleScene.unity"));
             waitSeconds = ArgInt("-agentWait", 5);
             playStart = -1;
+            battleSet = false;
             EditorApplication.update += PlayTick;
             EditorApplication.EnterPlaymode();
         }
@@ -70,10 +73,51 @@ public static class AgentTools
         }
     }
 
+    static bool battleSet;
+
+    // Starts a battle in the PlaytestView by reflection, so that a capture shows units (2026-11-27).
+    static void SetUpBattle()
+    {
+        battleSet = true;
+        Type viewType = null;
+        foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            viewType = asm.GetType("Treeline.Game.PlaytestView");
+            if (viewType != null) break;
+        }
+        if (viewType == null) { Debug.Log("[AgentTools] no PlaytestView"); return; }
+        var view = UnityEngine.Object.FindFirstObjectByType(viewType);
+        if (view == null) { Debug.Log("[AgentTools] PlaytestView not in the scene"); return; }
+        var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public;
+        object run = viewType.GetField("run", flags)?.GetValue(view);
+        string defs = Arg("-agentDefenders", "");
+        if (run != null && defs.Length > 0)
+        {
+            var place = run.GetType().GetMethod("Place");
+            foreach (string d in defs.Split(','))
+            {
+                string[] p = d.Split(':');
+                if (p.Length < 3 || place == null) continue;
+                object[] a = { p[0], float.Parse(p[1], System.Globalization.CultureInfo.InvariantCulture),
+                               float.Parse(p[2], System.Globalization.CultureInfo.InvariantCulture), null, null };
+                object ok = place.Invoke(run, a);
+                Debug.Log("[AgentTools] place " + d + ": " + ok + " " + a[4]);
+            }
+        }
+        int waves = ArgInt("-agentWave", 0);
+        var start = viewType.GetMethod("StartNextWave", flags);
+        for (int i = 0; i < waves && start != null; i++) start.Invoke(view, null);
+        float ts = 1f;
+        float.TryParse(Arg("-agentTimeScale", "1"), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out ts);
+        Time.timeScale = Mathf.Max(0.1f, ts);
+        Debug.Log("[AgentTools] battle set: waves " + waves + ", time scale " + Time.timeScale);
+    }
+
     static void PlayTick()
     {
         if (!EditorApplication.isPlaying) return;
         if (playStart < 0) playStart = EditorApplication.timeSinceStartup;
+        if (!battleSet && EditorApplication.timeSinceStartup - playStart > 1.0) SetUpBattle();
         if (EditorApplication.timeSinceStartup - playStart < waitSeconds) return;
         EditorApplication.update -= PlayTick;
         int code = 0;
