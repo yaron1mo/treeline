@@ -116,6 +116,25 @@ namespace Treeline.Render
                     0, SpriteMeshType.FullRect);
             }
 
+            // The simulation does not yet expose defender levels. These three unit types
+            // show the level art for review until the level interface is available.
+            string[] defenderIds = { "rifle_squad", "machine_gun", "sniper" };
+            string[] defenderArt = { "recruit", "experienced", "veteran" };
+            for (int i = 0; i < defenderIds.Length; i++)
+            {
+                var asset = Resources.Load<TextAsset>("Art/Units/defender_" + defenderArt[i]);
+                if (asset == null) throw new InvalidOperationException("Missing defender art: " + defenderArt[i]);
+                var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+                if (!texture.LoadImage(Convert.FromBase64String(asset.text.Trim())))
+                    throw new InvalidDataException("Invalid defender art: " + defenderArt[i]);
+                texture.filterMode = FilterMode.Point;
+                texture.wrapMode = TextureWrapMode.Clamp;
+                infantryTextures.Add(texture);
+                UnityEngine.Object.Destroy(byId[defenderIds[i]]);
+                byId[defenderIds[i]] = Sprite.Create(texture, new Rect(0, 0, 64, 64),
+                    new Vector2(0.5f, 0.5f), 64f / 12f, 0, SpriteMeshType.FullRect);
+            }
+
             for (int unit = 0; unit < 3; unit++)
             {
                 const int frameCount = 4;
