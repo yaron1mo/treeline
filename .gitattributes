@@ -25,3 +25,7 @@
 
 # These two charts were committed as normal files (2026-11-24); keep them out of LFS so clones are clean.
 docs/balance/mistral/attacker-cost/*.png !filter !diff !merge binary
+
+# Review images and GIFs of the agents stay out of LFS (2026-11-27), so that every agent and Claude can read them
+# from git. Keep them small (pixel art, GIFs under 2 MB).
+docs/design/visual/** !filter !diff !merge binary

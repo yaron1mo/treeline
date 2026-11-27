@@ -5,6 +5,10 @@ Written by Claude (CTO) from Yaroslav's decisions, 2026-11-27. Every visual task
 ## 1. Fixed (decided)
 
 - **Style base (Yaroslav, 2026-11-27): the PR #8 unit art is the base.** Round 3 (PR #31) looked too childish ("a game for five-year-olds"); its pixel variant has some good points and is a secondary source. Combine, improve and complete; do not start a new style.
+- **Rendering decided (Yaroslav, 2026-11-27): pixel art at the current density (PR #8, variant 1 of the density test PR #37).** Readable at 1×, cheapest, fits our limits. Higher density was not chosen.
+- **Deaths are the reward** (Yaroslav, 2026-11-27): blowing up pigs must feel great. Pigs fly apart, get crushed, leave marks. Violence: stylised and funny (pixel meat chunks, helmet and ears flying, bacon/sausage gags), not anatomical. Target rating 16+ (the IARC form decides).
+- **Unit size:** units are a little larger than the first default (Codex already raised the infantry to 1.34). Keep this direction for all units.
+- **Order of art work (Yaroslav, 2026-11-27):** finish each unit completely (views, all animations, death and break-apart) before the next. First the 3 infantry pigs, then all attackers, then all defenders, then the field (light, colours, palette). Sound and music come last, after graphics, levels and balance.
 - **Genre and tone: a satire.** Yaroslav (2026-11-27): the game is a satire in which the invaders are pigs. It is not a shooter or a simulator. **No hyper-realism and no horror.** Stylised, readable, with dark humour.
 - **Attackers: zombie pigs in helmets** in the gear of a modern invading army (the PR #8 pig is the reference): angry, aggressive, they push forward to kill you; gross and dirty (snot from the snout, drool). The satire comes from the grossness and the stupidity, not from cute cartoon shapes. Not a realistic horror monster either.
 - **Defenders: soldiers in modern uniform. No zombies on the defence side** (Yaroslav, 2026-11-27): no rotting flesh, no decay stage.
