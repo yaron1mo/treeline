@@ -53,6 +53,7 @@ jobs:
             "",
             "When you finish: push your branch and open the pull request with gh (section 7 of docs/agents/mistral.md).",
             "If a branch for this task already exists on origin, continue from it (an earlier run may have stopped at the turn limit). Push after each step.",
+            "If you cannot finish in this run, push all work and write 'NOT COMPLETE' in a comment on the issue: the Watchdog starts you again to continue.",
             "Then write a comment on issue #$env:NUM with the PR link. If you need a design decision, add the label needs:yaroslav to the issue and stop."
           )
           [System.IO.File]::WriteAllLines("$env:RUNNER_TEMP\task.md", $lines, (New-Object System.Text.UTF8Encoding $false))

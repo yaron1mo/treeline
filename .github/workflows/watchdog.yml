@@ -52,7 +52,7 @@ jobs:
               return None
           for wf, agent in (("mistral-task.yml", "mistral"), ("codex-task.yml", "codex")):
               runs = [r for r in api(f"repos/{repo}/actions/workflows/{wf}/runs?per_page=20").get("workflow_runs", [])
-                      if r["conclusion"] not in ("skipped",)]
+                      if r["conclusion"] not in ("skipped", "cancelled") and r["event"] in ("issues", "workflow_dispatch")]
               if not runs: continue
               last = runs[0]
               issue = issue_no(last)
@@ -72,6 +72,19 @@ jobs:
                   gh("workflow", "run", wf, "--repo", repo, "-f", f"issue={n}")
                   print("restarted", agent, n, reason)
               busy = labels & {"needs:yaroslav", f"queue:{agent}"}
+              # A run that ended "success" but says the task is not complete: start it again to continue (max 6 per day).
+              if last["status"] == "completed" and last["conclusion"] == "success" and not busy and comments:
+                  lastc = comments[-1]["body"].lower()
+                  conts = [c for c in comments if c["body"].startswith("Watchdog: continue") and now - t(c["created_at"]) < dt.timedelta(hours=24)]
+                  if ("not complete" in lastc or "is not finished" in lastc) and t(comments[-1]["created_at"]) > t(last["created_at"]):
+                      if len(conts) < 6:
+                          gh("issue", "comment", str(n), "--repo", repo, "--body", f"Watchdog: continue {agent} (the last run said the task is not complete). Continue {len(conts)+1} of 6.")
+                          gh("workflow", "run", wf, "--repo", repo, "-f", f"issue={n}")
+                          print("continued", agent, n)
+                      elif "needs:yaroslav" not in labels:
+                          gh("issue", "comment", str(n), "--repo", repo, "--body", f"@yaron1mo Watchdog: {agent} did not finish this task in 6 runs today. Stopped.")
+                          gh("issue", "edit", str(n), "--repo", repo, "--add-label", "needs:yaroslav")
+                      continue
               if last["status"] == "completed" and last["conclusion"] in ("failure", "timed_out") and not busy:
                   if now - t(last["updated_at"]) > dt.timedelta(minutes=3):
                       restart(f"run {last['id']} ended with {last['conclusion']}")
