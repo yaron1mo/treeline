@@ -55,6 +55,8 @@ namespace Treeline.Sim
         public float DroneWaypointX, DroneWaypointY;
         /// <summary>What was paid for it (prices can rise with each purchase); selling gives back a share of this.</summary>
         public float PaidCost;
+        /// <summary>The index of the house this defender stands in (or runs to), or -1 (2026-11-27).</summary>
+        public int House = -1;
     }
 
     /// <summary>A trench the player dug: a firing position, cover for whoever stands in it (both sides).</summary>
@@ -359,6 +361,8 @@ namespace Treeline.Sim
             if (!def.IsDefence) { why = "Not a defender"; return false; }
             float cost = CostOf(unitId);
             if (cost > Budget) { why = "Not enough budget"; return false; }
+            int house = HouseAt(x, y);
+            if (house >= 0 && !HouseDoor(house, null, out x, out y, out why)) return false;
             if (!CheckSpot(x, y, out var flow, out why)) return false;
 
             Budget -= cost;
@@ -367,6 +371,7 @@ namespace Treeline.Sim
             var d = new Defender { Id = nextId++, Def = def, Hp = def.Hp, PaidCost = cost };
             defenders.Add(d);
             StatsFor(def).Spawned++;
+            if (house >= 0) { d.House = house; houseOccupant[house] = d.Id; }
             Send(d, flow, x, y);
             placed = d;
             return true;
@@ -432,12 +437,72 @@ namespace Treeline.Sim
         {
             var d = defenders.Find(e => e.Id == defenderId);
             if (d == null) { why = "No such defender"; return false; }
+            int house = HouseAt(x, y);
+            if (house >= 0 && !HouseDoor(house, d, out x, out y, out why)) return false;
             if (!CheckSpot(x, y, out var flow, out why)) return false;
+            LeaveHouse(d);
+            if (house >= 0) { d.House = house; houseOccupant[house] = d.Id; }
             Send(d, flow, x, y);
             return true;
         }
 
-        public void Remove(int defenderId) => defenders.RemoveAll(e => e.Id == defenderId);
+        public void Remove(int defenderId)
+        {
+            foreach (var e in defenders) if (e.Id == defenderId) LeaveHouse(e);
+            defenders.RemoveAll(e => e.Id == defenderId);
+        }
+
+        // Houses (2026-11-27): one defender per house. A defender sent into a house runs to its door cell (the nearest
+        // cell it can stand on), then stands at the middle of the house with the house_inside cover.
+        readonly Dictionary<int, int> houseOccupant = new Dictionary<int, int>();
+
+        /// <summary>The defender in this house, or -1.</summary>
+        public int HouseOccupant(int house) => houseOccupant.TryGetValue(house, out int id) ? id : -1;
+
+        /// <summary>The house at this point (inside its outline, or within 4 m of its middle), or -1.</summary>
+        public int HouseAt(float x, float y)
+        {
+            if (vision == null) return -1;
+            var hs = vision.Houses;
+            for (int i = 0; i < hs.Count; i++)
+            {
+                float dx = x - hs[i].X, dy = y - hs[i].Y;
+                if (Geometry.InPoly(x, y, hs[i].Poly) || dx * dx + dy * dy <= 16f) return i;
+            }
+            return -1;
+        }
+
+        bool HouseDoor(int house, Defender mover, out float x, out float y, out string why)
+        {
+            var h = vision.Houses[house];
+            x = h.X; y = h.Y;
+            if (houseOccupant.TryGetValue(house, out int who) && (mover == null || who != mover.Id)) { why = "The house is taken"; return false; }
+            var cost = grid.Cost(UnitClass.Infantry);
+            float best = float.MaxValue;
+            for (float r = 2f; r <= 16f; r += 1f)
+            {
+                for (int k = 0; k < 16; k++)
+                {
+                    double a = k * Math.PI / 8.0;
+                    float px = h.X + r * (float)Math.Cos(a), py = h.Y + r * (float)Math.Sin(a);
+                    if (px < 0f || py < 0f || px > grid.Width || py > grid.Height) continue;
+                    int cell = grid.CellAt(px, py);
+                    if (float.IsPositiveInfinity(cost[cell])) continue;
+                    float dd = (px - h.X) * (px - h.X) + (py - h.Y) * (py - h.Y);
+                    if (dd < best) { best = dd; x = grid.CenterX(cell); y = grid.CenterY(cell); }
+                }
+                if (best < float.MaxValue) break;
+            }
+            if (best == float.MaxValue) { why = "No way into the house"; return false; }
+            why = "";
+            return true;
+        }
+
+        void LeaveHouse(Defender d)
+        {
+            if (d.House >= 0 && houseOccupant.TryGetValue(d.House, out int who) && who == d.Id) houseOccupant.Remove(d.House);
+            d.House = -1;
+        }
 
         /// <summary>Defenders may not be placed or moved closer to the enemy edge than this (metres from it). The game
         /// sets it from battle_rules placement_zone_start; 0 = anywhere.</summary>
@@ -472,6 +537,7 @@ namespace Treeline.Sim
             if (d == null) return false;
             foreach (var dr in drones) if (dr.Alive && dr.Owner == d) { dr.Alive = false; }
             drones.RemoveAll(dr => !dr.Alive);
+            LeaveHouse(d);
             defenders.Remove(d);
             refund = Math.Max(0f, d.PaidCost * refundShare);
             Budget += refund;
@@ -489,7 +555,7 @@ namespace Treeline.Sim
             {
                 d.ReloadLeft = 0f;
                 d.DroneInFlight = false;
-                if (d.State == DefenderState.Running) { d.X = d.TargetX; d.Y = d.TargetY; d.State = DefenderState.Standing; d.Path = null; }
+                if (d.State == DefenderState.Running) Arrive(d);
             }
             Phase = BattlePhase.Preparation;
             return true;
@@ -531,6 +597,7 @@ namespace Treeline.Sim
                 d.X = x; d.Y = y;
                 d.State = DefenderState.Standing;
                 d.Path = null;
+                EnterHouse(d);
                 return;
             }
             d.Path = flow.Trace(EntryCell(flow));
@@ -645,12 +712,21 @@ namespace Treeline.Sim
                 if (d.State == DefenderState.Running && Walk(d, cost, RunSpeedMps, dt)) Arrive(d);
         }
 
-        static void Arrive(Defender d)
+        void Arrive(Defender d)
         {
             d.X = d.TargetX;
             d.Y = d.TargetY;
             d.State = DefenderState.Standing;
             d.Path = null;
+            EnterHouse(d);
+        }
+
+        void EnterHouse(Defender d)
+        {
+            if (d.House < 0 || vision == null) return;
+            var h = vision.Houses[d.House];
+            d.X = d.TargetX = h.X;
+            d.Y = d.TargetY = h.Y;
         }
 
         void MoveAttackers(float dt)
@@ -1875,6 +1951,7 @@ namespace Treeline.Sim
                 }
             }
             foreach (var d in defenders) if (!d.Alive) StatsFor(d.Def).Killed++;
+            foreach (var e in defenders) if (!e.Alive) LeaveHouse(e);
             defenders.RemoveAll(e => !e.Alive);
             attackers.RemoveAll(e => !e.Alive);
         }
