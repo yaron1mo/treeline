@@ -40,6 +40,10 @@ Write all text in ASD-STE100. Mark each item as **Decided** (with date and who) 
 - **Endless** (Yaroslav, 2026-11-27): many different levels of different length (7, 10, 20 waves …); each level is a different map.
 - **No pair bonus and no pair hint** (Yaroslav, 2026-11-27): players find good pairs alone.
 
+- **Roster decisions on PR #28** (Yaroslav, 2026-11-27): keep motorbike, van, MRAP and helicopter (each needs a role). EW stations of both sides work until destroyed; they show small waves from time to time. EW does not stop fibre-optic FPV. The player does not see the EW zone; the player sees the station work and its effect on drones (shake, smoke, an electric layer). EW belongs to the Drone forces branch. Support calls at release: howitzer, rocket salvo, air strike.
+- **Shahed-type drone (attacker), added now** (Yaroslav, 2026-11-27): no damage to units; flies slowly past the defence and takes health from the base; makes the player spend a slot on air defence.
+- **Art:** `docs/design/art-brief.md` (world, references, open axes). Defenders: a low-level unit is a human, a veteran is a skeleton in uniform.
+
 ## 2. Open
 
 - **Death or wounded:** a unit at 0 HP is wounded ("300") or killed ("200"); proposal 50/50; what evacuation costs; recovery time.
