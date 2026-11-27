@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Draw the wave-generator chart: target cost vs measured cost per wave.
 
-Run 2 of this task: Balance run 45867645128 (27 of 30 waves within 20%).
+Best run after review 1: Balance run 45916087929 (run 4, 23 of 30 waves within 20%).
 Input: report.json from the run artifact. Output: target-vs-measured.png.
 """
 import json
