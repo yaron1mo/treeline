@@ -34,6 +34,15 @@ namespace Treeline.Tests
         }
 
         [Test]
+        public void UnitTable_ReadsDisplayScaleAndDefaultsWhenMissing()
+        {
+            var table = UnitTable.Parse("id,side,display_scale\nrecruit,attack,1.3417\nregular,attack,\n");
+            Assert.AreEqual(1.3417f, table.Get("recruit").DisplayScale, 0.00001f);
+            Assert.AreEqual(1f, table.Get("regular").DisplayScale);
+            Assert.AreEqual(1f, UnitTable.Parse(Units).Get("regular").DisplayScale);
+        }
+
+        [Test]
         public void Preparation_PlacingAndMovingAreInstant()
         {
             var b = Open();

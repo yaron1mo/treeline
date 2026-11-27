@@ -67,6 +67,7 @@ namespace Treeline.Render
         Texture2D muzzleTexture;
         Sprite muzzleSprite;
 
+        UnitTable unitTable;
         UnitSpriteAtlas sprites;
         Battle battle;
         BattlefieldEffects effects;
@@ -90,6 +91,12 @@ namespace Treeline.Render
             widthMetres = width;
             heightMetres = height;
             bloodEnabled = PlayerPrefs.GetInt(BloodSetting, 1) == 1;
+            string unitsPath = System.IO.Path.Combine(Application.dataPath, "Data", "units.csv");
+            try
+            {
+                if (System.IO.File.Exists(unitsPath)) unitTable = UnitTable.Parse(System.IO.File.ReadAllText(unitsPath));
+            }
+            catch (Exception ex) { Debug.LogError("Could not load display scales: " + ex.Message); }
             if (sprites == null)
             {
                 try { sprites = new UnitSpriteAtlas(); }
@@ -106,6 +113,13 @@ namespace Treeline.Render
         /// If bound, the catalog is hidden automatically and actual combat units are shown.
         /// </summary>
         public void BindEffects(BattlefieldEffects value) { effects = value; }
+
+        public void SetUnitTable(UnitTable table)
+        {
+            unitTable = table;
+            foreach (var visual in showroom)
+                if (visual.Root != null) visual.Root.transform.localScale = Vector3.one * DisplayScale(visual.UnitId);
+        }
 
         public void BindBattle(Battle current)
         {
@@ -188,17 +202,10 @@ namespace Treeline.Render
             };
         }
 
-        static float DisplayScale(string id)
+        float DisplayScale(string id)
         {
-            if (id == "recruit" || id == "regular" || id == "special_forces") return 1.3417f;
-            if (id == "old_tank" || id == "modern_tank") return 0.86f;
-            if (id == "helicopter" || id == "one_way_drone") return 1.0f;
-            if (id == "ifv" || id == "mrap" || id == "van") return 0.72f;
-            if (id == "buggy" || id == "motorbike") return 0.55f;
-            if (id == "air_defence") return 0.68f;
-            if (id == "fpv" || id == "recon_uav" || id == "recon_drone") return 0.39f;
-            if (id == "mortar" || id == "anti_tank") return 0.45f;
-            return 0.40f;
+            return unitTable != null && unitTable.TryGet(id, out var unit) && unit.DisplayScale > 0f
+                ? unit.DisplayScale : 1f;
         }
 
         Vector3 World(Vector2 loc) => new Vector3(
