@@ -49,6 +49,7 @@ public static class AgentTools
 
     static double playStart;
     static float waitSeconds;
+    static bool battleStarted;
 
     public static void CapturePlay()
     {
@@ -57,6 +58,7 @@ public static class AgentTools
             EditorSceneManager.OpenScene(Arg("-agentScene", "Assets/Scenes/SampleScene.unity"));
             waitSeconds = ArgInt("-agentWait", 5);
             playStart = -1;
+            battleStarted = false;
             EditorApplication.update += PlayTick;
             EditorApplication.EnterPlaymode();
         }
@@ -71,12 +73,37 @@ public static class AgentTools
     {
         if (!EditorApplication.isPlaying) return;
         if (playStart < 0) playStart = EditorApplication.timeSinceStartup;
+        if (!battleStarted && Arg("-agentBattle", "0") == "1" && EditorApplication.timeSinceStartup - playStart >= 1)
+        {
+            try { StartCaptureBattle(); battleStarted = true; }
+            catch (Exception e) { Debug.LogError("[AgentTools] " + e); EditorApplication.Exit(1); return; }
+        }
         if (EditorApplication.timeSinceStartup - playStart < waitSeconds) return;
         EditorApplication.update -= PlayTick;
         int code = 0;
         try { Save(FindCamera(), Arg("-agentOut", "capture.png")); }
         catch (Exception e) { Debug.LogError("[AgentTools] " + e); code = 1; }
         EditorApplication.Exit(code);
+    }
+
+    // Use the playtest commands so the capture does not change the game or its rules.
+    static void StartCaptureBattle()
+    {
+        var view = UnityEngine.Object.FindFirstObjectByType<Treeline.Game.PlaytestView>();
+        if (view == null) throw new InvalidOperationException("PlaytestView not found.");
+        var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+        var run = (Treeline.Sim.Run)typeof(Treeline.Game.PlaytestView).GetField("run", flags).GetValue(view);
+        if (run == null) throw new InvalidOperationException("Playtest run not ready.");
+        var fields = (System.Collections.Generic.List<Treeline.Sim.Field>)typeof(Treeline.Game.PlaytestView).GetField("fields", flags).GetValue(view);
+        int current = (int)typeof(Treeline.Game.PlaytestView).GetField("current", flags).GetValue(view);
+        var field = fields[current];
+        for (int i = 0; i < 3; i++)
+        {
+            bool ok = run.Place("rifle_squad", field.Width * (0.35f + i * 0.15f), field.Height * 0.8f, out _, out string why);
+            Debug.Log("[AgentTools] defender " + i + ": " + (ok ? "placed" : why));
+        }
+        typeof(Treeline.Game.PlaytestView).GetMethod("StartNextWave", flags).Invoke(view, null);
+        Debug.Log("[AgentTools] started wave 1 for capture");
     }
 
     static Camera FindCamera()
