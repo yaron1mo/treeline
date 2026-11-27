@@ -3,9 +3,8 @@
 
 Task: mistral/wave-generator-2 (docs/agents/mistral.md, section 10; issue #17, findings 4
 and 5 of the Claude review 2 on PR #9). The cost model comes from
-docs/balance/mistral/wave-generator-2/model.json (field Forest belts), a refit of the
-PR #9 model with the armour probe waves (tag mixed-train4) and the waves measured in the
-Balance runs of this task added to the training set (fit: fit_model.py next to the model).
+tools/balance/model.json (field Forest belts; since mistral/model-refit, issue #40, this
+file is refit automatically by the Model refit workflow after every data change).
 The single-type curves of that model (run 45411511647, artifact balance-report)
 are embedded below as constants, so this script needs no artifact to run.
 
@@ -62,7 +61,7 @@ else:
     with open(tc_path, newline="", encoding="utf-8") as fh:
         for r in csv.DictReader(fh):
             targets[int(r["wave"])] = float(r["target_cost"])
-model_all = json.load(open(os.path.join(root, "docs", "balance", "mistral", "wave-generator-2", "model.json"),
+model_all = json.load(open(os.path.join(root, "tools", "balance", "model.json"),
                            encoding="utf-8"))
 model = model_all["fields"]["Forest belts"]
 FLOOR = float(model_all.get("small_wave_floor", 0) or 0)   # one rifle squad, measured

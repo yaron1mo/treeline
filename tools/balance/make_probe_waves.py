@@ -1,16 +1,22 @@
 #!/usr/bin/env python3
-"""Probe waves for the attacker cost model, version 8 (2026-11-24).
+"""Probe waves for the attacker cost model, version 9 (2026-11-28).
 
-Version 8 adds a second train set: 220 more random game-like waves (seed 73) with the notes tag
+Version 9 (task mistral/model-refit, issue #40): the attacker types come from units.csv
+(side = attack), so a new attacker type in units.csv gets single-type, pair, triple and
+mixed probe waves with no other change. Only the excluded types stay a fixed list
+(EXCLUDED at the top of this file). The unlock waves, the triple waves and the infantry
+filler are derived from units.csv too.
+
+Version 8 added a second train set: 220 more random game-like waves (seed 73) with the notes tag
 mixed-train2. The test sets stay unchanged (seeds 61 and 62), so the runs judge the models on the
 same waves as before.
 
 These waves are not for play. They measure what each attacker costs the defence:
 1. Single-type waves: n attackers of one type, for n in COUNTS. They give the cost curve of each type.
 2. Pair waves: two types. Level 1 is (rep, rep) for every pair. Level 2 is (half, rep) for pairs
-   without a helicopter, and (rep, 1 helicopter) for pairs with one, so the helicopter level that
+   without an aircraft, and (rep, 1 aircraft) for pairs with one, so the aircraft level that
    mixed waves use (1-3) is measured too.
-3. Triple waves: three types. They show if pair terms are enough.
+3. Triple waves: three types, a fixed-seed sample of all triples. They show if pair terms are enough.
 4. Mixed waves: waves with the same structure as make_waves.py builds for play (a new type where it
    unlocks, two or three older types, infantry filler, heavy types for the rest), in two sets: 233
    train waves (seed 71 plus a coverage pass) and 40 test waves (seed 61, unchanged from version 5). The model is fitted on the train waves; the
@@ -20,6 +26,7 @@ Usage: make_probe_waves.py <units.csv> <out csv> [train=220] [test=40]  # 220 ra
 The output has the waves.csv format, plus a 'notes' column (single:<unit>:<n>, pair:<u>+<v>@<level>, triple:<u>+<v>+<w>, mixed-train, mixed-train2 or mixed).
 """
 import csv
+import itertools
 import random
 import sys
 
@@ -27,9 +34,22 @@ units_path, out = sys.argv[1], sys.argv[2]
 TRAIN = int(sys.argv[3]) if len(sys.argv) > 3 else 220
 TEST = int(sys.argv[4]) if len(sys.argv) > 4 else 40
 
-ATTACKERS = ["recruit", "regular", "special_forces", "motorbike", "buggy", "van", "mrap", "ifv",
-             "old_tank", "modern_tank", "helicopter"]
+# Types that are never measured and never generated. The same list as in make_waves.py and fitlib.py.
+EXCLUDED = ["fpv", "one_way_drone", "recon_uav"]
 units = {r["id"]: r for r in csv.DictReader(open(units_path, newline="", encoding="utf-8"))}
+# Attacker types from units.csv, in file order: no fixed list.
+ATTACKERS = [u for u, r in units.items() if r["side"] == "attack" and u not in EXCLUDED]
+AVIATION = [u for u in ATTACKERS if units[u]["type"] == "aviation"]
+INFANTRY = [u for u in ATTACKERS if units[u]["type"] == "troops"]
+# Infantry filler of the game-like waves: the cheapest infantry first, the next one later.
+FILLER = sorted(INFANTRY, key=lambda u: float(units[u].get("threat_value") or 0))
+tv = {u: float(units[u].get("threat_value") or 0) for u in ATTACKERS}
+
+# Unlock waves of the game-like waves: the attackers spread over waves 1..MAX_UNLOCK, cheapest first.
+MAX_UNLOCK = 14
+_order = sorted(ATTACKERS, key=lambda u: tv[u])
+UNLOCK = [(1 + (i * (MAX_UNLOCK - 1)) // max(1, len(_order) - 1), u) for i, u in enumerate(_order)]
+unlock_of = {u: k for k, u in UNLOCK}
 
 
 def heavy(u):
@@ -102,30 +122,20 @@ for u in ATTACKERS:
 for i, u in enumerate(ATTACKERS):
     for v in ATTACKERS[i + 1:]:
         add_wave([(u, rep(u)), (v, rep(v))], f"pair:{u}+{v}@1")
-        if "helicopter" in (u, v):
-            other = v if u == "helicopter" else u
-            add_wave([(other, rep(other)), ("helicopter", 1)], f"pair:{u}+{v}@2")
+        av = [x for x in (u, v) if x in AVIATION]
+        if av:
+            other = v if u in AVIATION else u
+            add_wave([(other, rep(other)), (av[0], 1)], f"pair:{u}+{v}@2")
         else:
             add_wave([(u, half(u)), (v, rep(v))], f"pair:{u}+{v}@2")
-TRIPLES = [
-    ("old_tank", "ifv", "mrap"),
-    ("old_tank", "modern_tank", "ifv"),
-    ("special_forces", "old_tank", "van"),
-    ("regular", "modern_tank", "helicopter"),
-    ("special_forces", "buggy", "motorbike"),
-    ("recruit", "mrap", "helicopter"),
-    ("special_forces", "ifv", "helicopter"),
-    ("van", "mrap", "modern_tank"),
-]
+# Triple waves: a fixed-seed sample of all triples of attacker types.
+TRIPLES = sorted(random.Random(5).sample(list(itertools.combinations(ATTACKERS, 3)),
+                                         min(8, len(ATTACKERS) * (len(ATTACKERS) - 1) * (len(ATTACKERS) - 2) // 6)))
 for t in TRIPLES:
     add_wave([(u, rep(u)) for u in t], "triple:" + "+".join(t))
 # Game waves: the same structure as make_waves.py produces for play, so the formula is judged on
 # waves the game really sends: a new type where it unlocks, two or three older types, infantry filler,
 # heavy types for what is left, all under the same threat budget curve.
-UNLOCK = [(1, "recruit"), (2, "regular"), (3, "motorbike"), (4, "buggy"), (5, "van"), (6, "special_forces"),
-          (7, "old_tank"), (8, "ifv"), (9, "mrap"), (12, "modern_tank"), (14, "helicopter")]
-INFANTRY = ["recruit", "regular", "special_forces"]
-tv = {k: float(r["threat_value"]) for k, r in units.items() if r["side"] == "attack" and r.get("threat_value")}
 
 
 def game_cap(u):
@@ -154,7 +164,7 @@ def game_wave(rng, w, first=50.0, growth=1.22):
     for u in new:
         n = add(u, max(1, round(0.35 * budget / tv[u])))
         left -= n * tv[u]
-    others = [u for u in unlocked if u not in new and u != "recruit"]
+    others = [u for u in unlocked if u not in new and u != FILLER[0]]
     picks = []
     for _ in range(min(len(others), rng.choice([2, 3]))):
         weights = [1 + unlocked.index(u) for u in others if u not in picks]
@@ -165,7 +175,7 @@ def game_wave(rng, w, first=50.0, growth=1.22):
         share = left * rng.uniform(0.25, 0.45)
         n = add(u, int(share // tv[u]))
         left -= n * tv[u]
-    filler = "recruit" if w < 6 else "regular"
+    filler = FILLER[0] if w < 6 else FILLER[min(1, len(FILLER) - 1)]
     left -= add(filler, max(0, int(round(left / tv[filler])))) * tv[filler]
     heavy_types = sorted((u for u in unlocked if tv[u] >= 50), key=lambda u: tv[u])
     while heavy_types and left >= tv[heavy_types[0]]:
@@ -196,7 +206,7 @@ def forced_wave(rng, level, must):
     for u in must:
         n = add(u, max(1, 1 if tv[u] >= 50 else round(0.15 * budget / tv[u])))
         left -= n * tv[u]
-    others = [u for u in unlocked if u not in must and u != "recruit"]
+    others = [u for u in unlocked if u not in must and u != FILLER[0]]
     for _ in range(min(len(others), rng.choice([1, 2]))):
         cand = [u for u in others if u not in groups]
         if cand:
@@ -204,7 +214,7 @@ def forced_wave(rng, level, must):
             share = left * rng.uniform(0.2, 0.4)
             n = add(u, int(share // tv[u]))
             left -= n * tv[u]
-    filler = "recruit" if level < 6 else "regular"
+    filler = FILLER[0] if level < 6 else FILLER[min(1, len(FILLER) - 1)]
     left -= add(filler, max(0, int(round(left / tv[filler])))) * tv[filler]
     heavy_types = sorted((u for u in unlocked if tv[u] >= 50), key=lambda u: tv[u])
     while heavy_types and left >= tv[heavy_types[0]]:
@@ -231,11 +241,8 @@ def pairs_in(groups_list):
                 seen.add((a, b))
     return seen
 
-import itertools
+
 target = set(itertools.combinations(ATTACKERS, 2))
-unlock_of = {}
-for k, u in UNLOCK:
-    unlock_of[u] = k
 extra = 0
 rng2 = random.Random(72)
 for _ in range(6):  # passes: each pass covers what earlier passes missed
@@ -259,6 +266,7 @@ for _ in range(TEST):
 rng = random.Random(62)
 for _ in range(TEST):
     add_wave(game_wave(rng, rng.randint(1, 20)), "mixed-test2")
+print(f"attackers: {len(ATTACKERS)} ({', '.join(ATTACKERS)})")
 print(f"coverage waves added: {extra}")
 
 with open(out, "w", newline="", encoding="utf-8") as fh:
