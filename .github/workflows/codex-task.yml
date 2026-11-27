@@ -1,5 +1,5 @@
 name: Codex task
-run-name: ${{ github.event.issue.title || format('Restart issue #{0}', github.event.inputs.issue) }}
+run-name: "${{ github.event.issue.title || format('Restart issue #{0}', github.event.inputs.issue) }}"
 # Agent office, stage 2 (2026-11-27). The label "agent:codex" on an issue starts Codex CLI on Yaroslav's Windows computer
 # (a self-hosted Windows runner), with his own ChatGPT login (codex login). No API key. One Codex task at a time.
 # Two runners on the same computer let Codex and Mistral work at the same time.
