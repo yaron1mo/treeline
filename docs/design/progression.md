@@ -32,7 +32,7 @@ Write all text in ASD-STE100. Mark each item as **Decided** (with date and who) 
 
 - **Death or wounded:** a unit at 0 HP is wounded ("300") or killed ("200"); proposal 50/50; what evacuation costs; recovery time.
 - **Barracks size** and units per level.
-- **Veteran slots and general slots:** if the player takes only veterans and all die, where do new units come from? Three variants and a recommendation: [squad-selection.md](squad-selection.md), section 7.
+- **Veterans and carry-over** (direction from Yaroslav, 2026-11-27; details open): units level up in the battle; carry-over is a limited perk. Open: branch of the perk, branch of the veteran slots, veteran cap, veteran cost, endless counter rule. See [squad-selection.md](squad-selection.md), section 7.8. Stories and call signs: [veteran-stories.md](veteran-stories.md).
 - **Slot opening after the start:** proposal for slots 4–6 in [squad-selection.md](squad-selection.md), section 3.1. (Start: 3 slots + recon slot, decided 2026-11-27 in PR #24.)
 - **In-battle progression:** upgrades during a battle and their costs.
 - **Campaign structure:** chapters, levels per chapter, what each level introduces.

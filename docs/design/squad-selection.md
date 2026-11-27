@@ -1,6 +1,6 @@
 # Squad selection and slots
 
-Proposal by the designer agent, 2026-11-27, for issue #19. Updated the same day to the decisions of Yaroslav on PR #24. Status: **one question is open** (veteran and general slots, section 7). Nothing here changes a "Decided" item in `progression.md`.
+Proposal by the designer agent, 2026-11-27, for issue #19. Updated the same day to the decisions of Yaroslav on PR #24. Updated again for the veteran model of Yaroslav (section 7). Status: **5 questions are open** (section 7.8). Nothing here changes a "Decided" item in `progression.md`.
 
 ## 1. Goal
 
@@ -16,7 +16,7 @@ The player opens a mission and sees a short brief: the map, the modifier (for ex
 
 - There are **3 slots** at the start. One slot holds one unit type with its upgrade path (for example "sniper" or "marksman"). The player can build many units of that type in the battle, for money.
 - **Recon drones have their own slot** with their own count. They do not use one of the 3 slots.
-- How a slot is filled (a named veteran or a general unit) is open: see section 7.
+- A slot holds a general unit type. The veteran has a separate slot: see section 7.
 - Slots open with the campaign, not with money. Proposal for later slots (not decided):
 
 | Slots | Opens when |
@@ -66,7 +66,7 @@ The brief shows the attacker types: infantry, IFVs, one-way drones. The player t
 - Uses "Squad before each mission", "Slots open with progress" and "One squad that wins everything is a failure".
 - Uses "Depth from upgrade paths": slot = type + path.
 - Uses "Mission modifiers" and the intelligence branch (each upgrade opens one forecast item).
-- Uses "Death" and "Weekly challenge" (same map, seed, modifier; nothing carried over).
+- Uses "Death", "Weekly challenge" (same map, seed, modifier; nothing carried over) and "Upgrades" (experience makes upgrades cheaper).
 
 ## 6. What Claude must build or measure
 
@@ -74,21 +74,77 @@ The brief shows the attacker types: infantry, IFVs, one-way drones. The player t
 2. Check that the wave generator can output the four forecast items (wave count, type list, next wave, best route).
 3. Run setup: add a squad (list of unit `id` and path) and a recon count. Add a wound table (missions out).
 4. Endless: a level list with different wave counts (7, 10, 20…) and one map per level. Codex makes the maps.
-5. For the chosen variant of section 7: measure the win rate of a squad of only veterans against a mixed squad.
+5. Veterans: see section 7.7.
 
-## 7. Open question: veteran slots and general slots
+## 7. Veterans and in-battle levelling
 
-**The problem.** Building many units in a battle is allowed. If the player takes only upgraded veterans and all of them die, there are no new units. Yaroslav's idea: veteran slots and general slots are separate. This conflicts a little with the weekly challenge (one map, nothing carried over), but this can be a feature. Three complete variants:
+Decided direction by Yaroslav, 2026-11-27. The open items are in section 7.8.
 
-| | A. Fixed split | B. Veteran leads, general builds | C. Free slots, free base unit |
+### 7.1 Core rule: units level up inside the battle
+
+- A unit gains experience from kills and levels up in the battle. This is the main progression in a battle in all modes (campaign, weekly, endless).
+- The player can move a unit. Roman-legion play: a fast first line levels up, then the player moves it back to a line where it protects more, and builds new units in front.
+- The balance of each mission is made **without veterans**. A veteran is a bonus.
+
+### 7.2 Carry-over is a limited perk, not the default
+
+Reason: if units carry over freely, mission 1 is hard and missions 2–7 are easy (a spike, then a collapse).
+
+- After a battle, the player **keeps** a unit only with the perk "keep a unit after the battle". The perk gives 1 kept unit, then 2, then 3 (maximum).
+- All other units are lost after the battle.
+- Proposed branch for the perk: Intelligence (Yaroslav; to confirm).
+
+### 7.3 The veteran
+
+| Step | Rule |
+| --- | --- |
+| Become a veteran | A kept unit that reached the maximum level of its path becomes a veteran. |
+| Name and story | It gets a call sign (random from a list) and a short story of the battle where it was promoted (section 7.5). |
+| Growth | It still levels, slowly, to one strong **passive talent**. |
+| Veteran slot | 1 at the start. It is separate from the 3 unit type slots and from the recon slot. More slots come from an upgrade branch (section 7.8, question 2). |
+| Cost | The player pays money for each battle when the veteran is taken. The cost is less than its full value. |
+| Cap | The veteran level cannot be higher than the mission level + N (N is for the balance table). A veteran helps, but it cannot skip a mission. |
+
+Unit type slots (the 3 slots) are upgraded in the infantry / Assault branch, and some maybe in Drone forces.
+
+### 7.4 What this means for the earlier problem
+
+"All veterans died, where do new units come from?" is solved by the base rule: the player builds general units of the 3 slot types in the battle, for money. The veteran is one extra unit on top of the squad. A dead veteran is lost ("200") or saved by the decided pop-up. No slot is ever empty.
+
+### 7.5 Stories without an AI model
+
+The game builds the story from templates. Each promotion has one reason, taken from the battle statistics. Each reason has 5 templates with variables `{callsign}`, `{sector}`, `{kills}`, `{enemy}`, `{wave}`. The lists are in [veteran-stories.md](veteran-stories.md) (later a CSV in `unity/Assets/Data`). The game picks the reason with the highest priority that the battle statistics show.
+
+### 7.6 Modes
+
+| Mode | Carry-over | Veteran | Levelling |
 | --- | --- | --- | --- |
-| **Rule** | The 3 slots are split: for example 1 veteran slot and 2 general slots. A veteran slot holds a named unit with its upgrades. A general slot holds a type at base level, built for money. | Each slot holds one type. A veteran is the "lead" and starts on the field for free. All new units of that type are built at base level (or with the upgrades of the type, bought in the run). If the lead dies, the slot stays and the player builds general units. | The player fills the 3 slots as they want. Each slot is veteran or general. The squad must hold at least one general slot, or the game adds a free base unit ("militia") when all veterans are dead. |
-| **If all veterans die** | The general slots still give new units. The veteran slot is empty. | The slot keeps its type, so the player rebuilds at base level. | The free base unit gives a way to continue. |
-| **Choice** | Simple, but the split is fixed. Less choice. | Deep: the lead is a gift, not a risk. The type still matters. | Most choice. Hardest to balance (a squad of 3 veterans is possible). |
-| **Weekly challenge** | No veterans exist (nothing is carried over), so the veteran slot is empty or gets a fixed unit. Result: weekly has fewer slots. This is simple and fair. | Same rule for all: no lead, only general builds. Same squad choice, fair. The weekly is a "pure" test of type choice. | The weekly forces "all general". The player still chooses 3 types. |
-| **Endless** | Veterans from the endless roster (kept for all time) fill the veteran slot. Many levels: the veteran can be wounded and be out, the general slots keep the run alive. | Veteran leads from the endless roster. A long run has no dead end. | The player takes more risk for more power. Veterans are wounded over many levels, so the player must go general for some levels. |
-| **Risk** | The split can feel like a rule, not a choice. | Veterans are weaker than in A because only the first unit is special. | Needs the most measuring. |
+| Campaign | Limited by the perk (7.2) | Yes | In the battle |
+| Weekly challenge | None | None | In the battle only. The Roman-legion play is the point. |
+| Endless | Kept units follow the same perk rule, inside the endless roster | Yes, from the endless roster | In the battle |
 
-**Recommendation: B.** Reason: the slot is always a type, so the squad choice stays simple (3 slots, 3 types) and a dead lead never stops the player. A veteran is a bonus on top of a type. This fits "depth from upgrade paths" and keeps the weekly challenge fair with no special case. A is the safe fallback if B is hard to measure.
+**Endless and the global kill counter.** Balance is not important in endless, but the difficulty must rise, so the player cannot farm the counter. Final target of the counter: open (50 000 seems possible, 100 000 is a lot). Proposed rule: kills in endless count with **diminishing returns** per level:
 
-**Sub-question for Yaroslav:** in the weekly challenge, is "no veterans" a feature (pure skill, equal for all)? Recommendation: yes.
+| Kills of the player in one endless level | Share that counts |
+| --- | --- |
+| First 100 | 100% |
+| 101–300 | 50% |
+| 301–600 | 25% |
+| More than 600 | 10% |
+
+Also: the difficulty of a new level rises with the number of levels done in the run, so a longer run is harder, not only longer. Claude measures how many levels a good player can do and checks the counter growth.
+
+### 7.7 What Claude must build or measure (veterans)
+
+1. Experience and level rules in `Sim` (the level is lost at the end of the battle unless the unit is kept).
+2. Run result: list of kept units with kills and the promotion reason. Run setup: veteran list with call sign and talent.
+3. Measure: win rate with a veteran against without one on the same mission. Pass: the veteran changes the win rate by a small set share, never by a "skip".
+4. Measure: the kill counter growth in endless with the table in 7.6.
+
+### 7.8 Open questions (new)
+
+1. **Branch of the perk "keep a unit".** (a) Intelligence (recommended: it fits "we know our people"; the branch has two paths and little other help for squads), (b) Assault, (c) Drone forces. Reason: Yaroslav proposed Intelligence; the branch is the least crowded.
+2. **Branch of the extra veteran slots ("special forces").** Only 3 meta branches are allowed. (a) Assault (recommended: infantry heavy; same branch as unit slots), (b) Intelligence (then one branch holds both carry-over and slots, too strong), (c) a new branch (not allowed by the "maximum 3" rule, so it needs a change of that rule).
+3. **Veteran cap N.** (a) mission level + 1 (strict), (b) mission level + 2 (recommended: a clear gift, no skip), (c) no cap, but a higher cost for a higher level.
+4. **Veteran cost per battle.** (a) fixed share of the full value, for example half, (b) a share that rises with the veteran level (recommended: keeps a late veteran a choice), (c) free for the first battle of each mission only.
+5. **Endless counter rule.** (a) diminishing returns by kills per level (table 7.6, recommended), (b) a hard cap per run, (c) endless does not count for the weapon milestones, only for a separate endless score.
