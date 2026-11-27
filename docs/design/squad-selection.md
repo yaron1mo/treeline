@@ -92,7 +92,7 @@ Reason: if units carry over freely, mission 1 is hard and missions 2–7 are eas
 
 - After a battle, the player **keeps** a unit only with the perk "keep a unit after the battle". The perk gives 1 kept unit, then 2, then 3 (maximum).
 - All other units are lost after the battle.
-- Proposed branch for the perk: Intelligence (Yaroslav; to confirm).
+- Branch for the perk: **Intelligence** (decided 2026-11-27, for now; Assault is the alternative).
 
 ### 7.3 The veteran
 
@@ -101,9 +101,10 @@ Reason: if units carry over freely, mission 1 is hard and missions 2–7 are eas
 | Become a veteran | A kept unit that reached the maximum level of its path becomes a veteran. |
 | Name and story | It gets a call sign (random from a list) and a short story of the battle where it was promoted (section 7.5). |
 | Growth | It still levels, slowly, to one strong **passive talent**. |
-| Veteran slot | 1 at the start. It is separate from the 3 unit type slots and from the recon slot. More slots come from an upgrade branch (section 7.8, question 2). |
-| Cost | The player pays money for each battle when the veteran is taken. The cost is less than its full value. |
-| Cap | The veteran level cannot be higher than the mission level + N (N is for the balance table). A veteran helps, but it cannot skip a mission. |
+| Veteran slot | 1 at the start. It is separate from the 3 unit type slots and from the recon slot. More veteran slots come from the **Intelligence** branch (decided 2026-11-27: highly skilled soldiers often go to special operations units). |
+| Cost | The player pays money for each battle when the veteran is taken. The cost is less than its full value. It rises with the veteran level, up to a price ceiling (decided 2026-11-27; the value comes from the balance later). |
+| Cap | **No cap** (decided 2026-11-27). A unit has at most 5 levels: rifleman → marksman → sniper or machine gunner → veteran (for example a veteran sniper) → one last veteran level. Keeping a unit opens around mission 5–7 at the earliest, so the first real veteran comes 1–2 missions later. By then the meta talents are part of the expected power, and one extra strong unit does not break the game. |
+| Balance rule | The difficulty of each mission follows the expected progression level, whatever path the player takes (deep in one branch, or a bit in each). Leave a small margin for a veteran. Claude measures deep and broad builds after the talents of each branch exist. |
 
 Unit type slots (the 3 slots) are upgraded in the infantry / Assault branch, and some maybe in Drone forces.
 
@@ -141,10 +142,8 @@ Also: the difficulty of a new level rises with the number of levels done in the 
 3. Measure: win rate with a veteran against without one on the same mission. Pass: the veteran changes the win rate by a small set share, never by a "skip".
 4. Measure: the kill counter growth in endless with the table in 7.6.
 
-### 7.8 Open questions (new)
+### 7.8 Open questions
 
-1. **Branch of the perk "keep a unit".** (a) Intelligence (recommended: it fits "we know our people"; the branch has two paths and little other help for squads), (b) Assault, (c) Drone forces. Reason: Yaroslav proposed Intelligence; the branch is the least crowded.
-2. **Branch of the extra veteran slots ("special forces").** Only 3 meta branches are allowed. (a) Assault (recommended: infantry heavy; same branch as unit slots), (b) Intelligence (then one branch holds both carry-over and slots, too strong), (c) a new branch (not allowed by the "maximum 3" rule, so it needs a change of that rule).
-3. **Veteran cap N.** (a) mission level + 1 (strict), (b) mission level + 2 (recommended: a clear gift, no skip), (c) no cap, but a higher cost for a higher level.
-4. **Veteran cost per battle.** (a) fixed share of the full value, for example half, (b) a share that rises with the veteran level (recommended: keeps a late veteran a choice), (c) free for the first battle of each mission only.
-5. **Endless counter rule.** (a) diminishing returns by kills per level (table 7.6, recommended), (b) a hard cap per run, (c) endless does not count for the weapon milestones, only for a separate endless score.
+1. **Endless counter rule.** (a) diminishing returns by kills per level (table 7.6, recommended), (b) a hard cap per run, (c) endless does not count for the weapon milestones, only for a separate endless score.
+
+Decided on 2026-11-27 (no longer open): branch of the perk (Intelligence); branch of the extra veteran slots (Intelligence); veteran cap (none, see 7.3); veteran cost (rises with the level, up to a ceiling).
