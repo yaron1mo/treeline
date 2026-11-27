@@ -1,5 +1,7 @@
 # Change log
 
+- 2026-11-27 — [codex] tools — Keep the Unity process handle so the check reports a failed import.
+
 - 2026-11-27 — [codex] art — Add the recruit crutch shoot GIF for review.
 
 - 2026-11-27 ? [codex] art ? Add recruit hit and crutch GIFs for review.

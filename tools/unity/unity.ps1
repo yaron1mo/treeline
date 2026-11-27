@@ -37,12 +37,14 @@ $uargs += $Extra
 Write-Host "Unity: $unity"
 Write-Host "Args:  $($uargs -join ' ')"
 $p = Start-Process -FilePath $unity -ArgumentList $uargs -PassThru -NoNewWindow
+$null = $p.Handle
 if (-not $p.WaitForExit($TimeoutMinutes * 60 * 1000)) {
     $p.Kill()
     Write-Host "Unity did not finish in $TimeoutMinutes minutes."
     exit 2
 }
 $code = $p.ExitCode
+if ($null -eq $code) { Write-Error "Unity did not report an exit code."; exit 1 }
 Write-Host "Exit code: $code. Log: $log"
 if (Test-Path $log) {
     Get-Content $log | Select-String -Pattern "\[AgentTools\]|error CS|Exception|Test run|Passed|Failed" | Select-Object -Last 40 | ForEach-Object { $_.Line }
