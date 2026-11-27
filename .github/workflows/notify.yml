@@ -30,7 +30,7 @@ jobs:
           RUN_NAME: ${{ github.event.workflow_run.name }}
           RUN_URL: ${{ github.event.workflow_run.html_url }}
         run: |
-          [ -z "$TG_TOKEN" ] || [ -z "$TG_CHAT" ] && { echo "No Telegram secrets"; exit 0; }
+          if [ -z "$TG_TOKEN" ] || [ -z "$TG_CHAT" ]; then echo "No Telegram secrets: token set=$([ -n "$TG_TOKEN" ] && echo yes || echo no), chat set=$([ -n "$TG_CHAT" ] && echo yes || echo no)"; exit 1; fi
           if [ "$EVENT" = "workflow_run" ]; then
             msg="❌ Збій: $RUN_NAME
           $RUN_URL"
@@ -41,6 +41,8 @@ jobs:
             msg="🟠 Потрібне твоє рішення: $ISSUE_TITLE
           $ISSUE_URL"
           fi
-          curl -s -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+          resp=$(curl -s -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
             --data-urlencode "chat_id=${TG_CHAT}" --data-urlencode "text=${msg}" \
-            --data-urlencode "disable_web_page_preview=true" > /dev/null
+            --data-urlencode "disable_web_page_preview=true")
+          # Print only ok and the error text, never the token.
+          echo "$resp" | python3 -c 'import json,sys; d=json.load(sys.stdin); print("telegram ok:", d.get("ok"), d.get("description", "")); sys.exit(0 if d.get("ok") else 1)'
