@@ -396,6 +396,13 @@ namespace Treeline.Render
             fallen.HelmetComesOff = (helmetChoice >> 16) % 5 == 0;
             if (fallen.HelmetComesOff) fallen.DeathVariant = 1;
             fallen.Spirit = CreateSpirit(fallen.Root.transform);
+            if (StyleSprite(fallen.UnitId, true) != null)
+            {
+                fallen.Body.sprite = StyleSprite(fallen.UnitId, true);
+                falling.Add(fallen);
+                live.Remove(key);
+                return;
+            }
             if (fallen.HelmetComesOff)
             {
                 fallen.Helmet = CreatePart(fallen.Root.transform, sprites.GetLooseHelmet(fallen.UnitId), "Loose helmet");
@@ -427,6 +434,14 @@ namespace Treeline.Render
         void UpdateFallPose(Visual fallen, float elapsed)
         {
             Transform body = fallen.Body.transform;
+            if (StyleSprite(fallen.UnitId, true) != null)
+            {
+                float drop = Mathf.Clamp01(elapsed / 0.3f);
+                body.localRotation = Quaternion.Euler(0, 0, 90f * drop);
+                fallen.Spirit.transform.localPosition = new Vector3(0, 2f + elapsed * 3f, 0);
+                fallen.Spirit.color = new Color(1f, 1f, 1f, Mathf.Clamp01(1f - elapsed / 2f));
+                return;
+            }
             if (fallen.DeathVariant == 1)
             {
                 int frame = Mathf.Min(5, Mathf.FloorToInt(elapsed / 0.09f));

@@ -50,6 +50,8 @@ public static class AgentTools
     static double playStart;
     static float waitSeconds;
     static bool battleStarted;
+    static bool seriesStart, seriesMid, seriesDeath;
+    static Treeline.Sim.Run captureRun;
 
     public static void CapturePlay()
     {
@@ -59,6 +61,8 @@ public static class AgentTools
             waitSeconds = ArgInt("-agentWait", 5);
             playStart = -1;
             battleStarted = false;
+            seriesStart = seriesMid = seriesDeath = false;
+            captureRun = null;
             EditorApplication.update += PlayTick;
             EditorApplication.EnterPlaymode();
         }
@@ -78,6 +82,16 @@ public static class AgentTools
             battleStarted = true;
             try { StartStyleBattle(); }
             catch (Exception e) { Debug.LogError("[AgentTools] battle setup: " + e); EditorApplication.Exit(1); return; }
+        }
+        if (Arg("-agentSeries", "") == "1" && battleStarted)
+        {
+            double elapsed = EditorApplication.timeSinceStartup - playStart;
+            string prefix = Arg("-agentOut", "capture.png");
+            string stem = Path.Combine(Path.GetDirectoryName(prefix) ?? "", Path.GetFileNameWithoutExtension(prefix));
+            if (!seriesStart && elapsed >= 4) { Save(FindCamera(), stem + "-start.png"); seriesStart = true; }
+            if (!seriesMid && elapsed >= 12) { Save(FindCamera(), stem + "-mid.png"); seriesMid = true; }
+            if (!seriesDeath && captureRun != null && captureRun.Battle.Rewards > 0)
+            { Save(FindCamera(), stem + "-death.png"); seriesDeath = true; }
         }
         if (EditorApplication.timeSinceStartup - playStart < waitSeconds) return;
         EditorApplication.update -= PlayTick;
@@ -99,6 +113,7 @@ public static class AgentTools
         type.GetField("current", flags).SetValue(view, field);
         type.GetMethod("NewRun", flags).Invoke(view, null);
         var run = (Treeline.Sim.Run)type.GetField("run", flags).GetValue(view);
+        captureRun = run;
         run.Battle.AddBudget(1000f); // Capture setup only.
         foreach (var item in new[] { ("rifle_squad", 70f, 260f), ("machine_gun", 100f, 270f), ("sniper", 130f, 280f) })
         {
