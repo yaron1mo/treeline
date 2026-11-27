@@ -1,6 +1,6 @@
 # Full unit roster (both sides)
 
-Proposal by the designer agent, 2026-11-27, for issue #26. Status: **Open**, updated after the decisions of Yaroslav on PR #28 (the same day). Nothing here changes a "Decided" item in `progression.md`. The squad rules are in [squad-selection.md](squad-selection.md) (PR #24).
+Proposal by the designer agent, 2026-11-27, for issue #26. Status: **Open**, updated after two rounds of decisions of Yaroslav on PR #28 (the same day). Nothing here changes a "Decided" item in `progression.md`. The squad rules are in [squad-selection.md](squad-selection.md) (PR #24).
 
 ## 1. Goal
 
@@ -17,10 +17,15 @@ Agree one final list of attacker and defender types, so that Mistral balances on
 | 5 | The player does not see the EW zone. The player sees the waves and the effect on drones. | Section 4 |
 | 6 | EW belongs to the Drone forces branch. | Section 6 |
 | 7 | Support calls at release: howitzer, rocket salvo, air strike. | Section 6 |
+| 8 | 14 attacker types accepted. | Section 3, 8 |
+| 9 | The own EW radius is visible in the placing mode and when the player taps the station. Never in battle without a tap. | Section 4 |
+| 10 | The Shahed-type drone has a fixed base damage per drone. | Section 5 |
+| 11 | EW **slows** a Shahed and gives it **periodic damage**. One station does not destroy it. **Two overlapping stations destroy one Shahed.** (A Shahed that learns: later, probably not.) | Sections 4, 5 |
+| 12 | EW is a **utility module for the player's recon drones**. It uses a separate "utilities" slot that the player takes into the mission. | Sections 4, 6 |
 
 ## 2. Player experience
 
-The player sees 14 enemy types. Each has a clear icon and one clear answer ("tank: anti-tank team", "Shahed: air defence"). The brief shows the class, so the player picks the answer before the battle. A late wave mixes types, so one answer is not enough. The EW station is a rare surprise: the player sees waves from a station and drones that shake and smoke, not a zone on the map.
+The player sees 14 enemy types. Each has a clear icon and one clear answer ("tank: anti-tank team", "Shahed: air defence"). The brief shows the class, so the player picks the answer before the battle. A late wave mixes types, so one answer is not enough. The EW station is a rare surprise: in battle the player sees waves from a station and drones that shake and smoke, not a zone on the map. The player sees the radius of the own station only when placing it or tapping it.
 
 ## 3. Attackers (14 types for release)
 
@@ -74,17 +79,20 @@ Effect on each air item, simple rule: **inside the zone the radio link is bad.**
 | Bomber drone (Mavic type) | Cannot hold position: it flies back to its launch point and tries again after it leaves the zone. No drops while inside. |
 | FPV (radio) | 80% chance that it loses the link on entry and falls. |
 | FPV, fibre-optic | **No effect.** This is its job: it beats EW and loses to air defence and machine guns. |
-| One-way drone | 50% chance that it turns away and misses its target (see question 3). |
+| One-way drone | It slows down and takes periodic damage. One station does not destroy it. Two overlapping stations destroy one Shahed. |
 | Artillery (support call) | The "seen by our drones" accuracy bonus does not work for a target in the zone. The shell uses the unseen accuracy. |
 
-What the player sees (decided: **the zone is never drawn**):
+What the player sees (decided: **the zone is not drawn in battle**; the own station shows its radius in the placing mode and on tap):
 - The station sends small waves from time to time. This shows that it is an EW station. For an enemy station, the waves are visible only when a defender sees the station (normal fog rules).
 - A recon drone in the zone shakes and smokes.
 - An FPV drone in the zone gets an electric layer (flicker), then falls with a spark.
 - The bomber drone shows the same shake and returns.
 - The fibre-optic FPV shows nothing. The player learns that it is immune.
+- A Shahed in the zone slows down and smokes. In two zones it burns and falls.
 
-The player must learn the radius by play. See question 2 for the own station.
+The enemy radius is never shown: the player learns it by play. The own radius is shown as a ring in the placing mode and on tap (decided).
+
+**Utilities slot (decided).** The EW station is a utility module of the recon drones. The player takes it into the mission in a separate "utilities" slot, not in a squad slot. How it is placed on the field: see question 1.
 
 ## 5. Air defence, helicopters and Shahed-type drones
 
@@ -95,7 +103,7 @@ The player must learn the radius by play. See question 2 for the own station.
 | Sniper | Recon UAV | FPV, helicopter, Shahed-type drone |
 | FPV drone (own) | Recon UAV, helicopter (air hit) | — |
 
-The Shahed-type drone has no AI: it flies a slow, straight line over the defence to the base and does base damage when it arrives. It does no damage to units on the way. The player moves and aims nothing. The slow speed gives the air defence time to shoot. The only questions are "is there air defence?" and "is there an EW station?". Its purpose is to force the player to take an air defence slot. The defender gets no one-way drone at release.
+The Shahed-type drone has no AI: it flies a slow, straight line over the defence to the base and does a fixed base damage per drone (decided) when it arrives. It does no damage to units on the way. The player moves and aims nothing. The slow speed gives the air defence time to shoot. In an EW zone it slows down more and takes periodic damage (decided). One station does not kill it; two overlapping stations kill one Shahed. So EW is a good partner of air defence, but not a replacement for it. The only questions are "is there air defence?" and "how many EW stations overlap?". Its purpose is to force the player to take an air defence slot. The defender gets no one-way drone at release.
 
 ## 6. Defenders (10 types for release)
 
@@ -110,7 +118,7 @@ Branches are the decided three: Assault, Drone forces, Intelligence.
 | 5 | Sniper (`sniper`) | Intelligence | Long range, picks one target | Elite infantry and EW teams at long range, in clear weather | Early–middle | Keep |
 | 6 | Mortar crew (`mortar`) | Intelligence (fire support) | Area damage from behind cover, uses shared vision | Infantry groups on a known route; killing an EW station in cover | Early | Keep |
 | 7 | Recon drone (`recon_drone`) | Intelligence (reconnaissance) | Gives sight to the whole side | Fog, night, mortar squads, long routes | Middle | Keep |
-| 8 | EW station (`ew_station`) | Drone forces | Hidden zone against enemy drones and enemy artillery accuracy | FPV, recon UAV and Shahed waves; as a cheap partner to air defence | Middle | **New** |
+| 8 | EW station (`ew_station`) | Drone forces | Zone against enemy drones and enemy artillery accuracy. A utility module of the recon drones, in its own utilities slot | FPV, recon UAV and Shahed waves; two overlapping stations kill a Shahed | Middle | **New** |
 | 9 | Bomber drone operator (`bomber_operator`) | Drone forces | Reusable drone, drops grenades on a cluster | Infantry in cover; EW teams; targets behind obstacles | Middle | Keep |
 | 10 | FPV operator (`fpv_operator`) | Drone forces | Single-use strike on a vehicle, at long range | Tanks and IFVs when no anti-tank is in range; drone-kill on vehicle carriers | Middle | Keep. Upgrades: improvised → factory → fibre-optic (fibre-optic is **new**; not a new type) |
 
@@ -135,7 +143,7 @@ Marksman, sniper and machine gunner upgrades are paths of the rifleman. Grenadie
 
 ## 8. Roster size
 
-14 attacker types, 10 defender types, 3 support calls. The attacker count is above the 8–10 of the issue, because Yaroslav kept four vehicles (see question 1). Hard counters, not the count, keep it readable: 5 carriers/runners are answered by only 3 defender answers (fast fire, anti-tank, air defence).
+14 attacker types, 10 defender types, 3 support calls. The attacker count is above the 8–10 of the issue, because Yaroslav kept four vehicles (14 accepted). Hard counters, not the count, keep it readable: 5 carriers/runners are answered by only 3 defender answers (fast fire, anti-tank, air defence).
 
 ## 9. Connection to decided items
 
@@ -143,23 +151,20 @@ Uses: "Full unit roster before more balance work", "EW for both sides", "Air def
 
 ## 10. What Claude must build or measure
 
-1. Check each row in the Sim: exists, change, new. New: `ew_team`, `ew_station`, fibre-optic FPV, `one_way_drone` (slow, base damage only, no unit damage).
+1. Check each row in the Sim: exists, change, new. New: `ew_team`, `ew_station`, fibre-optic FPV, `one_way_drone` (slow, fixed base damage, no unit damage). Also: the Shahed response to EW (slow, periodic damage, death in two overlapping zones); a ring for the own station in the placing mode and on tap; the utilities slot in the run setup.
 2. EW as a Sim feature: a zone entity with HP, radius, per-drone-type response (a data column, not an `if` on a name), a link to artillery accuracy, and a periodic "wave" event that Render can show. The zone has no draw event. Check how the old `ew` and `ew_chance` columns relate.
-3. Effect events for Render: `drone_jammed` (shake and smoke for recon, electric layer for FPV).
+3. Effect events for Render: `drone_jammed` (shake and smoke for recon, electric layer for FPV, smoke for Shahed).
 4. Fix `targetable_by` of the recon UAV (the `radar` target does not exist in the defender list). Check helicopter `targetable_by` against section 5.
 5. Mistral: one balance pass with the final roster. Pass: each attacker has a defender with "stopped" above a set value; no defender is best nowhere; the squads measurement can start. Measure motorbike, van and MRAP first (not yet in the counter table).
 
-## 11. Open questions (new, after the decisions)
+## 11. Open questions (new, after the second round)
 
-1. **Roster size: 14 attackers.**
-   a) Accept 14 (proposal). b) Merge the motorbike into the buggy later, if the balance shows no difference. c) Lower the waves' use of the motorbike to "rare".
-   Recommendation: a), with b) decided by the measurement. Reason: you decided to keep them; a measured copy is a clear rule to cut later.
-2. **Own EW station: does the player see its radius while placing it?**
-   a) No, only the waves and effects (strict reading of decision 5; the player learns by play). b) Yes, only in the placing mode, never in battle. c) Show the radius as a short ring when the station is placed.
-   Recommendation: b). Reason: a placement without any hint is a guess, and a guess is not a hard choice. The battle view stays clean.
-3. **EW against the Shahed-type drone.**
-   a) 50% chance that it turns away (proposal). b) No effect (so the air defence slot is always needed). c) It slows down in the zone.
-   Recommendation: b). Reason: you want the player to spend a slot on air defence; an EW that removes the need weakens that. EW keeps the jobs against the radio FPV and the recon drone.
-4. **Shahed damage to the base.**
-   a) One fixed amount per drone, as with `line_damage` (proposal). b) A share of base health. 
-   Recommendation: a). Reason: it is the simplest and Mistral can balance it. The number is for Claude and Mistral, not for this file.
+1. **How is the EW station placed in the field, if it is a recon-drone utility?**
+   a) The player drops it on the field like a defender; the utilities slot only decides that it is available, and the number of stations is limited per mission. b) The recon drone carries it and drops it where the drone is (the player sends the drone). c) Both: a drone drop is the upgrade of a).
+   Recommendation: a). Reason: it is the simplest on a phone, and the hard choice is where to place it. b) needs a new control.
+2. **Utilities slot: how many, and what else goes in it?**
+   a) One slot, EW only at release. b) One slot; EW and one more module later (for example a decoy or a flare). c) Two slots from the middle of the campaign.
+   Recommendation: a), with b) as a later update. Reason: a slot with one item is not a choice yet; do not add items before the roster is measured.
+3. **Does the later upgraded Shahed (anti-jam antenna) ignore part of the EW effect?**
+   a) Yes: less slowdown and less damage (as in public reports). b) No: it only has more HP. c) Not at release.
+   Recommendation: c). Reason: you said a learning Shahed is "probably not"; keep one Shahed for the first measurement.
