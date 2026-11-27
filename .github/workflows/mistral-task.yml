@@ -1,4 +1,5 @@
 name: Mistral task
+run-name: ${{ github.event.issue.title || format('Restart issue #{0}', github.event.inputs.issue) }}
 # Agent office, stage 1 (2026-11-26). The label "agent:mistral" on an issue starts Mistral Vibe CLI on Yaroslav's
 # Windows computer (the self-hosted Windows runner MASHINA), with his own Mistral login. No API key.
 # One task at a time. When the computer or the runner window is off, the job waits in the queue.
@@ -8,10 +9,15 @@ name: Mistral task
 on:
   issues:
     types: [labeled]
+  workflow_dispatch:   # the Watchdog restarts a task with this (an event made with GITHUB_TOKEN can start a dispatch)
+    inputs:
+      issue:
+        description: 'Issue number'
+        required: true
 
 jobs:
   task:
-    if: github.event.label.name == 'agent:mistral'
+    if: github.event.label.name == 'agent:mistral' || github.event_name == 'workflow_dispatch'
     runs-on: [self-hosted, Windows]
     # Job-level concurrency: only runs that pass the label check wait in line (a workflow-level group
     # would also queue the skipped runs of other issues and cancel a real pending run).
@@ -35,8 +41,10 @@ jobs:
         env:
           TITLE: ${{ github.event.issue.title }}
           BODY: ${{ github.event.issue.body }}
-          NUM: ${{ github.event.issue.number }}
+          NUM: ${{ github.event.issue.number || github.event.inputs.issue }}
+          GH_TOKEN: ${{ github.token }}
         run: |
+          if (-not $env:TITLE) { $j = gh issue view $env:NUM --repo ${{ github.repository }} --json title,body | ConvertFrom-Json; $env:TITLE = $j.title; $env:BODY = $j.body }
           $lines = @(
             "You are Mistral, a developer in the Treeline team. Read AGENTS.md and docs/agents/mistral.md first.",
             "Your task is GitHub issue #$env:NUM : $env:TITLE",
@@ -51,19 +59,29 @@ jobs:
       - name: Mark in progress
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh issue edit ${{ github.event.issue.number }} --repo ${{ github.repository }} --add-label in-progress
+        run: gh issue edit ${{ github.event.issue.number || github.event.inputs.issue }} --repo ${{ github.repository }} --add-label in-progress
       - name: Run Mistral Vibe
         run: |
-          vibe --prompt-file "$env:RUNNER_TEMP\task.md" --auto-approve --max-turns 400 --time-limit 13800 --output-dir "$env:RUNNER_TEMP\vibe-out"
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          # Mistral often fails in high-demand periods. Retry up to 4 times with a pause; the agent continues from its branch.
+          $code = 1
+          for ($i = 1; $i -le 4; $i++) {
+            vibe --prompt-file "$env:RUNNER_TEMP\task.md" --auto-approve --max-turns 400 --time-limit 13800 --output-dir "$env:RUNNER_TEMP\vibe-out" 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP\vibe-$i.log"
+            $code = $LASTEXITCODE
+            if ($code -eq 0) { break }
+            $tail = Get-Content "$env:RUNNER_TEMP\vibe-$i.log" -Tail 20 | Out-String
+            if ($tail -match "turn_limit|time_limit") { Write-Host "Stopped by a limit: no retry."; break }
+            Write-Host "Vibe failed (attempt $i, exit $code). Wait 3 minutes and retry."
+            Start-Sleep -Seconds 180
+          }
+          exit $code
       - name: Report
         if: always()
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh issue edit ${{ github.event.issue.number }} --repo ${{ github.repository }} --remove-label in-progress --remove-label agent:mistral
+          gh issue edit ${{ github.event.issue.number || github.event.inputs.issue }} --repo ${{ github.repository }} --remove-label in-progress --remove-label agent:mistral
           $usage = "{}"
           $f = "$env:RUNNER_TEMP\vibe-out\export.json"
           if (Test-Path $f) { try { $usage = ((Get-Content $f -Raw | ConvertFrom-Json).usage | ConvertTo-Json -Compress) } catch {} }
-          gh issue comment ${{ github.event.issue.number }} --repo ${{ github.repository }} --body "Mistral run finished: ${{ job.status }}. Usage: $usage. Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          gh issue comment ${{ github.event.issue.number || github.event.inputs.issue }} --repo ${{ github.repository }} --body "Mistral run finished: ${{ job.status }}. Usage: $usage. Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           exit 0
