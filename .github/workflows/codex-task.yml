@@ -7,14 +7,15 @@ on:
   issues:
     types: [labeled]
 
-concurrency:
-  group: codex
-  cancel-in-progress: false
-
 jobs:
   task:
     if: github.event.label.name == 'agent:codex'
     runs-on: [self-hosted, Windows]
+    # Job-level concurrency: only runs that pass the label check wait in line (a workflow-level group
+    # would also queue the skipped runs of other issues and cancel a real pending run).
+    concurrency:
+      group: codex
+      cancel-in-progress: false
     timeout-minutes: 240
     permissions:
       contents: read

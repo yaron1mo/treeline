@@ -5,14 +5,15 @@ on:
   issues:
     types: [labeled]
 
-concurrency:
-  group: design
-  cancel-in-progress: false
-
 jobs:
   design:
     if: github.event.label.name == 'agent:design'
     runs-on: ubuntu-latest
+    # Job-level concurrency: only runs that pass the label check wait in line (a workflow-level group
+    # would also queue the skipped runs of other issues and cancel a real pending run).
+    concurrency:
+      group: design
+      cancel-in-progress: false
     timeout-minutes: 45
     permissions:
       contents: write
