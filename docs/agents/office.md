@@ -12,7 +12,7 @@ The agents do not call each other directly. They write on GitHub (issues, labels
 | Claude (review) | A PR from `mistral/**` or `codex/**` opens or becomes ready | GitHub servers | Secret `CLAUDE_CODE_OAUTH_TOKEN` (Claude subscription) |
 | Claude (any request) | `@claude` in an issue, a PR comment or a PR review | GitHub servers | Same |
 | Mistral | Label `agent:mistral` on an issue | Yaroslav's Windows computer (self-hosted runner, label `mistral`, Windows PowerShell) | Yaroslav's Mistral login in Vibe CLI (no API key) |
-| Codex | `@codex` in an issue or PR comment | OpenAI cloud | Yaroslav's ChatGPT plan |
+| Codex | Label `agent:codex` on an issue | Yaroslav's Windows computer (second self-hosted runner, Windows PowerShell) | Yaroslav's ChatGPT login in Codex CLI (`codex login`, no API key) |
 | Yaroslav | Label `needs:yaroslav`, label `ready-to-merge` | GitHub Mobile notifications | — |
 
 ## 2. Labels
@@ -20,7 +20,7 @@ The agents do not call each other directly. They write on GitHub (issues, labels
 | Label | Meaning | Who sets it |
 | --- | --- | --- |
 | `agent:mistral` | Start Mistral on this issue | Claude or Yaroslav |
-| `agent:codex` | This issue is for Codex (Claude also writes `@codex` in a comment) | Claude or Yaroslav |
+| `agent:codex` | Start Codex on this issue | Claude or Yaroslav |
 | `agent:claude` | This issue is for Claude | Anyone |
 | `in-progress` | An agent works on this issue now | The workflow |
 | `needs:yaroslav` | A design decision or a stop. Agents do not continue | Any agent |
@@ -34,7 +34,7 @@ Do these steps for each review:
 2. Check the CI results of the PR (`gh pr checks`). Run `bash tools/tests/run_editmode.sh` when the PR changes code in `unity/Assets/Scripts`.
 3. Count your earlier reviews on this PR. If there are 3 or more, add `needs:yaroslav`, write why, and stop.
 4. Write one review comment: verdict (approve or changes), the findings, and what to do next.
-5. If you ask for changes: write the changes as a numbered list. For Mistral, add the label `agent:mistral` to the task issue again (remove it first), so that Mistral starts on the changes. For Codex, write `@codex` and the list.
+5. If you ask for changes: write the changes as a numbered list. For Mistral, add the label `agent:mistral` to the task issue again (remove it first), so that Mistral starts on the changes. For Codex, do the same with the label `agent:codex`.
 6. If you approve: add `ready-to-merge` to the PR. Write a summary for Yaroslav in 5 lines or fewer. Then find the next task of this agent in its spec or in the open issues. If the next task is not blocked, open an issue for it with the agent label.
 7. If a design decision is necessary, add `needs:yaroslav` and write the question with 2–4 options.
 
@@ -53,7 +53,7 @@ Do not merge. Do not change the PR branch in a review. Do not read or print secr
 | --- | --- | --- |
 | 0 | Claude review on PRs; `@claude` in comments; labels | Files ready |
 | 1 | Mistral on the label `agent:mistral` (self-hosted runner) | File ready; runner not installed |
-| 2 | Codex on `@codex` | Codex not connected to the repo |
+| 2 | Codex on the label `agent:codex` (second runner on the same computer) | File ready |
 | 3 | Claude dispatcher on a schedule (every 2–3 hours: who is free, what is stuck) and token counts | Not started |
 
 ## 6. Safety
