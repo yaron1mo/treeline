@@ -1,5 +1,7 @@
 # Change log
 
+- 2026-11-27 — [codex] render — Keep blood marks until the battle ends. Limit marks and corpses to 64 each. Show DOUBLE KILL after 2 kills.
+
 - 2026-11-27 — [codex] data, game, render — Move unit display scales to `units.csv`. Keep the current sizes. This also changes Claude's data, Sim and Game areas.
 
 - 2026-11-27 — [claude] tools/unity — `AgentTools.Showroom`: lays out PNG sprites pixel-perfect on a background (for example an in-game capture) and renders a phone-size PNG. For art comparisons when a battle capture shows no units.

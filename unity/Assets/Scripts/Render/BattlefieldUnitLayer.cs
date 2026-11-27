@@ -41,6 +41,7 @@ namespace Treeline.Render
             public Transform[] Drops;
             public Vector3[] Targets;
             public Vector3[] Scales;
+            public bool Settled;
         }
 
         sealed class DetachedSnout
@@ -57,6 +58,8 @@ namespace Treeline.Render
         readonly List<BloodMark> bloodMarks = new List<BloodMark>();
         readonly List<DetachedSnout> detachedSnouts = new List<DetachedSnout>();
         const string BloodSetting = "Treeline.BloodEnabled";
+        const int MaxBloodMarks = 64;
+        const int MaxCorpses = 64;
         bool bloodEnabled;
         Texture2D bloodTexture;
         Sprite bloodSprite;
@@ -207,12 +210,13 @@ namespace Treeline.Render
             {
                 BloodMark mark = bloodMarks[i];
                 float age = Time.time - mark.CreatedAt;
-                if (!bloodEnabled || age >= 15f)
+                if (!bloodEnabled)
                 {
                     Destroy(mark.Root);
                     bloodMarks.RemoveAt(i);
                     continue;
                 }
+                if (mark.Settled) continue;
                 float travel = Mathf.SmoothStep(0f, 1f, age / 0.24f);
                 for (int d = 0; d < mark.Drops.Length; d++)
                     if (mark.Drops[d] != null)
@@ -220,6 +224,7 @@ namespace Treeline.Render
                         mark.Drops[d].localPosition = mark.Targets[d] * travel;
                         mark.Drops[d].localScale = mark.Scales[d] * travel;
                     }
+                if (age >= 0.24f) mark.Settled = true;
             }
 
             for (int i = detachedSnouts.Count - 1; i >= 0; i--)
@@ -238,6 +243,11 @@ namespace Treeline.Render
                 {
                     Destroy(fallen.Spirit.gameObject);
                     corpses.Add(fallen.Root);
+                    if (corpses.Count > MaxCorpses)
+                    {
+                        Destroy(corpses[0]);
+                        corpses.RemoveAt(0);
+                    }
                     falling.RemoveAt(i);
                 }
             }
@@ -568,8 +578,8 @@ namespace Treeline.Render
         {
             killStreak = time - lastKillTime <= 4f ? killStreak + 1 : 1;
             lastKillTime = time;
-            if (killStreak < 3) return;
-            streakLabel = killStreak == 3 ? "TRIPLE KILL" : killStreak == 4 ? "MULTI KILL" : "ULTRA KILL";
+            if (killStreak < 2) return;
+            streakLabel = killStreak == 2 ? "DOUBLE KILL" : killStreak == 3 ? "TRIPLE KILL" : killStreak == 4 ? "MULTI KILL" : "ULTRA KILL";
             streakDisplayUntil = time + 1.8f;
         }
 
@@ -595,6 +605,11 @@ namespace Treeline.Render
 
         void AddBlood(Vector3 position, Vector2 impactDirection)
         {
+            if (bloodMarks.Count >= MaxBloodMarks)
+            {
+                Destroy(bloodMarks[0].Root);
+                bloodMarks.RemoveAt(0);
+            }
             if (bloodSprite == null)
             {
                 bloodTexture = new Texture2D(8, 8, TextureFormat.RGBA32, false);
