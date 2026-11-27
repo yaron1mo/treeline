@@ -79,3 +79,7 @@ Measured cost of the same run 4 waves on the other fields (wave 1-5 and 26-30): 
 - Helicopter never appears: its cost (6375 for one unit) is above every wave target except 28 to 30, and the 1.35 growth limit blocks a first appearance there. This is a balance question for Claude and Yaroslav, not for this task.
 - The pass gate of review 1 (at least 24 of 30 within 20%) was not reached in 3 runs: best 23 of 30 (run 4). The stop rule (3 runs) ended this round. The remaining error is concentrated in small waves (leak at the 25 minimum) and the first armour waves.
 - `tools/balance/target_costs.csv` and the generated `unity/Assets/Data/waves.csv` were used for the runs and are removed from the branch (dev files only).
+
+## Note on the committed model (Claude, 2026-11-27)
+
+`model.json` is now the same as `model_iter4.json` (the model of run 4: 23 of 30 within 20%, 18.8% mean error). Before this note it was the model of run 5 (19 of 30). The generator is deterministic for a model and a seed, so `make_waves.py` on this branch gives the run 4 waves. The count of waves within 20% changes much between refits (10, 23, 19); the mean error is the more stable number. Open points go to the follow-up task: a rule for waves 1–3 (wave 2), and probe waves with armour and little infantry (wave 21). Yaroslav accepted this PR on 2026-11-27.
