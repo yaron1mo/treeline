@@ -1,0 +1,45 @@
+name: Disk remove
+# Deletes the given folders on Yaroslav's Windows computer (self-hosted runner). By hand only, and only for folders
+# that Yaroslav approved in chat (2026-11-27). Permanent: no Recycle Bin. Reports free space before and after.
+on:
+  workflow_dispatch:
+    inputs:
+      issue:
+        description: 'Issue number for the report'
+        required: true
+      paths:
+        description: 'Folders to delete, separated by ;'
+        required: true
+
+jobs:
+  remove:
+    runs-on: [self-hosted, Windows]
+    timeout-minutes: 40
+    permissions:
+      issues: write
+    defaults:
+      run:
+        shell: powershell
+    steps:
+      - name: Remove
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PATHS: ${{ github.event.inputs.paths }}
+        run: |
+          $ErrorActionPreference = "Continue"
+          function Free { "{0:N1} GB" -f ((Get-PSDrive C).Free / 1GB) }
+          $out = New-Object System.Collections.Generic.List[string]
+          $out.Add("### Remove folders")
+          $out.Add("- Free on C before: $(Free)")
+          foreach ($p in $env:PATHS.Split(";")) {
+            $p = [Environment]::ExpandEnvironmentVariables($p.Trim())
+            if ($p.Length -lt 8 -or $p -match '^[A-Za-z]:\\?$' -or $p -match 'actions-runner') { $out.Add("- skipped (not allowed): $p"); continue }
+            if (-not (Test-Path -LiteralPath $p)) { $out.Add("- not found: $p"); continue }
+            Remove-Item -LiteralPath $p -Recurse -Force -ErrorAction SilentlyContinue
+            if (Test-Path -LiteralPath $p) { $out.Add("- partly removed (files in use): $p") } else { $out.Add("- removed: $p") }
+          }
+          $out.Add("- Free on C after: $(Free)")
+          $f = "$env:RUNNER_TEMP\remove.md"
+          [System.IO.File]::WriteAllLines($f, $out, (New-Object System.Text.UTF8Encoding $false))
+          Get-Content $f
+          gh issue comment ${{ github.event.inputs.issue }} --repo ${{ github.repository }} --body-file $f
