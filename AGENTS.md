@@ -37,6 +37,13 @@ Read this file first. It applies to Claude, Codex, Mistral and any other agent. 
 | Codex / ChatGPT | Chief Design Officer | Visuals (`Render`, UI, art), works on its own |
 | Mistral | Developer, works to specs from Claude | Large, repeated work: balance and wave loops. Rules: `docs/agents/mistral.md` |
 
+**Notion (decided 2026-11-24).** Plan: Notion page "10 — Strategy & Roadmap". Work: the Tasks database (epics with subtasks, Milestone "Release 10.12").
+1. When you start a task, set Status to "In progress".
+2. After each step, add a comment to the task: date, what you did, the PR or run link.
+3. When the task is done, set "Needs verification", put the link in Evidence and the date in Last checked.
+4. If you are blocked, set "Blocked" and write the reason in a comment.
+5. Only Yaroslav sets "Done". Do not make tasks for small steps; use comments.
+
 Ownership is a default, not a wall. Either agent may edit anything, but **say so in the log** when touching the other's area.
 
 ## The contract between layers

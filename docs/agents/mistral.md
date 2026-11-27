@@ -112,21 +112,181 @@ Keep one journal per task: `docs/balance/mistral/<topic>/iterations.md`.
 4. Add one entry on top of `docs/log/CHANGELOG.md`: `YYYY-MM-DD — [mistral] balance — what changed and why`.
 5. Do not merge.
 
-## 8. Current task: `mistral/economy-1`
+## 8. Closed task: `mistral/economy-1` (PR #5)
 
-**Goal.** All 20 waves are in the target curve on Forest belts (verdict `pass`).
+Result: 13 of 20 waves in the target, but the result fits the metric, not the game. Money went up 4 times and the waves were filled to match (wave 6: 11 special forces; waves 15-20: 6-9 tanks). Scripted players held fewer waves in a row. PR #5 is not merged. Yaroslav (2026-11-24): the 20 test waves were random and are not a reference. Find the rules of the cost first.
 
-**Limits:**
+## 9. Closed task: `mistral/attacker-cost` (PR #7)
 
-- Keep 20 waves.
-- Keep the order in which attacker types first appear. You can move the first wave of a type by up to 2 waves.
-- Do not add `fpv` or `one_way_drone`. They are not in this playtest.
-- Do not change `line_health`.
+Result (Claude review 2026-11-25): accepted. 213 held-out mixed waves: 13% mean error, 84% within 20%. Before the merge, remove `tools/balance/run.json` from the PR (with it, every new `mistral/**` branch would run probe waves).
 
-**Start point** (2026-11-17 measure, the old scripted player):
+The original task text follows.
 
-- Waves 1–6: mostly in target. Wave 1 costs 300, but the start budget is 250.
-- Wave 7 (first `old_tank`): cost 400 → 1675, ratio 0.59.
-- Waves 15–20: ratio 0.45–0.63. The player needs about 2 times more money.
+### Task text
 
-The first run on your branch gives the real start point. The scripted player changed on 2026-11-23: it now stands on the traced routes.
+**Goal.** Find what each attacker costs the defence, and a formula that gives the cost of any wave from its content and its map. Later, the wave generator and the money use this formula: money before a wave = wave cost × the target ratio.
+
+**Extra files you can change in this task:**
+
+| File | What you can change |
+| --- | --- |
+| `tools/balance/run.json` | All. It sets the Balance run on your branch |
+| `tools/balance/make_probe_waves.py` | All |
+| `tools/balance/probe_waves.csv` | All (made by `make_probe_waves.py`) |
+| `docs/balance/mistral/attacker-cost/**` | Your report, tables and charts (PNG) |
+
+Do not change `waves.csv`, `battle_rules.csv` or `units.csv` in this task.
+
+**Steps:**
+
+1. Make the branch `mistral/attacker-cost` from `codex/playable-steppe-patch-integration`.
+2. Add `tools/balance/run.json`: `{"waves_file": "tools/balance/probe_waves.csv", "max_budget": 30000, "playtest_seeds": 0}`.
+3. Push. The Balance run measures the 125 probe waves on all fields and runs `tools/balance/attacker_cost.py`. The report is in the run summary and in the artifact `balance-report` (`attacker_cost.md`, `attacker_cost.json`, `wave-cost.csv`).
+4. Read the report. Check these items:
+   - The cost curve of each attacker type: entry (the fixed cost of the first unit) and each (the cost of each next unit).
+   - Steps in the curves: where one more unit needs one more defender.
+   - Types that cost 0 or are "not held" at 30000. Find the reason in the battle log or the numbers.
+   - The error of the mixed-wave models A and B.
+   - The map coefficients.
+5. If a curve has too few points, or the mixed-wave error is more than 25%, change `make_probe_waves.py` (more counts, more mixed waves, other mixes), make a new `probe_waves.csv`, and push again. Write each run in the journal.
+6. Find the best formula for the cost of a mixed wave. You can add terms, for example a factor per pair of counters or per map. Fit it in your own script under `docs/balance/mistral/attacker-cost/`. Check it on waves that you did not use for the fit.
+7. Stop after 6 runs or when the formula predicts 80% of mixed waves within 20%.
+
+**Deliverables** (in `docs/balance/mistral/attacker-cost/`):
+
+- `report.md`: a table of each attacker type (counter, entry, each, step size) per field; the cost formula and its error; the map coefficients; what you found that is strange.
+- Charts (PNG): cost against count for each attacker type, all fields on one chart; predicted against measured cost for mixed waves.
+- `model.json`: the coefficients in a form that a script can read.
+- A proposal (not a change): how `make_waves.py` makes a wave of a given cost from this model.
+
+Open the pull request as in section 7. Title: `Mistral: attacker-cost — <error>% mean error, <n>% of mixed waves within 20%`.
+
+## 10. Current task: `mistral/wave-generator`
+
+**Goal.** `make_waves.py` makes waves whose measured cost follows a target cost for each wave. The endless mode will use the same method later (Claude ports it to C#). The money model is not part of this task: the target is a cost, not a ratio.
+
+**Start.** Wait until PR #7 is merged. Then make the branch `mistral/wave-generator` from `codex/playable-steppe-patch-integration`.
+
+**Files you can change in this task:**
+
+| File | What you can change | In the PR? |
+| --- | --- | --- |
+| `tools/balance/make_waves.py` | All | Yes |
+| `tools/balance/target_costs.csv` | The test target (below) | No: delete it before the PR |
+| `unity/Assets/Data/waves.csv` | The generated test waves | No: restore the original before the PR |
+| `docs/balance/mistral/wave-generator/**` | Journal, report, charts | Yes |
+
+**Review 1 (Claude, 2026-11-26, PR #9): changes needed.** The 30 waves came from a fixed plan (`PLAN`), not from the generator. Remove `PLAN` from the generation path. Extra permission: you can copy and change the fit scripts and `model.json` in `docs/balance/mistral/wave-generator/`, and add the measured waves of your runs to the training set (generate → measure → add → fit again). Pass: the pure generator (no plan) gives at least 24 of 30 waves within 20%. Stop after 3 more runs. Details: PR #9 comment.
+
+**Test target** (a test only, not the game design): 30 waves, `target_cost(n) = 250 × 1.13^(n−1)`, rounded to 25. Every 5th wave (5, 10, 15, 20, 25, 30) is a relief wave: × 0.8. Write it to `tools/balance/target_costs.csv` with the columns `wave,target_cost`.
+
+**Rules for the waves:**
+
+- Use the cost model from `docs/balance/mistral/attacker-cost/model.json` (field Forest belts) to predict the cost of candidate waves.
+- Keep the first-appearance order of attacker types (`UNLOCK` in `make_waves.py`). Do not use `fpv`, `one_way_drone`, `recon_uav`.
+- Caps per type (from `make_waves.py`). At most 2 helicopters in any wave.
+- From wave 4: at least 2 attacker types in a wave. From wave 8: no type has more than 70% of the predicted cost.
+- The predicted cost of a wave must not be more than 1.35 times the predicted cost of the wave before it, except a wave where a type appears for the first time.
+- The same seed gives the same waves.
+
+**Check.** With `tools/balance/target_costs.csv` on your branch, the `Balance run` report adds a "Target cost check" and decides the verdict: **pass** when at least 80% of the waves are within 20% of their target on Forest belts and no wave is "not held". `report.json` has the details under `target_cost`.
+
+**Loop:** as in section 5. Stop at pass, after 6 runs, or at an error.
+
+**Deliverables** (in `docs/balance/mistral/wave-generator/`): `report.md` (method, the final check table, the measured cost on the other two fields, problems), a chart of target against measured cost per wave, and the journal. Pull request title: `Mistral: wave-generator — <n> of 30 waves within 20%`.
+
+## 11. Next task: `mistral/squads`
+
+Written by Claude (CTO), 2026-11-25. Start after `mistral/wave-generator` is closed, or when Yaroslav tells you to start it first. PR #7 must be merged first (you need `tools/balance/probe_waves.csv` and its measured costs).
+
+**Background.** Yaroslav's design (2026-11-25): before each mission the player takes a squad of a few defender types (slots). The player cannot take all types. The choice must be hard: the wave needs some types, and the player wants others. One squad that wins every mission is a design failure (the problem of Plants vs. Zombies: one strategy wins the game).
+
+**Goal.** Measure which squads hold which waves, and at what cost. Find dominant squads, defender types that the player must always take, and defender types that the player never needs. Do not change any value. Give the findings and a proposal.
+
+**Tool.** `WaveCost.cs` has a squad mode: `SQUADS_FILE` is a CSV `squad,defenders`, with defender types split by `|`. For each squad the scripted player can buy only these types. The output has a `squad` column. `cost` is `NaN` when the squad cannot hold the wave with `max_budget`. The `Balance run` workflow reads `squads_file` from `tools/balance/run.json`.
+
+Defender types (9): `rifle_squad`, `machine_gun`, `sniper`, `mortar`, `anti_tank`, `air_defence`, `fpv_operator`, `bomber_operator`, `recon_drone`. `recon_drone` is a type like the others: a squad without it has no recon drone.
+
+**Files you can change in this task:**
+
+| File | What you can change | In the PR? |
+| --- | --- | --- |
+| `tools/balance/make_squads.py` | All (new) | Yes |
+| `tools/balance/squads.csv` | All (made by `make_squads.py`) | Yes |
+| `tools/balance/squad_waves.csv` | All (the test waves, same columns as `waves.csv`) | Yes |
+| `tools/balance/run.json` | All | No: delete it before the PR |
+| `docs/balance/mistral/squads/**` | Journal, analysis script, report, charts | Yes |
+
+**Steps:**
+
+1. Make the branch `mistral/squads` from `codex/playable-steppe-patch-integration`.
+2. Make `tools/balance/squad_waves.csv`: 40 waves from the mixed probe waves of the attacker-cost task. Use only waves with a measured cost from 500 to 6000 on Forest belts. Include waves with each attacker type (infantry, vehicles, armour, helicopters, drones).
+3. Write `tools/balance/make_squads.py`. It writes `tools/balance/squads.csv` with every squad of 4 types from the 9 types (126 squads), plus one squad `all` with the 9 types. Name a squad by its types, for example `mg+sn+at+ad`.
+4. Add `tools/balance/run.json`: `{"waves_file": "tools/balance/squad_waves.csv", "squads_file": "tools/balance/squads.csv", "max_budget": 12000, "playtest_seeds": 0}`.
+5. Push. Download `balance-report`. `wave-cost.csv` has one row per field, wave and squad.
+6. Write your analysis script in `docs/balance/mistral/squads/`. For each squad and field, calculate:
+   - **held share**: the share of the 40 waves that the squad holds;
+   - **cost premium**: the median of (squad cost / cost of `all`) on the waves that the squad holds;
+   - **rank**: how often the squad is the cheapest squad that holds the wave.
+7. Calculate for each defender type:
+   - **must-have**: the share of waves that no squad without this type can hold;
+   - **unused**: the share of waves where no squad in the best 10 for that wave has this type.
+8. If the first run takes more than 60 minutes, use only Forest belts for the next runs and write this in the journal.
+9. Repeat with squads of 3 and of 5 types (one run each). Compare the held share of the best squad for 3, 4 and 5 slots.
+
+**Check (definitions of the findings):**
+
+- A squad is **dominant** when it holds 90% of the waves or more, with a cost premium of 1.2 or less.
+- A type is **must-have** when more than 50% of the waves need it.
+- A type is **unused** when it is in no best-10 squad for 90% of the waves or more.
+- The target (not a pass/fail for this task): no dominant squad of 4 types; each type is in the best 10 for at least 20% of the waves.
+
+**Loop:** as in section 5. Stop after 4 runs or at an error.
+
+**Deliverables** (in `docs/balance/mistral/squads/`):
+
+- `report.md`: method; a table of the best 15 squads of 4 types (held share, cost premium, rank count) per field; a table of each type (must-have, unused); the result for 3, 4 and 5 slots; dominant squads; strange results.
+- Charts (PNG): held share against cost premium for each squad (one point per squad); a heat map of type against attacker type (how often the type is in the best squad for waves with that attacker).
+- `squads.json`: the per-squad and per-type numbers.
+- A proposal (not a change): which values in `units.csv` or `stop.csv` to change to remove a dominant squad or to give an unused type a role. Give the reason for each.
+
+Pull request title: `Mistral: squads — <n> dominant squads of 4, <n> unused types`.
+
+## 12. Next task: `mistral/model-refit`
+
+Written by Claude (CTO), 2026-11-26. Start after `mistral/wave-generator` is merged (the generator fixes the model format). Yaroslav can change the order.
+
+**Background.** The cost model (`model.json`) is fit on the results of the current data. When a value in `units.csv`, `armour.csv`, `stop.csv`, `battle_rules.csv` or `obstacles.csv` changes, or a new attacker or defender type is added, the model becomes old. The wave generator then makes waves with the wrong cost. The fit must run again. Now this is manual work (3 Balance runs and a local script). Make it one automatic step.
+
+**Goal.** One workflow measures the probe waves, fits the model, checks it on held-out waves and proposes the new model in a pull request. It starts on a data change and by hand.
+
+**Files you can change in this task:**
+
+| File | What you can change |
+| --- | --- |
+| `.github/workflows/model-refit.yml` | All (new) |
+| `tools/balance/fit_model.py`, `tools/balance/fitlib.py` | All (move them from `docs/balance/mistral/attacker-cost/`; keep the old copies) |
+| `tools/balance/model.json`, `tools/balance/model_metrics.json` | Made by the workflow |
+| `tools/balance/make_probe_waves.py` | All |
+| `tools/balance/make_waves.py` | Only the path of the model file |
+| `docs/balance/mistral/model-refit/**` | Journal, report |
+
+Do not change `balance-run.yml`, the C# tools or the data files.
+
+**Steps:**
+
+1. Make the branch `mistral/model-refit` from `codex/playable-steppe-patch-integration`.
+2. `make_probe_waves.py`: read the attacker types from `units.csv` (`side` = attacker). Do not keep a fixed list. Keep the excluded types (`fpv`, `one_way_drone`, `recon_uav`) in one list at the top. A new attacker type in `units.csv` must get single-type and mixed probe waves with no other change.
+3. Move the fit to `tools/balance/fit_model.py`. Input: the probe waves and the merged `wave-cost.csv`. Output: `tools/balance/model.json` and `tools/balance/model_metrics.json` (mean error and share within 20% on held-out mixed waves, per field). Use the same held-out rule as in the attacker-cost task. Use a fixed seed: the same input gives the same model.
+4. Change `make_waves.py` to read `tools/balance/model.json`.
+5. Write `.github/workflows/model-refit.yml`:
+   - Start: `workflow_dispatch`, and a push to `codex/playable-steppe-patch-integration` that changes `unity/Assets/Data/units.csv`, `armour.csv`, `stop.csv`, `battle_rules.csv`, `obstacles.csv`, `tools/balance/stop.csv` or `unity/Assets/Resources/Fields/**`.
+   - Jobs: make the probe waves; measure them on all fields (the same shards as `balance-run.yml`: field and a range of waves, at most 200 jobs, `MAX_BUDGET` 30000); fit; check.
+   - Check: **pass** when the share within 20% is 80% or more on each field. **fail** otherwise.
+   - On pass: open a pull request from a branch `model-refit/<run number>` with the new `model.json` and `model_metrics.json`. Title: `Model refit <run number>: <mean error>% mean error, <share>% within 20%`. In the body, give the old and the new metrics.
+   - On fail: no pull request. The run fails with the metrics in the run summary.
+6. Test it: start the workflow by hand on your branch. Then make a test change in your branch only (for example `old_tank` `hp` +20%), run it again, and compare the models. Remove the test change before the PR.
+
+**Deliverables:** the workflow and scripts; `docs/balance/mistral/model-refit/report.md` with the two test runs (time, metrics, what changed in the model after the test change).
+
+Pull request title: `Mistral: model-refit — <minutes> min per refit, <share>% within 20%`.
