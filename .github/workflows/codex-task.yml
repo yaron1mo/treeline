@@ -35,6 +35,22 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
           clean: false   # keep unity/Library between runs (Unity import takes 5-20 minutes)
+      - name: Prepare the issue branch
+        # One branch and one PR per issue (2026-11-27). Before this, each restart was a new Codex session.
+        # It made a new branch and a new PR (#45, #52, #53 for issue #44) and did the same work again.
+        env:
+          NUM: ${{ github.event.issue.number || github.event.inputs.issue }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $br = "codex/issue-$env:NUM"
+          git reset --hard -q
+          git clean -fdq
+          git fetch -q origin
+          git ls-remote --exit-code --heads origin $br | Out-Null
+          if ($LASTEXITCODE -eq 0) { git checkout -q -B $br "origin/$br" } else { git checkout -q -B $br origin/codex/playable-steppe-patch-integration }
+          $pr = gh pr list --repo ${{ github.repository }} --head $br --state open --json number -q '.[0].number'
+          "BRANCH=$br" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+          "PRNUM=$pr" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
       - name: Write the task file
         env:
           TITLE: ${{ github.event.issue.title }}
@@ -43,20 +59,22 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           if (-not $env:TITLE) { $j = gh issue view $env:NUM --repo ${{ github.repository }} --json title,body | ConvertFrom-Json; $env:TITLE = $j.title; $env:BODY = $j.body }
+          if ($env:PRNUM) { $prline = "The PR for this branch is #$env:PRNUM. Read its body and checklist first. Continue the work; do not do done items again. Update this PR; do not open a new PR." } else { $prline = "There is no PR for this branch yet. After your first push, open ONE draft PR from $env:BRANCH into codex/playable-steppe-patch-integration with gh. Put a checklist of all task items in its body." }
           $lines = @(
             "You are Codex, Chief Design Officer of the Treeline team (visuals, UI, art, renderer). Read AGENTS.md first.",
-            "You run headless on Windows. Make art as files in the repo. Start your branch from codex/playable-steppe-patch-integration (PR #8 is merged into it).",
+            "You run headless on Windows. Make art as files in the repo.",
+            "BRANCH RULE: you are on the branch $env:BRANCH. Work, commit and push only on this branch (git push origin $env:BRANCH). Do not make other branches.",
+            $prline,
             "mcs (Mono) is not installed on this computer, so tools/tests/*.sh do not run here; GitHub CI runs them on your PR. Check compile and tests with Unity instead: tools/unity/unity.ps1 -Method AgentTools.Ping and -Tests EditMode.",
-            "A missing check tool is never a reason to stop. Do the work, commit and push after each unit, open the PR, and write in the PR what you could not check.",
-            "Big tasks: keep a checklist of the task items in the PR body and tick them. If you cannot finish in this run, push all work, update the checklist, and write 'NOT COMPLETE' in your last message: the Watchdog starts you again in 20 minutes and you continue from your branch and the checklist.",
-            "No human will continue this work after you. Finish the whole task in this run: draw, commit, push, open the PR. Stop early only for a design decision (then add needs:yaroslav). Two earlier runs stopped after reading the files and produced nothing; do not do that.",
-            "You can run the Unity Editor without a window: powershell -File tools/unity/unity.ps1 -Method AgentTools.Ping (import and compile), -Method AgentTools.CapturePlay -Extra '-agentOut','build/shots/x.png','-agentWait','8' (screenshot in play mode), -Tests EditMode. Read the header of tools/unity/unity.ps1 and unity/Assets/Editor/AgentTools.cs. Put screenshots in the PR body.",
+            "A missing check tool is never a reason to stop. Do the work, commit and push after each item, and write in the PR what you could not check.",
+            "WORK RULE: do the task items one after the other, in this session, until all items are done. After each item: commit, push, tick it in the PR checklist, then start the next item at once. Do not write a final answer after one item.",
+            "Write a final answer only when (a) all items are done, or (b) you need a design decision (then add needs:yaroslav to the issue), or (c) a tool is broken and you cannot continue. In case (c) start the final answer with 'NOT COMPLETE' and give the reason. The runner then resumes this same session.",
+            "You can run the Unity Editor without a window: powershell -File tools/unity/unity.ps1 -Method AgentTools.Ping (import and compile), -Method AgentTools.CapturePlay -Extra '-agentOut','build/shots/x.png','-agentWait','8' (screenshot in play mode), -Method AgentTools.Showroom, -Tests EditMode. Read the header of tools/unity/unity.ps1 and unity/Assets/Editor/AgentTools.cs. Put screenshots in the PR body.",
             "Your task is GitHub issue #$env:NUM : $env:TITLE",
             "",
             $env:BODY,
             "",
-            "Work on a branch codex/<topic>. When you finish: push the branch and open a pull request into codex/playable-steppe-patch-integration with gh.",
-            "Then write a comment on issue #$env:NUM with the PR link. If you need a design decision, add the label needs:yaroslav to the issue and stop."
+            "When all items are done: mark the PR ready for review (gh pr ready) and write a comment on issue #$env:NUM with the PR link."
           )
           [System.IO.File]::WriteAllLines("$env:RUNNER_TEMP\codex-task.md", $lines, (New-Object System.Text.UTF8Encoding $false))
       - name: Mark in progress
@@ -66,12 +84,35 @@ jobs:
       - name: Run Codex
         # Unity 6000.3.28f1 on Yaroslav's computer (local Personal licence; batch mode costs nothing).
         # Model: GPT-6.1 Terra for visual work (Yaroslav, 2026-11-27). Override with the repo variable CODEX_MODEL.
+        # Resume loop (2026-11-27): codex exec ends when the model writes a final answer. When that answer says
+        # NOT COMPLETE (or a run ends with work left), resume the SAME session (codex exec resume --last), so that
+        # Codex keeps its context. At most 10 resumes and 200 minutes per job. The Watchdog is the fallback.
         env:
           CODEX_MODEL: ${{ vars.CODEX_MODEL || 'gpt-6.1-terra' }}
           UNITY_EXE: C:\Program Files\Unity\Hub\Editor\6000.3.28f1\Editor\Unity.exe
         run: |
-          Get-Content "$env:RUNNER_TEMP\codex-task.md" -Raw | codex exec -m $env:CODEX_MODEL -c model_reasoning_effort=high --dangerously-bypass-approvals-and-sandbox --json --output-last-message "$env:RUNNER_TEMP\codex-last.md" - | Tee-Object -FilePath "$env:RUNNER_TEMP\codex-events.jsonl" | Out-Null
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $start = Get-Date
+          $last = "$env:RUNNER_TEMP\codex-last.md"
+          $ev = "$env:RUNNER_TEMP\codex-events.jsonl"
+          $opts = @('-m', $env:CODEX_MODEL, '-c', 'model_reasoning_effort=high', '--dangerously-bypass-approvals-and-sandbox', '--json', '--output-last-message', $last)
+          Get-Content "$env:RUNNER_TEMP\codex-task.md" -Raw | codex exec @opts - | Tee-Object -FilePath $ev | Out-Null
+          $code = $LASTEXITCODE
+          $cont = "Continue the same task on branch $env:BRANCH. Read the PR checklist. Do the next open item, then the next, until all items are done. Commit and push after each item. Write a final answer only when all items are done, or for a design decision, or when a tool is broken (start it with NOT COMPLETE)."
+          for ($n = 1; $n -le 10; $n++) {
+            $mins = ((Get-Date) - $start).TotalMinutes
+            $text = ""
+            if (Test-Path $last) { $text = Get-Content $last -Raw }
+            if ($code -ne 0 -or $mins -gt 200 -or $text -notmatch 'NOT COMPLETE') { break }
+            Write-Host "Resume $n after $([int]$mins) min"
+            codex exec @opts resume --last $cont | Tee-Object -FilePath $ev -Append | Out-Null
+            $code = $LASTEXITCODE
+            if ($code -ne 0) {
+              Write-Host "Resume failed ($code). Start a new session on the same branch."
+              $cont | codex exec @opts - | Tee-Object -FilePath $ev -Append | Out-Null
+              $code = $LASTEXITCODE
+            }
+          }
+          if ($code -ne 0) { exit $code }
       - name: Report
         if: always()
         env:

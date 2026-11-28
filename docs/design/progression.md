@@ -47,6 +47,8 @@ Write all text in ASD-STE100. Mark each item as **Decided** (with date and who) 
 ## 2. Open
 
 - **Death or wounded:** a unit at 0 HP is wounded ("300") or killed ("200"); proposal 50/50; what evacuation costs; recovery time.
+- **Unit roster for release** (10 attacker types, 10 defender types, 3 support calls), EW station numbers and effects, air-defence rules, roster cuts. Proposal and options: [unit-roster.md](unit-roster.md).
+- **Roster follow-up (2026-11-27, second round on PR #28):** how the EW station is placed when it is a recon-drone utility; how many utility slots and what else goes in them; whether an upgraded Shahed resists EW. Options: [unit-roster.md](unit-roster.md), section 11.
 - **Barracks size** and units per level.
 - **Slots:** how many at start, how they open.
 - **Veteran slots and general slots** (Yaroslav's idea, 2026-11-27): if all upgraded veterans die, where do new units come from? Separate veteran slots and general slots; effect on the weekly challenge (nothing is carried over). To design together.
@@ -56,6 +58,7 @@ Write all text in ASD-STE100. Mark each item as **Decided** (with date and who) 
 - **Monetisation model** (Yaroslav, 2026-11-25, not decided): (a) free first chapters + one purchase of the full campaign, (b) paid game, (c) free with rewarded ads and purchases.
 - **Campaign length for release:** proposal 10–15 hours, the rest as updates.
 - **Story:** the tutorial character, advisors, the ending.
+- **Map concept sheets** (designer, 2026-11-27, issue #48): 22 maps in [maps/README.md](maps/README.md). Open: which maps stay (goal 20); whether crop rows count as "filled"; five new Sim rows (`stack`, `shed`, `silo`, `camo_net`, `dugout`); how the designed maps relate to the real-terrain maps; campaign order of the maps.
 
 ## 3. The player's goal (Yaroslav, 2026-11-24)
 

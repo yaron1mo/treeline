@@ -70,6 +70,14 @@ When open issues have `needs-spec`, the same workflow then starts Claude (Opus) 
 
 The `Watchdog` workflow runs every 20 minutes without an AI model. It restarts a Mistral or Codex run that failed, or that runs for more than 70 minutes with no push to the agent branch for 50 minutes (cancel, then start again with `workflow_dispatch`). At most 3 restarts per issue in 24 hours; then `needs:yaroslav`. Inside a Mistral run, Vibe is retried up to 4 times with a 3-minute pause when it fails (high demand).
 
+## 6b. Codex runs: one branch, one session
+
+Rules from 2026-11-27 (research: issue #44 took 5 runs and made 3 branches):
+- One branch per issue: `codex/issue-<N>`. The workflow checks it out before Codex starts. One PR per branch.
+- In one job, the workflow resumes the same Codex session (`codex exec resume --last`) when the last answer starts with `NOT COMPLETE`. At most 10 resumes and 200 minutes per job. Then the Watchdog continues.
+- Codex writes a final answer only when all items are done, for a design decision, or for a broken tool.
+- Split big art tasks: one unit per issue is best.
+
 ## 7. Auto-merge
 
 The `Auto-merge` workflow merges a PR when all these conditions are true:
