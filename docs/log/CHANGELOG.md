@@ -1,5 +1,7 @@
 # Change log
 
+2026-11-28 — [codex] art — Add the recruit straight-loose-helmet GIF.
+
 2026-11-28 — [codex] art — Add the recruit straight-crutch-fall-backward GIF.
 
 2026-11-28 — [codex] art — Add the recruit straight-fall-backward GIF.
