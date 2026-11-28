@@ -1,5 +1,7 @@
 # Change log
 
+2026-11-28 — [codex] art — Add the regular diagonal-shoot GIF.
+
 2026-11-28 — [codex] art — Add the regular diagonal-walk GIF.
 
 2026-11-28 — [codex] art — Add the regular straight-vehicle GIF.
