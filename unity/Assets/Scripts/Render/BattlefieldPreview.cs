@@ -14,7 +14,7 @@ namespace Treeline.Render
     {
         const int PixelsPerMetre = 2;
         const float WindFrameSeconds = 0.23f;
-        static readonly string[] MapFiles = { "forest-belts", "balka-and-railway", "river-crossing" };
+        static readonly string[] MapFiles = { "forest-belts", "balka-and-railway", "river-crossing", "village-street", "village-crossroads" };
 
         SpriteRenderer ground, wind, cloud, cloudTwo, cloudThree;
         BattlefieldEffects effects;
@@ -155,9 +155,9 @@ namespace Treeline.Render
 
             // Paint layers explicitly: landscape below paths, cover and tree crowns above them.
             foreach (var f in entries)
-                if (Kind(f) == "field")
+                if (Kind(f) == "field" || Kind(f) == "sunflower")
                 {
-                    string tone = Str(f, "tone");
+                    string tone = Kind(f) == "sunflower" ? "sunflower" : Str(f, "tone");
                     int angle = Mathf.RoundToInt(Num(f, "angle", 0));
                     Color32 c = tone == "plowed" ? new Color32(150, 104, 67, 255)
                         : tone == "sunflower" ? new Color32(130, 154, 76, 255)
@@ -170,8 +170,9 @@ namespace Treeline.Render
             foreach (var f in entries)
             {
                 string type = Kind(f);
-                if (type == "field" || type == "tracks" || type == "craters" ||
-                    type == "grove" || type == "belt" || type == "bridge_ruins") continue;
+                if (type == "field" || type == "sunflower" || type == "tracks" || type == "craters" ||
+                    type == "grove" || type == "belt" || type == "bridge_ruins" ||
+                    type == "house" || type == "ruin" || type == "fence" || type == "burned_belt") continue;
 
                 Color32 tint;
                 switch (type)
@@ -222,7 +223,87 @@ namespace Treeline.Render
             foreach (var f in entries)
             {
                 if (Kind(f) == "belt") DrawBelt(Points(f, "line"), Num(f, "width", 14f), pixels);
-                if (Kind(f) == "grove") DrawGrove(Points(f, "poly"), pixels);
+                if (Kind(f) == "grove")
+                {
+                    if (mapIndex >= 3) DrawGarden(Points(f, "poly"), pixels);
+                    else DrawGrove(Points(f, "poly"), pixels);
+                }
+                if (Kind(f) == "burned_belt") DrawBurnedBelt(Points(f, "line"), Num(f, "width", 14f), pixels);
+                if (Kind(f) == "fence") DrawFence(Points(f, "line"), pixels);
+                if (Kind(f) == "house") DrawVillageHouse(Points(f, "poly"), pixels, false);
+                if (Kind(f) == "ruin") DrawVillageHouse(Points(f, "poly"), pixels, true);
+            }
+        }
+
+        void DrawVillageHouse(Vector2[] poly, Color32[] pixels, bool ruin)
+        {
+            if (poly.Length < 3) return;
+            Bounds(poly, out int l, out int t, out int r, out int b);
+            float x0 = l / (float)PixelsPerMetre, x1 = r / (float)PixelsPerMetre;
+            float y0 = t / (float)PixelsPerMetre, y1 = b / (float)PixelsPerMetre;
+            float cx = (x0 + x1) * 0.5f, cy = (y0 + y1) * 0.5f;
+            int variant = (int)(Hash(l, t, 76) * 4f) % 4;
+            PaintPolygon(poly, pixels, ruin ? new Color32(100, 91, 77, 255) :
+                new Color32(62, 65, 59, 255), "house", 0, null);
+            if (ruin)
+            {
+                Blob(pixels, cx, cy, (x1-x0)*0.35f, (y1-y0)*0.34f, new Color32(159, 141, 111, 255), 255);
+                for (int i = 0; i < 7; i++)
+                    Blob(pixels, x0 + (x1-x0)*Hash(l, i, 13), y0 + (y1-y0)*Hash(t, i, 17),
+                        0.65f, 0.4f, new Color32(78, 69, 58, 255), 255);
+                return;
+            }
+            Color32 roof = variant == 0 ? new Color32(112, 119, 116, 255) :
+                variant == 1 ? new Color32(129, 120, 103, 255) :
+                variant == 2 ? new Color32(91, 102, 98, 255) : new Color32(117, 108, 96, 255);
+            Vector2[] inset = { new Vector2(x0+0.5f,y0+0.5f), new Vector2(x1-0.5f,y0+0.5f),
+                new Vector2(x1-0.5f,y1-0.5f), new Vector2(x0+0.5f,y1-0.5f) };
+            PaintPolygon(inset, pixels, roof, "roof", 0, null);
+            for (float x = x0+1.5f; x < x1-1f; x += 2f)
+                PaintPath(new[] { new Vector2(x,y0+0.8f), new Vector2(x,y1-0.8f) }, 0.35f, pixels, new Color32(75,82,78,255));
+            PaintPath(new[] { new Vector2(x0+0.7f,cy), new Vector2(x1-0.7f,cy) }, 0.5f, pixels, new Color32(157,155,137,255));
+            Blob(pixels, x0+(x1-x0)*0.3f, y0+(y1-y0)*0.3f, 0.8f, 0.8f, new Color32(72,62,54,255), 255);
+            PaintPath(new[] { new Vector2(cx-1f,y1), new Vector2(cx+1f,y1) }, 1.2f, pixels, new Color32(153,139,111,255));
+            if (variant == 3) Blob(pixels, cx+1f, cy-1f, 1.2f, 0.8f, new Color32(39,37,33,255), 255);
+        }
+
+        void DrawFence(Vector2[] line, Color32[] pixels)
+        {
+            PaintPath(line, 0.65f, pixels, new Color32(93, 73, 53, 255));
+            for (int i = 1; i < line.Length; i++)
+            {
+                int count = Mathf.Max(1, Mathf.CeilToInt(Vector2.Distance(line[i-1], line[i]) / 3f));
+                for (int j = 0; j <= count; j++)
+                {
+                    Vector2 p = Vector2.Lerp(line[i-1], line[i], j / (float)count);
+                    Blob(pixels, p.x, p.y, 0.55f, 0.55f, new Color32(158, 135, 94, 255), 255);
+                }
+            }
+        }
+
+        void DrawGarden(Vector2[] poly, Color32[] pixels)
+        {
+            if (poly.Length < 3) return;
+            Bounds(poly, out int l, out int t, out int r, out int b);
+            for (float y = t / (float)PixelsPerMetre + 3f; y < b / (float)PixelsPerMetre; y += 6f)
+                for (float x = l / (float)PixelsPerMetre + 3f; x < r / (float)PixelsPerMetre; x += 6f)
+                    if (Inside(poly, x, y)) Tree(pixels, x, y, 1.8f, Mathf.RoundToInt(x+y));
+        }
+
+        void DrawBurnedBelt(Vector2[] line, float width, Color32[] pixels)
+        {
+            PaintPath(line, width, pixels, new Color32(90, 87, 76, 255));
+            for (int i = 1; i < line.Length; i++)
+            {
+                Vector2 a = line[i-1], b = line[i];
+                Vector2 normal = new Vector2(-(b-a).y, (b-a).x).normalized;
+                int count = Mathf.Max(1, Mathf.CeilToInt(Vector2.Distance(a,b) / 4f));
+                for (int j = 0; j <= count; j++)
+                {
+                    Vector2 p = Vector2.Lerp(a,b,j/(float)count) + normal * (Hash(i,j,31)-0.5f)*width*0.7f;
+                    Blob(pixels, p.x, p.y, 1.2f, 1.2f, new Color32(49,46,42,255), 255);
+                    PaintPath(new[] { p, p + new Vector2(1.4f,1.8f) }, 0.65f, pixels, new Color32(35,34,31,255));
+                }
             }
         }
 
@@ -826,6 +907,7 @@ namespace Treeline.Render
 
         void SeedAmbientSmoke()
         {
+            if (mapIndex >= 3) return;
             // Wrecks are graphic-only scale cues; the smoke is purely decorative.
             Vector2 wreck = mapIndex == 0 ? new Vector2(112, 222)
                 : mapIndex == 1 ? new Vector2(110, 228)
@@ -872,7 +954,7 @@ namespace Treeline.Render
             GUILayout.Label("ART PREVIEW — all 23 unit types / no simulated battle");
             GUILayout.BeginHorizontal();
             for (int i = 0; i < MapFiles.Length; i++)
-                if (GUILayout.Button((i + 1).ToString() + " · " + (i == 0 ? "Forest" : i == 1 ? "Balka" : "River"),
+                if (GUILayout.Button((i + 1).ToString() + " · " + MapFiles[i],
                     GUILayout.Height(34))) { if (i != mapIndex) LoadMap(i); }
             GUILayout.EndHorizontal();
             if (GUILayout.Button(showUnits ? "UNITS: ON — 23 types" : "UNITS: OFF",
