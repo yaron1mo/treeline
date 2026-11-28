@@ -1,0 +1,91 @@
+field,wave,threat,cost,held_at_cost
+Balka and railway,1,60,200,8
+Balka and railway,2,65,200,8
+Balka and railway,11,305,1100,8
+Balka and railway,12,210,500,8
+Balka and railway,13,220,700,8
+Balka and railway,14,325,900,8
+Balka and railway,15,320,900,8
+Balka and railway,16,550,1400,8
+Balka and railway,17,635,2300,8
+Balka and railway,18,930,3000,8
+Balka and railway,19,985,2800,8
+Balka and railway,20,910,2000,8
+Balka and railway,3,110,200,8
+Balka and railway,21,420,NaN,0
+Balka and railway,22,560,3575,8
+Balka and railway,23,1005,5025,8
+Balka and railway,24,1025,NaN,0
+Balka and railway,25,1400,NaN,0
+Balka and railway,26,1405,NaN,0
+Balka and railway,27,1345,NaN,0
+Balka and railway,28,2380,NaN,0
+Balka and railway,29,2265,NaN,0
+Balka and railway,30,2290,NaN,0
+Balka and railway,4,155,200,8
+Forest belts,1,60,300,8
+Forest belts,2,65,300,8
+Forest belts,3,110,300,8
+Forest belts,4,155,300,8
+Forest belts,5,115,300,8
+Forest belts,6,135,400,8
+Forest belts,7,260,600,8
+Forest belts,8,265,500,8
+Forest belts,9,305,600,8
+Forest belts,10,165,500,8
+Balka and railway,5,115,200,8
+Forest belts,11,305,700,8
+Forest belts,12,210,600,8
+Forest belts,13,220,700,8
+Forest belts,14,325,900,8
+Forest belts,15,320,1000,8
+Forest belts,16,550,1500,8
+Forest belts,17,635,1800,8
+Forest belts,18,930,2200,8
+Forest belts,19,985,1800,8
+Forest belts,20,910,1700,8
+Balka and railway,6,135,300,8
+Forest belts,21,420,2925,8
+Forest belts,22,560,3675,8
+Forest belts,23,1005,4275,8
+Forest belts,24,1025,3675,8
+Forest belts,25,1400,2875,8
+Forest belts,26,1405,4525,8
+Forest belts,27,1345,4475,8
+Forest belts,28,2380,6275,8
+Forest belts,29,2265,7275,8
+Forest belts,30,2290,7375,8
+Balka and railway,7,260,600,8
+River crossing,1,60,200,8
+River crossing,2,65,200,8
+River crossing,3,110,200,8
+River crossing,4,155,200,8
+River crossing,5,115,200,8
+River crossing,6,135,400,8
+River crossing,7,260,600,8
+River crossing,8,265,500,8
+River crossing,9,305,700,8
+River crossing,10,165,500,8
+Balka and railway,8,265,400,8
+River crossing,11,305,2500,8
+River crossing,12,210,600,8
+River crossing,13,220,900,8
+River crossing,14,325,1000,8
+River crossing,15,320,1000,8
+River crossing,16,550,2700,8
+River crossing,17,635,3600,8
+River crossing,18,930,5200,8
+River crossing,19,985,4600,8
+River crossing,20,910,5000,8
+Balka and railway,9,305,800,8
+River crossing,21,420,3525,8
+River crossing,22,560,7825,8
+River crossing,23,1005,7025,8
+River crossing,24,1025,4125,8
+River crossing,25,1400,6425,8
+River crossing,26,1405,4525,8
+River crossing,27,1345,5225,8
+River crossing,28,2380,8275,8
+River crossing,29,2265,NaN,0
+River crossing,30,2290,8925,8
+Balka and railway,10,165,300,8

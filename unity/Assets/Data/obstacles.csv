@@ -7,7 +7,7 @@ embankment,Embankment,terrain,full,,,behind,0.5,0.5,0.85,1,0.7,0.7,0.85,1,,,,2,b
 hill,Hill,terrain,full,,,behind,0.5,0.5,0.85,1,0.7,0.7,0.85,1,1.15,1.3,0.7,1.6,1.8,"Behind it: like a rock. On top: more range and sight, enemy direct fire is less accurate (on_cover_mult). on_ values are a proposal.",FALSE,
 grove,Grove,terrain,soft,0.5,0.04,inside,0.5,1,1,1,0.7,0.7,0.7,0.85,,,,2,blocked,"Seen blurred, inside and beyond. Cover is from the old 'tree' rows. Detect values are a proposal.",FALSE,
 belt,Forest belt,terrain,soft,0.5,0.03,inside,0.5,1,1,1,0.7,0.7,0.7,0.85,,,,2,3,"Seen blurred, inside and beyond. Cover is from the old 'tree' rows. Detect values are a proposal.",FALSE,
-trench,Trench,object,none,,,inside,0.85,0.5,0.7,1,0.85,0.5,0.85,0.7,,,,1,1,Values are from the old 'trench' rows.,TRUE,60
+trench,Trench,object,none,,,inside,0.85,0.5,0.7,1,0.85,0.5,0.85,0.7,,,,1,1,Values are from the old 'trench' rows.,TRUE,70
 balka,Gully,terrain,none,,,,,,,,,,,,,,,1.2,blocked,Terrain Balka. Move cost only for now.,FALSE,
 pond,Pond,terrain,none,,,,,,,,,,,,,,,blocked,blocked,Terrain Pond.,FALSE,
 river,River,terrain,none,,,,,,,,,,,,,,,4,blocked,Terrain River. Vehicles cross only at fords.,FALSE,
@@ -16,3 +16,14 @@ pipe,Pipe,terrain,none,,,,,,,,,,,,,,,2,blocked,Terrain Pipe.,FALSE,
 road,Road,terrain,none,,,,,,,,,,,,,,,0.8,0.5,Terrain Road.,FALSE,
 wire,Barbed wire,object,none,,,,,,,,,,,,,,,6,2,Player builds it. Infantry can cut through but very slowly; vehicles drive through with a small delay. Proposal values.,TRUE,40
 hedgehog,Anti-tank hedgehog,object,none,,,,,,,,,,,,,,,1.5,blocked,"Player builds it. Blocks vehicles, infantry walk around. Proposal values.",TRUE,80
+house,House,object,full,,,behind,0.45,0.45,0.85,1,0.6,0.6,0.85,1,,,,blocked,blocked,"One-storey rural house (2026-11-27). Blocks sight and movement. Protects whoever stands behind it. One defender can stand inside it (house_inside cover). Values are a proposal.",FALSE,
+house_inside,House (inside),object,none,,,inside,0.35,0.5,0.8,0.75,0.5,0.5,0.7,0.6,,,,blocked,blocked,"Cover of the one defender inside a house, from every side. Not placed on a map. Values are a proposal.",FALSE,
+ruin,Ruined house,object,full,,,behind,0.6,0.6,0.9,1,0.75,0.75,0.9,1,,,,2.5,blocked,"A house without a roof: infantry climbs through slowly, vehicles cannot pass. Values are a proposal.",FALSE,
+fence,Fence,object,full,,,behind,1,1,1,1,1,1,1,1,,,,1.5,2,"A wooden fence: hides what is behind it but gives no protection. Values are a proposal.",FALSE,
+sunflower,Sunflower field,terrain,soft,0.35,0.05,,1,1,1,1,1,1,1,1,,,,1.3,1.3,"Tall sunflowers (2026-11-27): hide who is inside and beyond, but give no cover against fire. Values are a proposal.",FALSE,
+burned_belt,Burned forest belt,terrain,soft,0.85,0.01,,1,1,1,1,1,1,1,1,,,,1.5,2,"A burned belt (2026-11-27): looks like a belt, hides almost nothing and gives no cover. Values are a proposal.",FALSE,
+stack,Hay stack,object,full,,,behind,0.5,0.5,0.85,1,0.7,0.7,0.85,1,,,,3,blocked,"Hay or straw stack (2026-11-28, map sheets #51). Like a spoil heap: cover behind it. Burning when hit is not in the Sim yet. Values are a proposal.",FALSE,
+shed,Field shed,object,full,,,behind,0.45,0.45,0.85,1,0.6,0.6,0.85,1,,,,blocked,blocked,"Field shed (2026-11-28, map sheets #51). Like a small house, but no defender can stand inside. Values are a proposal.",FALSE,
+silo,Silo or tower,object,full,,,behind,0.5,0.5,0.85,1,0.7,0.7,0.85,1,,,,blocked,blocked,"Silo, water tower or windmill (2026-11-28, map sheets #51). Like a rock; a landmark. A spotter on top is not in the Sim yet. Values are a proposal.",FALSE,
+camo_net,Camouflage net,object,soft,0.3,0.05,,1,1,1,1,1,1,1,1,,,,1,1,"Camouflage net (2026-11-28, map sheets #51). Hides who is under it and beyond, but gives no cover against fire. Player building is for later. Values are a proposal.",FALSE,
+dugout,Dugout,object,none,,,inside,0.8,0.5,0.5,0.8,0.7,0.5,0.4,0.35,,,,1.2,blocked,"Dugout (2026-11-28, map sheets #51): a trench with a roof. Stronger cover than a trench against indirect fire and aviation. Values are a proposal.",FALSE,

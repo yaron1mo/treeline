@@ -1,0 +1,21 @@
+field,wave,threat,cost,held_at_cost
+River crossing,1,50,100,8
+River crossing,2,65,700,8
+River crossing,3,70,700,8
+River crossing,4,95,700,8
+River crossing,5,110,700,8
+River crossing,6,135,500,8
+River crossing,7,160,1575,8
+River crossing,8,205,1375,8
+River crossing,9,245,2825,8
+River crossing,10,305,2975,8
+River crossing,11,365,7625,8
+River crossing,12,445,4625,8
+River crossing,13,545,4025,8
+River crossing,14,660,NaN,0
+River crossing,15,790,7825,8
+River crossing,16,960,NaN,0
+River crossing,17,1170,9825,8
+River crossing,18,1440,NaN,0
+River crossing,19,1750,NaN,0
+River crossing,20,2180,NaN,0

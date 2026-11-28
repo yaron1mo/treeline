@@ -1,0 +1,291 @@
+name: Model refit
+# Automatic refit of the wave cost model (2026-11-28, task mistral/model-refit, issue #40,
+# spec docs/agents/mistral.md section 12). When the game data changes (units, armour, stop,
+# battle rules, obstacles, fields), the cost model in tools/balance/model.json becomes old
+# and the wave generator (make_waves.py) would make waves with the wrong cost. This
+# workflow makes the probe waves (attacker types from units.csv), measures them on all
+# fields with the same shards as the Balance run, refits the model (tools/balance/fit_model.py),
+# checks it on the held-out mixed waves and, on pass, opens a pull request with the new
+# model.json and model_metrics.json from a branch model-refit/<run number>.
+# On fail: no pull request, the run fails with the metrics in the run summary.
+# Starts by hand (Actions > Model refit > Run workflow) and on a push to
+# codex/playable-steppe-patch-integration that changes one of the data files below.
+on:
+  workflow_dispatch:
+    inputs:
+      fields:
+        description: 'Field name parts, comma-separated (empty = all fields)'
+        required: false
+        default: ''
+      waves:
+        description: 'Probe waves, first-last (empty = all probe waves)'
+        required: false
+        default: ''
+  push:
+    branches: ['codex/playable-steppe-patch-integration']
+    paths:
+      - 'unity/Assets/Data/units.csv'
+      - 'unity/Assets/Data/armour.csv'
+      - 'unity/Assets/Data/stop.csv'
+      - 'unity/Assets/Data/battle_rules.csv'
+      - 'unity/Assets/Data/obstacles.csv'
+      - 'tools/balance/stop.csv'
+      - 'unity/Assets/Resources/Fields/**'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: model-refit
+  cancel-in-progress: false
+
+env:
+  MAX_BUDGET: '30000'
+  PROBE_FILE: tools/balance/probe_waves_refit.csv
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    outputs:
+      waves_file: ${{ steps.gen.outputs.waves_file }}
+      waves: ${{ steps.gen.outputs.waves }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Make the probe waves (attacker types from units.csv)
+        id: gen
+        run: |
+          python3 tools/balance/make_probe_waves.py unity/Assets/Data/units.csv "$PROBE_FILE"
+          echo "waves_file=$PROBE_FILE" >> "$GITHUB_OUTPUT"
+          echo "waves=$(( $(wc -l < "$PROBE_FILE") - 1 ))" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: probe-waves
+          path: ${{ env.PROBE_FILE }}
+          retention-days: 1
+
+  plan:
+    needs: probe
+    runs-on: ubuntu-latest
+    outputs:
+      shards: ${{ steps.plan.outputs.shards }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Mono C# compiler
+        run: sudo apt-get update && sudo apt-get install -y mono-mcs
+      - name: Build the tools
+        run: |
+          mkdir -p bin
+          mcs -langversion:latest -nowarn:0649,0169,0414 -out:bin/wave-cost.exe unity/Assets/Scripts/Sim/*.cs tools/balance/Routes.cs tools/balance/WaveCost.cs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bin
+          path: bin
+          retention-days: 1
+      - uses: actions/download-artifact@v4
+        with:
+          name: probe-waves
+          path: tools/balance
+      - name: Plan the shards (field and a range of waves; at most 200 jobs)
+        id: plan
+        env:
+          FIELDS: ${{ github.event.inputs.fields }}
+          WAVES: ${{ github.event.inputs.waves }}
+          WAVES_FILE: ${{ needs.probe.outputs.waves_file }}
+        run: |
+          python3 - <<'EOF' >> "$GITHUB_OUTPUT"
+          import csv, glob, json, math, os
+          names = []
+          for p in sorted(glob.glob("unity/Assets/Resources/Fields/*.json")):
+              n = json.load(open(p, encoding="utf-8"))["name"]
+              if n != "Vision test":
+                  names.append(n)
+          want = [s.strip() for s in os.environ.get("FIELDS", "").split(",") if s.strip()]
+          if want:
+              names = [n for n in names if any(w in n for w in want)]
+          count = max(int(r["wave"]) for r in csv.DictReader(open(os.environ["WAVES_FILE"], encoding="utf-8")))
+          first, last = 1, count
+          if os.environ.get("WAVES", "").strip():
+              a, b = os.environ["WAVES"].split("-")
+              first, last = int(a), int(b)
+          chunk = max(1, math.ceil(len(names) * (last - first + 1) / 200))
+          shards = [{"field": n, "first": w, "last": min(last, w + chunk - 1)} for n in names for w in range(first, last + 1, chunk)]
+          print("shards=" + json.dumps(shards))
+          EOF
+
+  wave-cost:
+    needs: [probe, plan]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(needs.plan.outputs.shards) }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Mono runtime
+        run: sudo apt-get update && sudo apt-get install -y mono-runtime
+      - uses: actions/download-artifact@v4
+        with:
+          name: bin
+          path: bin
+      - uses: actions/download-artifact@v4
+        with:
+          name: probe-waves
+          path: tools/balance
+      - name: Measure the probe waves on one field
+        env:
+          WAVES_FILE: ${{ needs.probe.outputs.waves_file }}
+        run: mono bin/wave-cost.exe . tools/balance/stop.csv "${{ matrix.shard.field }}" ${{ matrix.shard.first }} ${{ matrix.shard.last }} > out.csv
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wave-cost-${{ strategy.job-index }}
+          path: out.csv
+          retention-days: 1
+
+  fit:
+    needs: [probe, wave-cost]
+    if: needs.wave-cost.result == 'success'
+    runs-on: ubuntu-latest
+    outputs:
+      verdict: ${{ steps.check.outputs.verdict }}
+      pooled: ${{ steps.check.outputs.pooled }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: probe-waves
+          path: tools/balance
+      - uses: actions/download-artifact@v4
+        with:
+          path: results
+          pattern: wave-cost-*
+      - name: Merge the shard results
+        run: |
+          mkdir -p merged
+          python3 - <<'PY'
+          import csv, glob, os
+          rows = []
+          for p in sorted(glob.glob("results/wave-cost-*/out.csv")):
+              with open(p, newline="", encoding="utf-8") as fh:
+                  rows += list(csv.DictReader(fh))
+          if not rows:
+              raise SystemExit("no wave-cost results")
+          with open("merged/wave-cost.csv", "w", newline="", encoding="utf-8") as fh:
+              w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()), lineterminator="\n")
+              w.writeheader()
+              w.writerows(rows)
+          held = sum(1 for r in rows if r["cost"] not in ("NaN", ""))
+          print(f"{len(rows)} measured wave costs, {held} held")
+          PY
+      - name: Fit the model (fixed seed, held-out tags mixed and mixed-test2)
+        run: |
+          mkdir -p refit
+          python3 tools/balance/fit_model.py . "$PROBE_FILE" merged/wave-cost.csv refit
+      - uses: actions/upload-artifact@v4
+        with:
+          name: model
+          path: refit
+          retention-days: 7
+      - name: Check (at least 80% within 20% on every field, held-out mixed waves)
+        id: check
+        run: |
+          python3 - <<'PY'
+          import json, os, sys
+          m = json.load(open("refit/model_metrics.json"))
+          per = m["per_field"]
+          ok = bool(per) and all(v["n"] > 0 and v["within_20pct"] >= 0.80 for v in per.values())
+          lines = ["## Model refit check (held-out mixed waves)", "",
+                   "| Field | Waves | Mean error | Within 20% |", "|---|---|---|---|"]
+          for f, v in per.items():
+              me = "-" if v["mean_error"] is None else f"{100 * v['mean_error']:.1f}%"
+              lines.append(f"| {f} | {v['n']} | {me} | {100 * v['within_20pct']:.1f}% |")
+          p = m["pooled"]
+          me = "-" if p["mean_error"] is None else f"{100 * p['mean_error']:.1f}%"
+          lines += ["", f"Pooled: {p['n']} waves, {me} mean error, {100 * p['within_20pct']:.1f}% within 20%.",
+                    "", f"Verdict: {'pass' if ok else 'fail'} (rule: at least 80% within 20% on every field)."]
+          text = "\n".join(lines) + "\n"
+          print(text)
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as fh:
+              fh.write(text)
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
+              fh.write("verdict=" + ("pass" if ok else "fail") + "\n")
+              fh.write("pooled=" + json.dumps(p, separators=(",", ":")) + "\n")
+          if not ok:
+              sys.exit(1)
+          PY
+
+  pr:
+    needs: fit
+    if: needs.fit.outputs.verdict == 'pass'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: model
+          path: refit
+      - name: Open the pull request with the new model
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_NUMBER: ${{ github.run_number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin codex/playable-steppe-patch-integration
+          BR="model-refit/$RUN_NUMBER"
+          git checkout -b "$BR" origin/codex/playable-steppe-patch-integration
+          OLD=$(cat tools/balance/model_metrics.json 2>/dev/null || true)
+          if [ -z "$OLD" ]; then OLD=$(cat docs/balance/mistral/wave-generator-2/metrics.json 2>/dev/null || echo '{}'); fi
+          cp refit/model.json refit/model_metrics.json tools/balance/
+          git add tools/balance/model.json tools/balance/model_metrics.json
+          git commit -m "Model refit $RUN_NUMBER: automatic refit of the wave cost model (Generated by the Model refit workflow, .github/workflows/model-refit.yml)"
+          git push --force origin "$BR"
+          TITLE=$(python3 -c "import json; p = json.load(open('refit/model_metrics.json'))['pooled']; print('Model refit $RUN_NUMBER: %.0f%% mean error, %.0f%% within 20%%' % (100 * p['mean_error'], 100 * p['within_20pct']))")
+          BODY=$(OLD="$OLD" RUN_URL="$RUN_URL" python3 - refit/model_metrics.json <<'PY'
+          import json, os, sys
+          new = json.load(open(sys.argv[1]))
+          def norm(raw):
+              try:
+                  m = json.loads(raw)
+              except Exception:
+                  return None
+              if "per_field" in m:
+                  return m
+              s = m.get("summary")
+              if isinstance(s, dict):
+                  per = {f: {"n": v["n"], "mean_error": v["mape"], "within_20pct": v["within_20pct"]}
+                         for f, v in s.items() if isinstance(v, dict) and "mape" in v and f != "pooled"}
+                  p = s.get("pooled") or {}
+                  return {"per_field": per, "pooled": {"n": p.get("n"), "mean_error": p.get("mape"), "within_20pct": p.get("within_20pct")}}
+              return None
+          old = norm(os.environ.get("OLD", "")) or {"per_field": {}, "pooled": {}}
+          def cell(v, key):
+              x = (v or {}).get(key)
+              return "-" if x is None else f"{100 * x:.1f}%"
+          lines = [f"Automatic refit of tools/balance/model.json by the Model refit workflow (run {os.environ['RUN_URL']}).",
+                   "", "Held-out mixed waves (tags mixed, mixed-test2), old model vs new model:", "",
+                   "| Field | Old mean error | Old within 20% | New mean error | New within 20% |",
+                   "|---|---|---|---|---|"]
+          for f in new["per_field"]:
+              o = old["per_field"].get(f, {})
+              n = new["per_field"][f]
+              lines.append(f"| {f} | {cell(o, 'mean_error')} | {cell(o, 'within_20pct')} | {cell(n, 'mean_error')} | {cell(n, 'within_20pct')} |")
+          po, pn = old.get("pooled", {}), new["pooled"]
+          lines += ["", f"Pooled: old {cell(po, 'mean_error')} mean error, {cell(po, 'within_20pct')} within 20% -> "
+                    f"new {cell(pn, 'mean_error')} mean error, {cell(pn, 'within_20pct')} within 20% ({pn['n']} waves).",
+                    "", "Check: pass when at least 80% of the held-out mixed waves are within 20% on every field.",
+                    "The model was fitted by tools/balance/fit_model.py on the probe waves of this run "
+                    "(make_probe_waves.py, attacker types from units.csv), measured on all fields with MAX_BUDGET 30000."]
+          print("\n".join(lines))
+          PY
+          )
+          if [ -n "$(gh pr list --head "$BR" --json number --jq 'length')" ] && [ "$(gh pr list --head "$BR" --json number --jq 'length')" != "0" ]; then
+            N=$(gh pr list --head "$BR" --json number --jq '.[0].number')
+            gh pr comment "$N" --body "$BODY"
+          else
+            gh pr create --repo "$GITHUB_REPOSITORY" --base codex/playable-steppe-patch-integration --head "$BR" --title "$TITLE" --body "$BODY"
+          fi

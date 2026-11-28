@@ -5,7 +5,8 @@
 //   saver    - before each wave buys only what that wave needs, keeps the rest of the money
 //   greedy   - the same, then spends everything left on machine gunners and rifle squads
 //   reactive - waits for the wave, sees which entry point it uses, then places (defenders run in) as saver does
-// Compile: mcs -langversion:latest -out:playtest-run.exe unity/Assets/Scripts/Sim/*.cs tools/balance/PlaytestRun.cs
+// Houses near a route and hill tops that see it are scored as candidate spots first (Routes.TerrainSpots, issue #49).
+// Compile: mcs -langversion:latest -out:playtest-run.exe unity/Assets/Scripts/Sim/*.cs tools/balance/Routes.cs tools/balance/PlaytestRun.cs
 // Run:     mono playtest-run.exe <data root> [seeds] [style] [stop table csv]
 //   stop table: defender,attacker,stopped (units of that attacker one defender stops in a run)
 using System;
@@ -49,9 +50,13 @@ static class PlaytestRun
             if (field.Name == "Vision test") continue;
             for (int seed = 1; seed <= seeds; seed++)
             {
-                var b = new Battle(new NavGrid(field, obstacles), units, rules.StartBudget, new VisionMap(field, obstacles), armour,
+                var grid = new NavGrid(field, obstacles);
+                var vision = new VisionMap(field, obstacles);
+                var b = new Battle(grid, units, rules.StartBudget, vision, armour,
                     Environment.GetEnvironmentVariable("PLAYTEST_LINE") != null ? float.Parse(Environment.GetEnvironmentVariable("PLAYTEST_LINE"), CultureInfo.InvariantCulture) : -1f, seed, rules);
                 b.PlacementMinY = rules.PlacementZoneStart * field.Height;
+                pvision = vision;
+                lanes = Routes.Of(field.Name, grid, field.Height * 0.55f, field.Height * 0.9f);
                 var rng = new Random(seed);
                 int heldWaves = 0;
                 float spent = 0f;
@@ -96,6 +101,9 @@ static class PlaytestRun
         }
     }
 
+    static List<Routes.Lane> lanes;
+    static VisionMap pvision;
+
     static float f0(Field f) => f.Height * 0.3f;   // still far up the field: time to run in
 
     static float Stop(string defender, string attacker) =>
@@ -131,9 +139,9 @@ static class PlaytestRun
         }
         float spent = 0f;
         // Every entry point needs someone who can see it (no recon: sight is only 30-65 m).
-        var lanes = new List<float>();
-        if (lane.HasValue) lanes.Add(lane.Value); else lanes.AddRange(f.Spawns);
-        foreach (var x in lanes) spent += Cover(b, units, x, f, rng);
+        var laneXs = new List<float>();
+        if (lane.HasValue) laneXs.Add(lane.Value); else foreach (var l in lanes) laneXs.Add(l.X);
+        foreach (var x in laneXs) spent += Cover(b, units, x, f, rng);
         var have = new Dictionary<string, int>();
         foreach (var d in b.Defenders) { have.TryGetValue(d.Def.Id, out int h); have[d.Def.Id] = h + 1; }
         bool wantRecon = wave >= 3 && b.Budget >= 450f;   // recon lets long guns cover both lanes
@@ -149,7 +157,7 @@ static class PlaytestRun
             // Safety: twice what 1 v 1 says (two lanes, no trench, mixed waves); with a known lane, 1.5 times.
             float safety = lane.HasValue ? 1.5f : 2f;
             int want = (int)Math.Ceiling(kv.Value * safety - 0.15f);
-            if (!lane.HasValue && f.Spawns.Count > 1) want = Math.Max(want, f.Spawns.Count);
+            if (!lane.HasValue && lanes.Count > 1) want = Math.Max(want, lanes.Count);
             for (int i = h; i < want; i++)
             {
                 float c = Place(b, units, kv.Key, f, lane, rng);
@@ -195,20 +203,29 @@ static class PlaytestRun
     }
 
     // Somewhere in front of an entry point (the seen lane if known), at a random depth in the placing zone.
+    // Houses and hill tops that suit this type go first (Routes.TerrainSpots, issue #49).
     static float Place(Battle b, UnitTable units, string id, Field f, float? lane, Random rng)
     {
         var def = units.Get(id);
-        if (b.Budget < def.BuildCost) return 0f;
+        float cost = b.CostOf(id);
+        if (b.Budget < cost) return 0f;
+        var spots = Routes.TerrainSpots(f.Name, f, pvision, lanes, def, f.Height * 0.55f, f.Height * 0.9f);
+        foreach (var s in spots)
+        {
+            if (s.Score <= Routes.LaneScore) break;   // not worth it for this type: use the lane points below
+            if (s.House >= 0 && b.HouseOccupant(s.House) >= 0) continue;
+            if (b.TryPlace(id, s.X, s.Y, out _, out _)) return cost;
+        }
         for (int tries = 0; tries < 20; tries++)
         {
-            float x;
-            if (lane.HasValue) x = lane.Value;
-            else if (f.Spawns.Count > 0) x = f.Spawns[rng.Next(f.Spawns.Count)];
-            else x = f.Width * (0.25f + 0.5f * (float)rng.NextDouble());
-            x += (float)(rng.NextDouble() * 2 - 1) * 30f;
-            x = Math.Max(4f, Math.Min(f.Width - 4f, x));
-            float y = f.Height * (0.55f + 0.35f * (float)rng.NextDouble());
-            if (b.TryPlace(id, x, y, out _, out _)) return def.BuildCost;
+            float x, y;
+            if (lane.HasValue)
+            {
+                x = Math.Max(12f, Math.Min(f.Width - 12f, lane.Value + (float)(rng.NextDouble() * 2 - 1) * 30f));
+                y = f.Height * (0.55f + 0.35f * (float)rng.NextDouble());
+            }
+            else Routes.Near(lanes[rng.Next(lanes.Count)], rng, f.Width, f.Height * 0.55f, f.Height * 0.9f, out x, out y);
+            if (b.TryPlace(id, x, y, out _, out _)) return cost;
         }
         return 0f;
     }

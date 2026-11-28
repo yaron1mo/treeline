@@ -13,6 +13,8 @@ namespace Treeline.Game
     /// Treeline.Render and Treeline.UI. Press Play in any scene; it creates itself. Set <see cref="Enabled"/> to false
     /// to get the old debug view back.
     /// Every wave is also written to playtest-log.csv in Application.persistentDataPath for the balance work.
+    /// The run is a <see cref="Run"/>: fixed steps and a record of the player's actions, so "Back to wave N" replays it
+    /// to the start of an earlier wave (2026-11-17).
     /// </summary>
     public sealed class PlaytestView : MonoBehaviour
     {
@@ -35,6 +37,7 @@ namespace Treeline.Game
         readonly List<string> fieldFiles = new List<string>();   // Resources/Fields names, for the art layer
         GameObject art;            // Treeline.Render.BattlefieldPreview, if present: the ground is drawn by it
         bool overArt;
+        bool spritesBound;
         int current;
         UnitTable units;
         ObstacleTable obstacles;
@@ -47,16 +50,21 @@ namespace Treeline.Game
         // Run
         NavGrid grid;
         VisionMap vision;
-        Battle battle;
-        int wavesHeld;        // waves the defence has held
-        bool runOver;
+        Run run;              // the run: fixed steps, recorded actions, rewind (Treeline.Sim.Run)
+        Battle battle => run?.Battle;
+        int wavesHeld => run != null ? run.WavesHeld : 0;
+        bool runOver => run != null && run.Over;
+        int rewindTo = 1;     // wave chosen for "Back to wave"
+        float stepClock;      // real time not yet simulated
         string message = "";
         float messageUntil;
         int simSpeed = 1;
         bool paused;
 
         // Input modes
-        string placing;       // unit id to place on the next click, or null
+        string placing;       // unit id to place on the next click, TrenchId to dig, or null
+        const string TrenchId = "#trench";
+        int trenchesDrawn;
         Defender selected;
         enum ClickMode { Normal, Move, Waypoint }
         ClickMode mode;
@@ -122,16 +130,25 @@ namespace Treeline.Game
         void NewRun()
         {
             var field = fields[current];
-            grid = new NavGrid(field, obstacles);
-            vision = obstacles != null ? new VisionMap(field, obstacles) : null;
-            battle = new Battle(grid, units, rules.StartBudget, vision, armour, -1f, System.Environment.TickCount, rules);
-            battle.PlacementMinY = rules.PlacementZoneStart * field.Height;
-            wavesHeld = 0;
-            runOver = false;
+            int seed = System.Environment.TickCount;
+            float minY = rules.PlacementZoneStart * field.Height;
+            // Every rewind builds the battle again from the same field, data and seed (a fresh grid: wrecks go).
+            run = new Run(() =>
+            {
+                grid = new NavGrid(field, obstacles);
+                vision = obstacles != null ? new VisionMap(field, obstacles) : null;
+                var b = new Battle(grid, units, rules.StartBudget, vision, armour, -1f, seed, rules);
+                b.PlacementMinY = minY;
+                return b;
+            }, plan, rules);
+            run.WaveEnded += OnWaveEnded;
+            rewindTo = 1;
+            stepClock = 0f;
             placing = null;
             selected = null;
             mode = ClickMode.Normal;
             paused = false;
+            spritesBound = false; // a new Battle instance needs a new visual binding
             ShowArt();
             BuildTerrain();
             FitCamera();
@@ -145,7 +162,17 @@ namespace Treeline.Game
             if (art == null) art = GameObject.Find("Steppe Patch Battlefield Preview");
             bool was = overArt;
             overArt = art != null;
-            if (art != null) art.SendMessage("ShowField", fieldFiles[current], SendMessageOptions.DontRequireReceiver);
+            if (art != null)
+            {
+                art.SendMessage("ShowField", fieldFiles[current], SendMessageOptions.DontRequireReceiver);
+                // Render depends on Game; Game intentionally uses this message bridge.
+                GameObject artUnits = GameObject.Find("Unit sprites");
+                if (artUnits != null && battle != null)
+                {
+                    artUnits.SendMessage("BindBattle", battle, SendMessageOptions.DontRequireReceiver);
+                    spritesBound = true;
+                }
+            }
             if (overArt != was && grid != null) BuildTerrain();
         }
 
@@ -154,7 +181,8 @@ namespace Treeline.Game
         void Update()
         {
             if (battle == null) return;
-            if (!overArt && Time.frameCount % 30 == 0) ShowArt();   // the art layer may start after us
+            if ((!overArt || !spritesBound) && Time.frameCount % 15 == 0)
+                ShowArt(); // art and unit layer may awake after the Game playtest
             if (selected != null && !selected.Alive) { selected = null; mode = ClickMode.Normal; }
             if (selected != null)
             {
@@ -164,49 +192,52 @@ namespace Treeline.Game
             }
             if (pendingClick.HasValue) { var c = pendingClick.Value; pendingClick = null; OnMapClick(c.x, c.y); }
 
-            if (battle.Phase == BattlePhase.Round && battle.Outcome == BattleOutcome.Ongoing && !paused)
+            if (battle.Phase == BattlePhase.Round && !runOver && !paused)
             {
-                // Fixed small steps so fast-forward gives the same result as real time.
-                float dt = Mathf.Min(Time.deltaTime, 0.05f);
-                int steps = simSpeed * 3;
-                for (int i = 0; i < steps; i++) battle.Step(dt / 3f);
-            }
-
-            if (!runOver && battle.Phase == BattlePhase.Round)
-            {
-                if (battle.Outcome == BattleOutcome.Lost)
+                // Fixed steps (Run.Dt), so a rewind replays exactly what happened; fast-forward runs more of them.
+                stepClock = Mathf.Min(stepClock + Time.deltaTime * simSpeed, 0.25f * simSpeed);
+                while (stepClock >= Run.Dt && battle.Phase == BattlePhase.Round && !runOver)
                 {
-                    runOver = true;
-                    LogWave("lost");
-                    Say($"The line is broken on wave {battle.WaveNumber}. Restart to try again.", 999f);
-                }
-                else if (battle.Outcome == BattleOutcome.Won && battle.Attackers.Count == 0 && battle.Pending == 0)
-                {
-                    wavesHeld = battle.WaveNumber;
-                    LogWave("held");
-                    if (wavesHeld >= plan.WaveCount)
-                    {
-                        runOver = true;
-                        Say($"Victory: all {plan.WaveCount} waves held, line {battle.LineDamage:0.#} / {battle.LineHealth:0}.", 999f);
-                    }
-                    else
-                    {
-                        float reward = battle.CollectRewards();
-                        battle.AddBudget(rules.WaveIncome);
-                        battle.BackToPreparation();
-                        Say($"Wave {wavesHeld} held. +{rules.WaveIncome + reward:0} money ({reward:0} for kills). Get ready for wave {wavesHeld + 1}.", 6f);
-                    }
+                    run.Tick();
+                    stepClock -= Run.Dt;
                 }
             }
+            else stepClock = 0f;
             Draw();
+        }
+
+        void OnWaveEnded(int wave, string result)
+        {
+            if (run.Replaying) return;
+            LogWave(result);
+            if (result == "lost")
+                Say($"The line is broken on wave {wave}. Go back to an earlier wave or restart.", 999f);
+            else if (run.Won)
+                Say($"Victory: all {plan.WaveCount} waves held, line {battle.LineDamage:0.#} / {battle.LineHealth:0}.", 999f);
+            else
+                Say($"Wave {wave} held. +{rules.WaveIncome + run.LastReward:0} money ({run.LastReward:0} for kills). Get ready for wave {wave + 1}.", 6f);
+            rewindTo = wave;   // "Back to wave" offers this wave again by default (retry it)
+        }
+
+        void Rewind(int wave)
+        {
+            if (!run.RewindTo(wave)) { Say($"Cannot go back to wave {wave}.", 3f); return; }
+            selected = null;
+            placing = null;
+            mode = ClickMode.Normal;
+            paused = false;
+            stepClock = 0f;
+            spritesBound = false;   // a new Battle instance needs a new visual binding
+            ShowArt();
+            BuildTerrain();
+            Say($"Back before wave {wave}: money {battle.Budget:0}, {battle.Defenders.Count} defenders, as they were.", 6f);
         }
 
         void StartNextWave()
         {
             int next = battle.WaveNumber + 1;
             if (next > plan.WaveCount || runOver) return;
-            plan.Queue(battle, next);
-            battle.StartRound();
+            run.StartNextWave();
             waveStartLine = battle.LineDamage;
             waveStartKills = Kills();
             placing = null;
@@ -257,25 +288,31 @@ namespace Treeline.Game
             if (battle == null || runOver) return;
             if (x < 0f || y < 0f || x > grid.Width || y > grid.Height) return;
 
+            if (placing == TrenchId)
+            {
+                if (run.Dig(x, y, out string why)) { if (battle.Budget < battle.TrenchCost) placing = null; }
+                else Say(why + ".", 3f);
+                return;
+            }
             if (placing != null)
             {
-                if (battle.TryPlace(placing, x, y, out var d, out string why))
+                if (run.Place(placing, x, y, out var d, out string why))
                 {
                     selected = d;
-                    if (!units.TryGet(placing, out var def) || battle.Budget < def.BuildCost) placing = null;
+                    if (!units.TryGet(placing, out var def) || battle.Budget < battle.CostOf(placing)) placing = null;
                 }
                 else Say(why + ".", 3f);
                 return;
             }
             if (selected != null && mode == ClickMode.Move)
             {
-                if (!battle.TryMove(selected.Id, x, y, out string why)) Say(why + ".", 3f);
+                if (!run.Move(selected.Id, x, y, out string why)) Say(why + ".", 3f);
                 mode = ClickMode.Normal;
                 return;
             }
             if (selected != null && mode == ClickMode.Waypoint)
             {
-                if (!battle.TrySetDroneWaypoint(selected.Id, x, y, out string why)) Say(why + ".", 3f);
+                if (!run.SetWaypoint(selected.Id, x, y, out string why)) Say(why + ".", 3f);
                 mode = ClickMode.Normal;
                 return;
             }
@@ -333,6 +370,17 @@ namespace Treeline.Game
                     if (y < zone) c = Color.Lerp(c, Color.black, 0.35f);   // no placing up here
                     terrain[Index(x, y)] = c;
                 }
+            // Dug trenches (Yaroslav 2026-11-17): drawn in both modes, the art does not know about them.
+            trenchesDrawn = battle.Trenches.Count;
+            foreach (var t in battle.Trenches)
+                for (float ty = t.Y - t.RadiusM; ty <= t.Y + t.RadiusM; ty += 1f)
+                    for (float tx = t.X - t.RadiusM; tx <= t.X + t.RadiusM; tx += 1f)
+                    {
+                        if (tx < 0f || ty < 0f || tx >= W || ty >= H) continue;
+                        float dx = tx - t.X, dy = ty - t.Y, d2 = dx * dx + dy * dy, r2 = t.RadiusM * t.RadiusM;
+                        if (d2 > r2) continue;
+                        terrain[Index(tx, ty)] = d2 > r2 * 0.55f ? new Color32(150, 120, 80, 255) : new Color32(85, 62, 40, 255);
+                    }
             // Our line at the bottom.
             for (int px = 0; px < W; px++) { terrain[Index(px, H - 0.5f)] = new Color32(60, 130, 235, 255); terrain[Index(px, H - 1.5f)] = new Color32(60, 130, 235, 255); }
         }
@@ -340,7 +388,7 @@ namespace Treeline.Game
         void Draw()
         {
             if (terrain == null) return;
-            if (grid.Version != terrainVersion) BuildTerrain();   // a wreck appeared
+            if (grid.Version != terrainVersion || battle.Trenches.Count != trenchesDrawn) BuildTerrain();   // a wreck or a trench appeared
             System.Array.Copy(terrain, pixels, pixels.Length);
 
             // Selected defender: its range (white) and sight (pale) rings, and an FPV's search point.
@@ -368,22 +416,26 @@ namespace Treeline.Game
                 if (age < 4f) Dashed(l.KillerX, l.KillerY, l.X, l.Y, new Color32(255, 60, 60, 255));
                 XMark(l.X, l.Y, 3, new Color32(255, 40, 40, 255));
             }
-            foreach (var a in battle.Attackers)
+            if (!spritesBound)
             {
-                Color32 c;
-                int r;
-                if (a.Airborne) { c = a.Def.Id == "fpv" ? new Color32(220, 60, 220, 255) : new Color32(255, 120, 255, 255); r = a.Def.Id == "fpv" ? 1 : 3; }
-                else if (a.Class == UnitClass.Vehicle) { c = a.Dismounting ? new Color32(255, 230, 60, 255) : new Color32(255, 140, 40, 255); r = 3; }
-                else { c = new Color32(235, 60, 50, 255); r = 1; }
-                Block(a.X, a.Y, r, c);
+                // Fallback for scenes without the new Render layer.
+                foreach (var a in battle.Attackers)
+                {
+                    Color32 c;
+                    int r;
+                    if (a.Airborne) { c = a.Def.Id == "fpv" ? new Color32(220, 60, 220, 255) : new Color32(255, 120, 255, 255); r = a.Def.Id == "fpv" ? 1 : 3; }
+                    else if (a.Class == UnitClass.Vehicle) { c = a.Dismounting ? new Color32(255, 230, 60, 255) : new Color32(255, 140, 40, 255); r = 3; }
+                    else { c = new Color32(235, 60, 50, 255); r = 1; }
+                    Block(a.X, a.Y, r, c);
+                }
+                foreach (var d in battle.Defenders)
+                {
+                    var c = d == selected ? new Color32(255, 255, 255, 255)
+                        : d.State == DefenderState.Running ? new Color32(140, 235, 245, 255) : new Color32(60, 130, 235, 255);
+                    Block(d.X, d.Y, 2, c);
+                }
+                foreach (var dr in battle.Drones) Block(dr.X, dr.Y, 1, new Color32(255, 255, 255, 255));
             }
-            foreach (var d in battle.Defenders)
-            {
-                var c = d == selected ? new Color32(255, 255, 255, 255)
-                    : d.State == DefenderState.Running ? new Color32(140, 235, 245, 255) : new Color32(60, 130, 235, 255);
-                Block(d.X, d.Y, 2, c);
-            }
-            foreach (var dr in battle.Drones) Block(dr.X, dr.Y, 1, new Color32(255, 255, 255, 255));
             foreach (var pr in battle.Projectiles)
             {
                 if (pr.Kind == ProjectileKind.Shell) Cross(pr.ToX, pr.ToY, 2, new Color32(140, 20, 20, 255));
@@ -575,6 +627,17 @@ namespace Treeline.Game
                     GUILayout.EndHorizontal();
                 }
             }
+            // Back to the start of an earlier wave (or retry the one lost): the run is played again from its record.
+            int maxBack = Mathf.Min(wavesHeld + 1, plan.WaveCount);
+            if (maxBack >= 1 && (wavesHeld >= 1 || runOver))
+            {
+                rewindTo = Mathf.Clamp(rewindTo, 1, maxBack);
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("<", GUILayout.Width(26), GUILayout.Height(26))) rewindTo = Mathf.Max(1, rewindTo - 1);
+                if (GUILayout.Button($"Back to wave {rewindTo}", GUILayout.Height(26))) Rewind(rewindTo);
+                if (GUILayout.Button(">", GUILayout.Width(26), GUILayout.Height(26))) rewindTo = Mathf.Min(maxBack, rewindTo + 1);
+                GUILayout.EndHorizontal();
+            }
             if (GUILayout.Button("Restart", GUILayout.Height(26))) NewRun();
 
             // Build menu.
@@ -582,11 +645,23 @@ namespace Treeline.Game
             GUILayout.Label(placing != null ? "Click the map to place (right click: stop)" : "Defenders (click, then click the map):", small);
             foreach (var d in defenderTypes)
             {
-                GUI.enabled = !runOver && battle.Budget >= d.BuildCost;
+                float cost = battle.CostOf(d.Id);
+                GUI.enabled = !runOver && battle.Budget >= cost;
                 bool on = placing == d.Id;
-                if (GUILayout.Toggle(on, $"{d.Name}  —  {d.BuildCost:0}", "Button") != on)
+                if (GUILayout.Toggle(on, $"{d.Name}  —  {cost:0}", "Button") != on)
                 {
                     placing = on ? null : d.Id;
+                    selected = null;
+                    mode = ClickMode.Normal;
+                }
+            }
+            if (!float.IsPositiveInfinity(battle.TrenchCost))
+            {
+                GUI.enabled = !runOver && battle.Budget >= battle.TrenchCost;
+                bool onT = placing == TrenchId;
+                if (GUILayout.Toggle(onT, $"Trench (cover)  —  {battle.TrenchCost:0}", "Button") != onT)
+                {
+                    placing = onT ? null : TrenchId;
                     selected = null;
                     mode = ClickMode.Normal;
                 }
@@ -602,10 +677,10 @@ namespace Treeline.Game
                 if (selected.State == DefenderState.Running) GUILayout.Label("Running in from our line...", small);
                 GUILayout.BeginHorizontal();
                 if (GUILayout.Button(mode == ClickMode.Move ? "Click the map..." : "Move")) mode = ClickMode.Move;
-                float refund = d.BuildCost * rules.SellRefund;
+                float refund = selected.PaidCost * rules.SellRefund;
                 if (GUILayout.Button($"Sell +{refund:0}"))
                 {
-                    battle.TrySell(selected.Id, rules.SellRefund, out _);
+                    run.Sell(selected.Id, out _);
                     selected = null;
                     mode = ClickMode.Normal;
                 }
@@ -617,9 +692,16 @@ namespace Treeline.Game
 
             // Legend.
             GUILayout.Space(8);
-            GUILayout.Label("Blue: ours (light blue: running in, white: selected). Red dots: infantry. Orange: vehicles " +
-                "(yellow: letting troops out). Pink: aircraft, purple: enemy FPV. White dots: our drones. Lines: our shots " +
-                "orange (hit) / grey (miss), theirs red / dark red. Red cross: one of ours fell, dashed line: from whom. Dark red cross: where a shell lands. Dark side strips: closed to everyone. Blue-grey: impassable.", small);
+            if (spritesBound)
+                GUILayout.Label("STEPPE PATCH: actual units use natural camouflage; small armbands mark sides. " +
+                    "Click a defender to view range; lines are live shots: ours orange (hit) / grey (miss), theirs red / dark red. " +
+                    "Red cross: one of ours fell, dashed line: from whom. Dark side strips: closed to everyone. " +
+                    "Explosions, smoke and dust follow real battle state.", small);
+            else
+                GUILayout.Label("Blue: ours (light blue: running in, white: selected). Red dots: infantry. Orange: vehicles " +
+                    "(yellow: letting troops out). Pink: aircraft, purple: enemy FPV. White dots: our drones. Lines: our shots " +
+                    "orange (hit) / grey (miss), theirs red / dark red. Red cross: one of ours fell, dashed line: from whom. " +
+                    "Dark red cross: where a shell lands. Dark side strips: closed to everyone. Blue-grey: impassable.", small);
             GUILayout.Label("Log: " + logPath, small);
             GUILayout.EndScrollView();
             GUILayout.EndArea();

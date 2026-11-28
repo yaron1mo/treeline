@@ -1,6 +1,6 @@
 # AGENTS.md — rules for every agent working in this repo
 
-Read this file first. It applies to Claude, Codex and any other agent. The human owner is Yaroslav (analyst, not a developer): explain in plain words, keep changes small and reviewable.
+Read this file first. It applies to Claude, Codex, Mistral and any other agent. The human owner is Yaroslav (analyst, not a developer): explain in plain words, keep changes small and reviewable.
 
 ## The game
 
@@ -28,6 +28,22 @@ Read this file first. It applies to Claude, Codex and any other agent. The human
 
 **Who owns what (decided 2026-11-05, Yaroslav).** Claude: units and every in-game process (the battle: simulation, rules, balance, data tables for units and obstacles, analytics). Codex / ChatGPT: everything that is not the battle: story, maps and their content, game modes (campaign, endless, weekly challenges), commander selection and progression, menus, easter eggs and similar. Shared: the economy of progression and monetisation, decided with Yaroslav.
 
+**Team roles (decided 2026-11-23, Yaroslav).**
+
+| Who | Role | Does |
+| --- | --- | --- |
+| Yaroslav | CEO, founder, creative director | Vision, design decisions, approves targets, merges pull requests |
+| Claude | CTO, co-founder | Architecture, `Sim` core, measuring tools, task specs for Mistral, code review, analysis, reports to Yaroslav |
+| Codex / ChatGPT | Chief Design Officer | Visuals (`Render`, UI, art), works on its own |
+| Mistral | Developer, works to specs from Claude | Large, repeated work: balance and wave loops. Rules: `docs/agents/mistral.md` |
+
+**Notion (decided 2026-11-24).** Plan: Notion page "10 — Strategy & Roadmap". Work: the Tasks database (epics with subtasks, Milestone "Release 10.12").
+1. When you start a task, set Status to "In progress".
+2. After each step, add a comment to the task: date, what you did, the PR or run link.
+3. When the task is done, set "Needs verification", put the link in Evidence and the date in Last checked.
+4. If you are blocked, set "Blocked" and write the reason in a comment.
+5. Only Yaroslav sets "Done". Do not make tasks for small steps; use comments.
+
 Ownership is a default, not a wall. Either agent may edit anything, but **say so in the log** when touching the other's area.
 
 ## The contract between layers
@@ -41,7 +57,7 @@ Ownership is a default, not a wall. Either agent may edit anything, but **say so
 
 ## Work rules
 
-1. **Branches**: `claude/<topic>` and `codex/<topic>`. Never both agents on the same branch. Merge to `main` through a pull request; Yaroslav approves.
+1. **Branches**: `claude/<topic>`, `codex/<topic>` and `mistral/<topic>`. Never two agents on the same branch. A push to `mistral/**` starts the `Balance run` workflow. Merge to `main` through a pull request; Yaroslav approves.
 2. **Logs are mandatory.** Every change that is more than a typo gets a dated line in `docs/log/CHANGELOG.md` (newest on top): `YYYY-MM-DD — [agent] area — what changed and why`. Story, names, texts and setting changes **also** go in `docs/story/log.md` with the old and new wording. Never rewrite old log entries; add new ones.
 3. **Unity files**: commit every `.meta` file together with its asset. Never commit `Library/`, `Temp/`, `Logs/`, `UserSettings/`. Do not rename or move assets outside the Unity editor without moving the `.meta` too. Scenes and prefabs are text (YAML) — keep diffs small, and avoid two agents editing the same scene; prefer building content from data in code.
 4. **Binaries** (png, wav, mp3, ttf…) go through Git LFS (see `.gitattributes`).
