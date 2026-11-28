@@ -416,6 +416,14 @@ namespace Treeline.Game
                 if (age < 4f) Dashed(l.KillerX, l.KillerY, l.X, l.Y, new Color32(255, 60, 60, 255));
                 XMark(l.X, l.Y, 3, new Color32(255, 40, 40, 255));
             }
+            if (vision != null)
+                for (int i = 0; i < vision.Houses.Count; i++)
+                    if (battle.HouseOccupant(i) >= 0)
+                    {
+                        var house = vision.Houses[i];
+                        Block(house.X, house.Y, 3, new Color32(35, 72, 96, 255));
+                        Cross(house.X, house.Y, 2, new Color32(210, 230, 210, 255));
+                    }
             if (!spritesBound)
             {
                 // Fallback for scenes without the new Render layer.
@@ -563,6 +571,12 @@ namespace Treeline.Game
                 {
                     var sp = cam.WorldToScreenPoint(new Vector3(d.X - grid.Width / 2f, grid.Height / 2f - d.Y, 0f));
                     GUI.Label(new Rect(sp.x + 6, Screen.height - sp.y - 10, 120, 20), Short(d.Def.Id) + "  " + Mathf.CeilToInt(d.Hp), small);
+                    if (vision != null && d.House >= 0 && d.House < vision.Houses.Count)
+                    {
+                        var house = vision.Houses[d.House];
+                        var hp = cam.WorldToScreenPoint(new Vector3(house.X - grid.Width / 2f, grid.Height / 2f - house.Y, 0f));
+                        GUI.Label(new Rect(hp.x + 6, Screen.height - hp.y - 20, 120, 20), Short(d.Def.Id), small);
+                    }
                 }
 
             GUI.matrix = Matrix4x4.Scale(new Vector3(s, s, 1f));

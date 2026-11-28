@@ -1,5 +1,7 @@
 # Change log
 
+- 2026-11-28 ? [codex] game ? Mark occupied houses and show the defender type on the roof.
+
 - 2026-11-28 ? [codex] render ? Add village roofs, ruins, fences, gardens, sunflowers, and burned belts. Load both village fields in the renderer.
 
 - 2026-11-28 — [claude] data/maps — Yaroslav approved the 22 map sheets (#51) and the 5 new rows. `obstacles.csv`: `stack` (like a heap), `shed` (like a house, nobody inside), `silo` (like a rock, landmark), `camo_net` (hides, no cover), `dugout` (trench with a roof, strong against indirect fire and aviation). Not in the Sim yet: burning stacks, a spotter on a silo, player-built nets. Values are a proposal. Other decisions of 2026-11-28: no crush death (#44); recon drone and EW have separate utilities slots, EW is placed like a defender, no upgraded Shahed at release (#28); squads: better tests first, no value change (#57).
