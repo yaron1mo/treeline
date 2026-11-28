@@ -9,8 +9,18 @@ namespace Treeline.Sim
     /// circle; a soft one (grove, forest belt) only blurs: the chance to recognise something is highest right
     /// behind it and falls with distance. Pure maths, no randomness: the caller rolls against the chance.
     /// </summary>
+    /// <summary>A one-storey house on the map (2026-11-27): one defender can stand inside it.</summary>
+    public sealed class House
+    {
+        public Pt[] Poly;
+        public float X, Y;
+    }
+
     public sealed class VisionMap
     {
+        /// <summary>The houses of the field, in feature order.</summary>
+        public readonly List<House> Houses = new List<House>();
+
         public readonly int Cols, Rows;
         public readonly float Width, Height;
         readonly short[] cells;                      // index into 'used', -1 = nothing
@@ -35,6 +45,12 @@ namespace Treeline.Sim
 
             foreach (var f in field.Features)
             {
+                if (f.Type == "house" && f.Poly != null && f.Poly.Length >= 3)
+                {
+                    float hx = 0f, hy = 0f;
+                    foreach (var p in f.Poly) { hx += p.X; hy += p.Y; }
+                    Houses.Add(new House { Poly = f.Poly, X = hx / f.Poly.Length, Y = hy / f.Poly.Length });
+                }
                 if (!table.TryGet(f.Type, out var o)) continue;
                 if (o.Sight == SightEffect.None && !o.HasOnBonus && string.IsNullOrEmpty(o.CoverApplies)) continue;   // a trench hides nothing but still covers
                 var pts = f.Poly ?? f.Line;
@@ -251,6 +267,9 @@ namespace Treeline.Sim
         public Obstacle CoverFor(float sx, float sy, float tx, float ty)
         {
             int tc = CellOf(tx, ty);
+            // The one defender inside a house (2026-11-27) has the house_inside cover from every side.
+            var inHouse = ObstacleAt(tx, ty);
+            if (inHouse != null && inHouse.Id == "house" && Table.TryGet("house_inside", out var inside)) return inside;
             if (coverCells[tc] >= 0 && used[coverCells[tc]].CoverApplies == "inside") return used[coverCells[tc]];   // in a trench
             var here = ObstacleAt(tx, ty);
             if (here != null && here.CoverApplies == "inside") return here;

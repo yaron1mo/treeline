@@ -1,0 +1,40 @@
+name: Design task
+# Agent office (2026-11-27). The label "agent:design" on an issue starts the designer agent (Claude Sonnet) on GitHub
+# servers with Yaroslav's Claude subscription. Rules: docs/agents/designer.md. The PR always waits for Yaroslav.
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  design:
+    if: github.event.label.name == 'agent:design'
+    runs-on: ubuntu-latest
+    # Job-level concurrency: only runs that pass the label check wait in line (a workflow-level group
+    # would also queue the skipped runs of other issues and cancel a real pending run).
+    concurrency:
+      group: design
+      cancel-in-progress: false
+    timeout-minutes: 45
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/playable-steppe-patch-integration
+          fetch-depth: 0
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            You are the Treeline designer agent. Follow docs/agents/designer.md exactly (read it first; it is on the
+            main branch: `git show origin/main:docs/agents/designer.md`). Your task is issue #${{ github.event.issue.number }}
+            in ${{ github.repository }}: read it with gh. When you finish, write a comment on the issue with the PR link,
+            then remove the label agent:design from the issue.
+          claude_args: |
+            --model claude-sonnet-5-5
+            --max-turns 60
+            --allowedTools "Bash(gh:*),Bash(git:*),Read,Write,Edit,Grep,Glob"

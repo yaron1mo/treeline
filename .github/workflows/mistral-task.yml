@@ -1,60 +1,91 @@
 name: Mistral task
-# Agent office, stage 1 (2026-11-26). The label "agent:mistral" on an issue starts Mistral Vibe on Yaroslav's computer
-# (a self-hosted runner with the label "mistral"), with his own Vibe login. No API key. One task at a time.
-# When the computer is off, the job waits in the queue.
+run-name: "${{ github.event.issue.title || format('Restart issue #{0}', github.event.inputs.issue) }}"
+# Agent office, stage 1 (2026-11-26). The label "agent:mistral" on an issue starts Mistral Vibe CLI on Yaroslav's
+# Windows computer (the self-hosted Windows runner MASHINA), with his own Mistral login. No API key.
+# One task at a time. When the computer or the runner window is off, the job waits in the queue.
+# Steps use Windows PowerShell (always present), not bash.
 # Mistral pushes and opens the PR with Yaroslav's own git and gh login on that computer (not GITHUB_TOKEN): a push with
 # GITHUB_TOKEN does not start other workflows, so Claude would not see the PR.
 on:
   issues:
     types: [labeled]
-
-concurrency:
-  group: mistral
-  cancel-in-progress: false
+  workflow_dispatch:   # the Watchdog restarts a task with this (an event made with GITHUB_TOKEN can start a dispatch)
+    inputs:
+      issue:
+        description: 'Issue number'
+        required: true
 
 jobs:
   task:
-    if: github.event.label.name == 'agent:mistral'
-    runs-on: [self-hosted, mistral]
+    if: github.event.label.name == 'agent:mistral' || github.event_name == 'workflow_dispatch'
+    runs-on: [self-hosted, Windows]
+    # Job-level concurrency: only runs that pass the label check wait in line (a workflow-level group
+    # would also queue the skipped runs of other issues and cancel a real pending run).
+    concurrency:
+      group: mistral
+      cancel-in-progress: false
     timeout-minutes: 240
     permissions:
       contents: read
       issues: write
+    defaults:
+      run:
+        shell: powershell
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
+          clean: false   # do not delete unity/Library of the Codex runs on the same runner
       - name: Write the task file
         env:
           TITLE: ${{ github.event.issue.title }}
           BODY: ${{ github.event.issue.body }}
-          NUM: ${{ github.event.issue.number }}
-        shell: bash
+          NUM: ${{ github.event.issue.number || github.event.inputs.issue }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          {
-            echo "You are Mistral, a developer in the Treeline team. Read AGENTS.md and docs/agents/mistral.md first."
-            echo "Your task is GitHub issue #$NUM: $TITLE"
-            echo
-            echo "$BODY"
-            echo
-            echo "When you finish: push your branch and open the pull request with gh (section 7 of docs/agents/mistral.md)."
-            echo "Then write a comment on issue #$NUM with the PR link. If you need a design decision, add the label needs:yaroslav to the issue and stop."
-          } > "$RUNNER_TEMP/task.md"
+          if (-not $env:TITLE) { $j = gh issue view $env:NUM --repo ${{ github.repository }} --json title,body | ConvertFrom-Json; $env:TITLE = $j.title; $env:BODY = $j.body }
+          $lines = @(
+            "You are Mistral, a developer in the Treeline team. Read AGENTS.md and docs/agents/mistral.md first.",
+            "Your task is GitHub issue #$env:NUM : $env:TITLE",
+            "",
+            $env:BODY,
+            "",
+            "When you finish: push your branch and open the pull request with gh (section 7 of docs/agents/mistral.md).",
+            "If a branch for this task already exists on origin, continue from it (an earlier run may have stopped at the turn limit). Push after each step.",
+            "If you cannot finish in this run, push all work and write 'NOT COMPLETE' in a comment on the issue: the Watchdog starts you again to continue.",
+            "Then write a comment on issue #$env:NUM with the PR link. If you need a design decision, add the label needs:yaroslav to the issue and stop."
+          )
+          [System.IO.File]::WriteAllLines("$env:RUNNER_TEMP\task.md", $lines, (New-Object System.Text.UTF8Encoding $false))
       - name: Mark in progress
         env:
           GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: gh issue edit ${{ github.event.issue.number }} --repo ${{ github.repository }} --add-label in-progress
+        run: gh issue edit ${{ github.event.issue.number || github.event.inputs.issue }} --repo ${{ github.repository }} --add-label in-progress
       - name: Run Mistral Vibe
-        shell: bash
-        run: vibe --prompt-file "$RUNNER_TEMP/task.md" --auto-approve --max-turns 200 --time-limit 13800 --output-dir "$RUNNER_TEMP/vibe-out"
+        run: |
+          # Mistral often fails in high-demand periods. Retry up to 4 times with a pause; the agent continues from its branch.
+          # GitHub starts PowerShell with ErrorActionPreference Stop. With 2>&1, a Vibe stderr line (for example
+          # "Reading API keys from the system keyring") then stops the step (#23, 2026-11-27). Use the exit code only.
+          $ErrorActionPreference = 'Continue'
+          $code = 1
+          for ($i = 1; $i -le 4; $i++) {
+            vibe --prompt-file "$env:RUNNER_TEMP\task.md" --auto-approve --max-turns 400 --time-limit 13800 --output-dir "$env:RUNNER_TEMP\vibe-out" 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP\vibe-$i.log"
+            $code = $LASTEXITCODE
+            if ($code -eq 0) { break }
+            $tail = Get-Content "$env:RUNNER_TEMP\vibe-$i.log" -Tail 20 | Out-String
+            if ($tail -match "turn_limit|time_limit") { Write-Host "Stopped by a limit: no retry."; break }
+            Write-Host "Vibe failed (attempt $i, exit $code). Wait 3 minutes and retry."
+            Start-Sleep -Seconds 180
+          }
+          exit $code
       - name: Report
         if: always()
         env:
           GH_TOKEN: ${{ github.token }}
-        shell: bash
         run: |
-          gh issue edit ${{ github.event.issue.number }} --repo ${{ github.repository }} --remove-label in-progress || true
-          usage=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(json.dumps(d.get('usage', {})))" "$RUNNER_TEMP/vibe-out/export.json" 2>/dev/null || echo "{}")
-          gh issue comment ${{ github.event.issue.number }} --repo ${{ github.repository }} --body "Mistral run finished: ${{ job.status }}. Usage: \`$usage\`. Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          gh issue edit ${{ github.event.issue.number || github.event.inputs.issue }} --repo ${{ github.repository }} --remove-label in-progress --remove-label agent:mistral
+          $usage = "{}"
+          $f = "$env:RUNNER_TEMP\vibe-out\export.json"
+          if (Test-Path $f) { try { $usage = ((Get-Content $f -Raw | ConvertFrom-Json).usage | ConvertTo-Json -Compress) } catch {} }
+          gh issue comment ${{ github.event.issue.number || github.event.inputs.issue }} --repo ${{ github.repository }} --body "Mistral run finished: ${{ job.status }}. Usage: $usage. Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          exit 0

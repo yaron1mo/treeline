@@ -1,22 +1,30 @@
 #!/usr/bin/env python3
 """Generate waves whose predicted defence cost follows a target cost per wave.
 
-Task: mistral/wave-generator (docs/agents/mistral.md, section 10). The cost model
-comes from docs/balance/mistral/wave-generator/model.json (field Forest belts), a
-refit of the attacker-cost model of PR #7 with the waves measured in the Balance
-runs of this task added to the training set (fit: fit_model.py next to the model).
+Task: mistral/wave-generator-2 (docs/agents/mistral.md, section 10; issue #17, findings 4
+and 5 of the Claude review 2 on PR #9). The cost model comes from
+tools/balance/model.json (field Forest belts; since mistral/model-refit, issue #40, this
+file is refit automatically by the Model refit workflow after every data change).
 The single-type curves of that model (run 45411511647, artifact balance-report)
 are embedded below as constants, so this script needs no artifact to run.
 
 Method: pure generator, no plan. For every wave count N and every seed the wave
 list comes from a randomised local search over wave compositions that drives the
 model prediction to the target cost of the wave. The search keeps the task rules
-(caps, type order, mix rules, growth limit). The model prediction has a floor for
-small waves: a wave cheaper than twice the price of one rifle squad (100, measured)
+(caps, type order, mix rules, growth limit) plus one rule for the small waves:
+waves 1-3 have at least MIN_EARLY_INFANTRY infantry, because a wave of fewer
+infantry leaks through the line and is measured at the 25 minimum budget
+(run 45916087929, wave 2: 2 regular measured 25; 4 infantry is the first held
+count, recruit x4 = 200). The model prediction has a floor for small waves:
+a wave cheaper than twice the price of one rifle squad (100, measured)
 is counted as at least one rifle squad. The same seed always gives the same waves.
 
-Usage: make_waves.py <units.csv> <out waves.csv> [waves=30] [seed=7]
-Reads: tools/balance/target_costs.csv (wave,target_cost) next to the repo root.
+Usage: make_waves.py <units.csv> <out waves.csv> [waves=30] [seed=7] [targets=250,275,...]
+The options can also be positional: make_waves.py <units.csv> <out> [30] [7] ["250,275,..."]
+Reads tools/balance/target_costs.csv (wave,target_cost) next to the repo root, unless
+`targets` is given: a comma-separated list of target costs for waves 1..n. With
+`targets` the file is not read and the list sets the wave count when `waves` is not
+given, so the endless mode can pass the target costs directly, without a file.
 """
 import csv
 import json
@@ -26,18 +34,40 @@ import random
 import sys
 
 units_path, out = sys.argv[1], sys.argv[2]
-N = int(sys.argv[3]) if len(sys.argv) > 3 else 30
-SEED = int(sys.argv[4]) if len(sys.argv) > 4 else 7
+kv, pos = {}, []
+for a in sys.argv[3:]:
+    if "=" in a:
+        k, v = a.split("=", 1)
+        kv[k] = v
+    else:
+        pos.append(a)
+N = int(kv["waves"]) if "waves" in kv else (int(pos[0]) if pos else 30)
+SEED = int(kv["seed"]) if "seed" in kv else (int(pos[1]) if len(pos) > 1 else 7)
+targets_arg = kv["targets"] if "targets" in kv else (pos[2] if len(pos) > 2 else "")
 rng = random.Random(SEED)
 root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(units_path)))))
 targets = {}
-with open(os.path.join(root, "tools", "balance", "target_costs.csv"), newline="", encoding="utf-8") as fh:
-    for r in csv.DictReader(fh):
-        targets[int(r["wave"])] = float(r["target_cost"])
-model_all = json.load(open(os.path.join(root, "docs", "balance", "mistral", "wave-generator", "model.json"),
+if targets_arg:
+    tl = [float(x) for x in targets_arg.split(",") if x.strip()]
+    if len(tl) != N and "waves" not in kv and not pos:
+        N = len(tl)
+    if len(tl) != N:
+        sys.exit(f"targets gives {len(tl)} values, but waves={N}")
+    targets = {i + 1: v for i, v in enumerate(tl)}
+else:
+    tc_path = os.path.join(root, "tools", "balance", "target_costs.csv")
+    if not os.path.exists(tc_path):
+        sys.exit("no targets: pass targets=250,275,... or create tools/balance/target_costs.csv")
+    with open(tc_path, newline="", encoding="utf-8") as fh:
+        for r in csv.DictReader(fh):
+            targets[int(r["wave"])] = float(r["target_cost"])
+model_all = json.load(open(os.path.join(root, "tools", "balance", "model.json"),
                            encoding="utf-8"))
 model = model_all["fields"]["Forest belts"]
 FLOOR = float(model_all.get("small_wave_floor", 0) or 0)   # one rifle squad, measured
+# Waves 1-3 need at least this many infantry (troops): fewer infantry leak at the
+# 25 minimum budget (measured, run 45916087929 wave 2: 2 regular = 25).
+MIN_EARLY_INFANTRY = 4
 
 EXCLUDE = {"fpv", "one_way_drone", "recon_uav"}
 UNLOCK = [(1, "recruit"), (2, "regular"), (3, "motorbike"), (4, "buggy"), (5, "van"),
@@ -147,6 +177,8 @@ def violations(comp, w, prev_pred, has_new):
     if sum(comp.values()) == 0:
         return 1
     if any(comp.get(u, 0) > cap(u) for u in TYPES):
+        v += 1
+    if w <= 3 and sum(comp.get(u, 0) for u in TYPES if units[u]["type"] == "troops") < MIN_EARLY_INFANTRY:
         v += 1
     if w >= 4 and len([c for c in comp.values() if c > 0]) < 2:
         v += 1

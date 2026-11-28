@@ -55,6 +55,19 @@ namespace Treeline.Render
 
         readonly Dictionary<string, Sprite> byId =
             new Dictionary<string, Sprite>(StringComparer.OrdinalIgnoreCase);
+        readonly Dictionary<string, Sprite[]> walkFrames =
+            new Dictionary<string, Sprite[]>(StringComparer.OrdinalIgnoreCase);
+        Sprite[] recruitCrutchFrames;
+        readonly List<Texture2D> walkTextures = new List<Texture2D>();
+        readonly Dictionary<string, Sprite> aimSprites = new Dictionary<string, Sprite>();
+        readonly Dictionary<string, Sprite> headlessSprites = new Dictionary<string, Sprite>();
+        readonly Dictionary<string, Sprite> helmetSprites = new Dictionary<string, Sprite>();
+        readonly Dictionary<string, Sprite> snoutSprites = new Dictionary<string, Sprite>();
+        readonly Dictionary<string, Sprite> cleanSnouts = new Dictionary<string, Sprite>();
+        readonly Dictionary<string, Sprite> looseHelmets = new Dictionary<string, Sprite>();
+        readonly Dictionary<string, Sprite> bareBodies = new Dictionary<string, Sprite>();
+        readonly List<Texture2D> infantryTextures = new List<Texture2D>();
+        readonly Dictionary<string, Sprite[]> fallPoses = new Dictionary<string, Sprite[]>();
         Texture2D atlasTexture;
 
         public UnitSpriteAtlas()
@@ -102,6 +115,275 @@ namespace Treeline.Render
                     new Vector2(0.5f, 0.5f), PixelsPerWorldMetre,
                     0, SpriteMeshType.FullRect);
             }
+
+            for (int unit = 0; unit < 3; unit++)
+            {
+                const int frameCount = 4;
+                const int size = 64;
+                int variantCount = 1;
+                int atlasWidth = size * frameCount * variantCount;
+                var idle = LoadInfantryTexture(Ids[unit], "idle");
+                var aim = LoadInfantryTexture(Ids[unit], "aim");
+                UnityEngine.Object.Destroy(byId[Ids[unit]]);
+                byId[Ids[unit]] = Sprite.Create(idle, new Rect(0, 0, size, size),
+                    new Vector2(0.5f, 0.5f), size / 12f, 0, SpriteMeshType.FullRect);
+                aimSprites[Ids[unit]] = Sprite.Create(aim, new Rect(0, 0, size, size),
+                    new Vector2(0.5f, 0.5f), size / 12f, 0, SpriteMeshType.FullRect);
+                Color32[] idlePixels = idle.GetPixels32();
+                {
+                    var snoutPixels = new Color32[10 * 8];
+                    for (int y = 0; y < 8; y++)
+                    for (int x = 0; x < 10; x++)
+                    {
+                        int snoutBottom = unit == 2 ? 23 : 19;
+                        Color32 pixel = idlePixels[(snoutBottom + y) * size + 27 + x];
+                        bool pink = pixel.r > 140 && pixel.r > pixel.g * 1.2f && pixel.r > pixel.b * 1.1f;
+                        bool nostril = x >= 2 && x <= 7 && y >= 2 && y <= 5 && pixel.r < 140;
+                        if (pink || nostril) snoutPixels[y * 10 + x] = pixel;
+                    }
+                    var snoutTexture = new Texture2D(10, 8, TextureFormat.RGBA32, false);
+                    snoutTexture.filterMode = FilterMode.Point;
+                    snoutTexture.SetPixels32(snoutPixels);
+                    snoutTexture.Apply();
+                    infantryTextures.Add(snoutTexture);
+                    cleanSnouts[Ids[unit]] = Sprite.Create(snoutTexture, new Rect(0, 0, 10, 8),
+                        new Vector2(0.5f, 0.5f), size / 12f, 0, SpriteMeshType.FullRect);
+                }
+                fallPoses[Ids[unit]] = BuildFallPoses(idlePixels);
+                var headlessPixels = (Color32[])idlePixels.Clone();
+                for (int y = 0; y < size; y++)
+                for (int x = 0; x < size; x++)
+                    if (y >= 29 || (y >= 20 && x >= 23 && x < 41))
+                        headlessPixels[y * size + x] = new Color32(0, 0, 0, 0);
+                var headless = new Texture2D(size, size, TextureFormat.RGBA32, false);
+                headless.filterMode = FilterMode.Point;
+                headless.SetPixels32(headlessPixels);
+                headless.Apply();
+                infantryTextures.Add(headless);
+                headlessSprites[Ids[unit]] = Sprite.Create(headless, new Rect(0, 0, size, size),
+                    new Vector2(0.5f, 0.5f), size / 12f, 0, SpriteMeshType.FullRect);
+                helmetSprites[Ids[unit]] = Sprite.Create(idle, new Rect(0, 29, 64, 35),
+                    new Vector2(0.5f, 0.5f), size / 12f, 0, SpriteMeshType.FullRect);
+                snoutSprites[Ids[unit]] = Sprite.Create(idle, new Rect(22, 18, 20, 12),
+                    new Vector2(0.5f, 0.5f), size / 12f, 0, SpriteMeshType.FullRect);
+                var walkPixels = new Color32[atlasWidth * size];
+                int[] forwardLeft = { -3, -2, -4, -1, -3 };
+                int[] forwardRight = { 2, 3, 1, 3, 1 };
+                int[] backLeft = { 1, 3, 2, 2, 3 };
+                int[] backRight = { -2, -2, -1, -3, -1 };
+                for (int variant = 0; variant < variantCount; variant++)
+                for (int frame = 0; frame < frameCount; frame++)
+                {
+                    int frameX = (variant * frameCount + frame) * size;
+                    for (int y = 0; y < size; y++)
+                    for (int x = 0; x < size; x++)
+                    {
+                        int stride = frame == 1 ? (x < size / 2 ? forwardLeft[variant] : forwardRight[variant]) :
+                            frame == 3 ? (x < size / 2 ? backLeft[variant] : backRight[variant]) : 0;
+                        float footWeight = Mathf.Clamp01((17f - y) / 12f);
+                        int sourceY = Mathf.Clamp(Mathf.RoundToInt(y - stride * footWeight), 0, size - 1);
+                        walkPixels[y * atlasWidth + frameX + x] = idlePixels[sourceY * size + x];
+                    }
+                }
+                var texture = new Texture2D(atlasWidth, size, TextureFormat.RGBA32, false);
+                texture.filterMode = FilterMode.Point;
+                texture.wrapMode = TextureWrapMode.Clamp;
+                texture.SetPixels32(walkPixels);
+                texture.Apply(false, true);
+                walkTextures.Add(texture);
+                var frames = new Sprite[frameCount * variantCount];
+                for (int frame = 0; frame < frames.Length; frame++)
+                    frames[frame] = Sprite.Create(texture, new Rect(frame * size, 0, size, size),
+                        new Vector2(0.5f, 0.5f), size / 12f, 0, SpriteMeshType.FullRect);
+                if (unit < 3)
+                {
+                    var drawnWalk = LoadInfantryTexture(Ids[unit], "walk");
+                    for (int frame = 0; frame < frames.Length; frame++)
+                    {
+                        UnityEngine.Object.Destroy(frames[frame]);
+                        frames[frame] = Sprite.Create(drawnWalk, new Rect(frame * size, 0, size, size),
+                            new Vector2(0.5f, 0.5f), size / 12f, 0, SpriteMeshType.FullRect);
+                    }
+                }
+                walkFrames[Ids[unit]] = frames;
+                if (unit == 0)
+                {
+                    var crutch = LoadInfantryTexture(Ids[unit], "crutch");
+                    recruitCrutchFrames = new Sprite[frameCount];
+                    for (int frame = 0; frame < frameCount; frame++)
+                        recruitCrutchFrames[frame] = Sprite.Create(crutch, new Rect(frame * size, 0, size, size),
+                            new Vector2(0.5f, 0.5f), size / 12f, 0, SpriteMeshType.FullRect);
+                }
+            }
+        }
+
+        public Sprite GetWalkFrame(string unitId, int frame, int variant = 0) =>
+            unitId == "recruit" && variant == 0 ? recruitCrutchFrames[frame] : walkFrames[unitId][frame];
+
+        public Sprite GetAim(string unitId) => aimSprites[unitId];
+        public Sprite GetHeadless(string unitId) => headlessSprites[unitId];
+        public Sprite GetHelmet(string unitId) => helmetSprites[unitId];
+        public Sprite GetSnout(string unitId) => snoutSprites[unitId];
+        public Sprite GetCleanSnout(string unitId) => cleanSnouts[unitId];
+
+        public Sprite GetLooseHelmet(string unitId) => GetStaticInfantrySprite(unitId, "loose_helmet", looseHelmets);
+        public Sprite GetBareBody(string unitId) => GetStaticInfantrySprite(unitId, "bare", bareBodies);
+
+        Sprite GetStaticInfantrySprite(string unitId, string pose, Dictionary<string, Sprite> cache)
+        {
+            if (!cache.TryGetValue(unitId, out var sprite))
+            {
+                var texture = LoadInfantryTexture(unitId, pose);
+                sprite = Sprite.Create(texture, new Rect(0, 0, 64, 64), new Vector2(0.5f, 0.5f),
+                    64f / 12f, 0, SpriteMeshType.FullRect);
+                cache[unitId] = sprite;
+            }
+            return sprite;
+        }
+
+        public Sprite GetFallPose(string unitId, int pose) => fallPoses[unitId][pose];
+
+        readonly Dictionary<string, Sprite[]> infantryFallFrames = new Dictionary<string, Sprite[]>();
+        readonly Dictionary<string, Sprite[]> infantryShootFrames = new Dictionary<string, Sprite[]>();
+
+        public Sprite GetInfantryShootFrame(string unitId, int frame, int variant)
+        {
+            string artId = unitId == "recruit" && variant == 0 ? "recruit_crutch" : unitId;
+            if (!infantryShootFrames.TryGetValue(artId, out var frames))
+            {
+                Texture2D texture = LoadInfantryTexture(artId, "shoot");
+                frames = new Sprite[3];
+                for (int i = 0; i < frames.Length; i++)
+                    frames[i] = Sprite.Create(texture, new Rect(i * 64, 0, 64, 64),
+                        new Vector2(0.5f, 0.5f), 64f / 12f, 0, SpriteMeshType.FullRect);
+                infantryShootFrames[artId] = frames;
+            }
+            return frames[frame];
+        }
+        public Sprite GetInfantryFallFrame(string unitId, int frame)
+        {
+            if (!infantryFallFrames.TryGetValue(unitId, out var frames))
+            {
+                Texture2D texture = LoadInfantryTexture(unitId, "fall");
+                frames = new Sprite[6];
+                for (int i = 0; i < frames.Length; i++)
+                    frames[i] = Sprite.Create(texture, new Rect(i * 64, 0, 64, 64),
+                        new Vector2(0.5f, 0.5f), 64f / 12f, 0, SpriteMeshType.FullRect);
+                infantryFallFrames[unitId] = frames;
+            }
+            return frames[frame];
+        }
+
+        public Sprite GetBareFallFrame(string unitId, int frame)
+        {
+            string cacheKey = unitId + "_bare";
+            if (!infantryFallFrames.TryGetValue(cacheKey, out var frames))
+            {
+                Texture2D texture = LoadInfantryTexture(unitId, "bare_fall");
+                frames = new Sprite[6];
+                for (int i = 0; i < frames.Length; i++)
+                    frames[i] = Sprite.Create(texture, new Rect(i * 64, 0, 64, 64),
+                        new Vector2(0.5f, 0.5f), 64f / 12f, 0, SpriteMeshType.FullRect);
+                infantryFallFrames[cacheKey] = frames;
+            }
+            return frames[frame];
+        }
+
+
+        // Draw the limbs first. Use the unit art for the cloth and helmet.
+        Sprite[] BuildFallPoses(Color32[] idle)
+        {
+            const int size = 64;
+            var frames = new Sprite[3];
+            for (int pose = 0; pose < frames.Length; pose++)
+            {
+                bool kneel = pose == 0;
+                bool back = pose == 2;
+                var pixels = new Color32[size * size];
+                Color32 edge = Palette[1];
+                Color32 boot = Palette[3];
+                Color32 cloth = Palette[7];
+                Color32 webbing = Palette[9];
+                int facing = back ? 1 : -1;
+
+                // All coordinates start at the hips. Positive Y points toward the head.
+                System.Action<int, int, int, int, int, Color32, bool> Stroke = (x1, y1, x2, y2, radius, fill, fabric) =>
+                {
+                    Vector2 a = new Vector2(32 + x1, 31 + facing * y1);
+                    Vector2 b = new Vector2(32 + x2, 31 + facing * y2);
+                    Vector2 line = b - a;
+                    for (int y = Mathf.Max(0, (int)Mathf.Min(a.y, b.y) - radius);
+                         y <= Mathf.Min(63, (int)Mathf.Max(a.y, b.y) + radius); y++)
+                    for (int x = Mathf.Max(0, (int)Mathf.Min(a.x, b.x) - radius);
+                         x <= Mathf.Min(63, (int)Mathf.Max(a.x, b.x) + radius); x++)
+                    {
+                        Vector2 delta = new Vector2(x, y) - a;
+                        float t = Mathf.Clamp01(Vector2.Dot(delta, line) / Mathf.Max(1f, line.sqrMagnitude));
+                        float distance = (delta - t * line).sqrMagnitude;
+                        if (distance > radius * radius) continue;
+                        Color32 color = fabric ? idle[(13 + y % 8) * size + 25 + x % 14] : fill;
+                        if (color.a < 200) color = fill;
+                        pixels[y * size + x] = distance > (radius - 1) * (radius - 1) ? edge : color;
+                    }
+                };
+
+                int leftFoot = kneel ? -5 : -23;
+                int rightFoot = kneel ? -6 : -19;
+                int leftX = kneel ? -10 : back ? -14 : -8;
+                Stroke(-4, -2, -8, -10, 4, cloth, true);
+                Stroke(-8, -10, leftX, leftFoot, 3, cloth, true);
+                Stroke(leftX, leftFoot, leftX - 2, leftFoot - 2, 3, boot, false);
+                Stroke(4, -2, 9, -10, 4, cloth, true);
+                Stroke(9, -10, 12, rightFoot, 3, cloth, true);
+                Stroke(12, rightFoot, 14, rightFoot - 2, 3, boot, false);
+                Stroke(-7, 9, -15, back ? 4 : 12, 3, cloth, true);
+                Stroke(-15, back ? 4 : 12, kneel ? -12 : -19, back ? 8 : 18, 2, webbing, false);
+                Stroke(7, 9, kneel ? 12 : 17, back ? 6 : 11, 3, cloth, true);
+                Stroke(kneel ? 12 : 17, back ? 6 : 11, kneel ? 10 : 19, back ? 1 : 19, 2, webbing, false);
+                Stroke(0, -2, 0, 8, 8, cloth, true);
+                if (back)
+                {
+                    Stroke(-5, 10, 5, 1, 2, webbing, false);
+                    Stroke(-5, 0, 5, 0, 2, boot, false);
+                }
+                else Stroke(-1, 2, -1, 8, 5, Palette[5], false);
+
+                // Map the helmet crown from the idle sprite onto the lowered head.
+                int headY = kneel ? 11 : 17;
+                for (int y = -7; y <= 7; y++)
+                for (int x = -8; x <= 8; x++)
+                {
+                    int r = x * x * 49 + y * y * 64;
+                    if (r > 3136) continue;
+                    Color32 c = idle[(45 + y) * size + 32 + x];
+                    pixels[(31 + facing * headY + y) * size + 32 + x] =
+                        r > 2450 ? edge : c.a > 200 ? c : cloth;
+                }
+                if (back) Stroke(-2, headY - 4, 2, headY - 4, 2, Palette[14], false);
+
+                var texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+                texture.filterMode = FilterMode.Point;
+                texture.wrapMode = TextureWrapMode.Clamp;
+                texture.SetPixels32(pixels);
+                texture.Apply(false, true);
+                infantryTextures.Add(texture);
+                frames[pose] = Sprite.Create(texture, new Rect(0, 0, size, size),
+                    new Vector2(0.5f, 0.5f), size / 12f, 0, SpriteMeshType.FullRect);
+            }
+            return frames;
+        }
+
+        Texture2D LoadInfantryTexture(string unitId, string pose)
+        {
+            var asset = Resources.Load<TextAsset>("Art/Units/infantry_" + unitId + "_" + pose);
+            if (asset == null) throw new InvalidOperationException("Missing infantry art: " + unitId + " " + pose);
+            var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            if (!texture.LoadImage(Convert.FromBase64String(asset.text.Trim())))
+                throw new InvalidDataException("Invalid infantry art: " + unitId + " " + pose);
+            texture.filterMode = FilterMode.Point;
+            texture.wrapMode = TextureWrapMode.Clamp;
+            infantryTextures.Add(texture);
+            return texture;
         }
 
         public bool TryGet(string unitId, out Sprite sprite)
@@ -116,6 +398,39 @@ namespace Treeline.Render
 
         public void Dispose()
         {
+            foreach (var frames in infantryShootFrames.Values)
+                foreach (var frame in frames) UnityEngine.Object.Destroy(frame);
+            infantryShootFrames.Clear();
+            if (recruitCrutchFrames != null)
+                foreach (var frame in recruitCrutchFrames) UnityEngine.Object.Destroy(frame);
+            foreach (var sprite in cleanSnouts.Values) UnityEngine.Object.Destroy(sprite);
+            foreach (var sprite in looseHelmets.Values) UnityEngine.Object.Destroy(sprite);
+            foreach (var sprite in bareBodies.Values) UnityEngine.Object.Destroy(sprite);
+            foreach (var frames in infantryFallFrames.Values)
+                foreach (var frame in frames) UnityEngine.Object.Destroy(frame);
+            infantryFallFrames.Clear();
+            foreach (var poses in fallPoses.Values)
+                foreach (var pose in poses) UnityEngine.Object.Destroy(pose);
+            fallPoses.Clear();
+            foreach (var sprite in headlessSprites.Values) if (sprite != null) UnityEngine.Object.Destroy(sprite);
+            foreach (var sprite in helmetSprites.Values) if (sprite != null) UnityEngine.Object.Destroy(sprite);
+            foreach (var sprite in snoutSprites.Values) if (sprite != null) UnityEngine.Object.Destroy(sprite);
+            headlessSprites.Clear();
+            helmetSprites.Clear();
+            snoutSprites.Clear();
+            foreach (var sprite in aimSprites.Values)
+                if (sprite != null) UnityEngine.Object.Destroy(sprite);
+            aimSprites.Clear();
+            foreach (var texture in infantryTextures)
+                if (texture != null) UnityEngine.Object.Destroy(texture);
+            infantryTextures.Clear();
+            foreach (var frames in walkFrames.Values)
+                foreach (var frame in frames)
+                    if (frame != null) UnityEngine.Object.Destroy(frame);
+            walkFrames.Clear();
+            foreach (var texture in walkTextures)
+                if (texture != null) UnityEngine.Object.Destroy(texture);
+            walkTextures.Clear();
             foreach (var sprite in byId.Values)
                 if (sprite != null) UnityEngine.Object.Destroy(sprite);
             byId.Clear();

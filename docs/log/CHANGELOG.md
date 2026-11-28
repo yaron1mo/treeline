@@ -1,5 +1,83 @@
 # Change log
 
+- 2026-11-28 — [claude] office/mistral — `mistral-task.yml`: Mistral failed 3 times on #23 because GitHub starts PowerShell with `ErrorActionPreference` Stop, and the Vibe stderr line "Reading API keys from the system keyring" (with `2>&1`) stopped the step. The step now uses `Continue` and only the exit code.
+- 2026-11-28 — [claude] tests — CI `tests` failed on every PR (for example #55): `check_game.sh` uses Mono `mcs`, which cannot compile the local function `Stroke` in `UnitSpriteAtlas.cs`, and the Unity stub had no `PlayerPrefs`, `GameObject.SetActive`, `Transform.localRotation`, `Quaternion.identity`, `Vector2.down`, `Vector3.Lerp`/`up`, `Texture2D.GetPixels32`/`LoadImage`. `Stroke` is now a lambda (same behaviour; each call gives `fabric`). The stub has the missing members. Both test scripts pass (93 tests; game scripts compile).
+- 2026-11-27 — [claude] office/codex — Codex stopped early and repeated work: each restart was a new session, made a new branch and PR (#45, #52, #53 for issue #44) and did the same items again (about 6,500 output tokens per run). `codex-task.yml` now checks out `codex/issue-<N>` before Codex starts, tells Codex to update the PR of that branch, and resumes the same session (`codex exec resume --last`) when the last answer says `NOT COMPLETE` (at most 10 resumes, 200 minutes; a new session on the same branch if the resume fails). The prompt no longer says that the Watchdog starts it again; that text let Codex stop after 1 item. PR #54 (`codex/issue-44`, from `codex/infantry-pigs`) replaces #45, #52 and #53. `docs/agents/office.md` section 6b.
+- 2026-11-27 — [claude] sim/maps — Houses (Yaroslav: Ukrainian village streets, one-storey houses). `obstacles.csv`: `house` (blocks sight and movement, cover behind it), `house_inside` (cover of the one defender inside, from every side), `ruin`, `fence`, `sunflower` (hides, no cover), `burned_belt` (no cover). Sim: a defender sent to a house runs to its door cell and stands inside; one defender per house; moving out, selling or death frees it (`Battle.HouseAt`, `HouseOccupant`, `Defender.House`; `VisionMap.Houses`). 4 new tests (93 pass). Two prototype maps by `tools/maps/make_villages.py`: `village-street`, `village-crossroads` (waves 1–8 held; cost 0.4–0.9 × Forest belts; the scripted player does not use houses yet).
+- 2026-11-28 — [mistral] balance/model-refit — Issue #40 test runs: the Model refit workflow ran twice on the branch (runs 45989845538 and 45996371275, 36-37 min each, 2178 probe-wave costs per run). With unchanged data the refit gives 15.9% mean error and 72.5% within 20% on held-out mixed waves (Forest belts 85.0%, Balka and railway 60.0%, River crossing 67.1%) — verdict fail per the >= 80%-per-field rule, so no refit PR and the metrics went to the run summary. With a test change (`old_tank` hp +20, reverted) the model refit by itself: only the River-crossing old_tank curve changed (1475->1925 at n=4), pooled within 20% moved to 75.0%. Report in `docs/balance/mistral/model-refit/report.md`.
+- 2026-11-28 — [mistral] balance/model-refit — Issue #40 in progress: automatic refit of the wave cost model. New `.github/workflows/model-refit.yml` (Model refit): on a push to `codex/playable-steppe-patch-integration` that changes `unity/Assets/Data/units.csv`, `armour.csv`, `stop.csv`, `battle_rules.csv`, `obstacles.csv`, `tools/balance/stop.csv` or `unity/Assets/Resources/Fields/**`, and by hand, it makes the probe waves, measures them on all fields (same shards as the Balance run, MAX_BUDGET 30000), refits `tools/balance/model.json` + `model_metrics.json` (`tools/balance/fit_model.py`, moved from `docs/balance/mistral/attacker-cost/`, fixed seed, held-out tags mixed/mixed-test2), checks at least 80% within 20% on every field and opens a PR from `model-refit/<run number>` on pass. `tools/balance/make_probe_waves.py` now reads the attacker types from `units.csv` (only the excluded types stay a fixed list), so a new attacker type gets probe waves with no other change; `tools/balance/make_waves.py` reads `tools/balance/model.json` (seeded with the wave-generator-2 run 3 model, so its output is unchanged).
+- 2026-11-27 — [claude] tools/unity — `AgentTools.Showroom`: lays out PNG sprites pixel-perfect on a background (for example an in-game capture) and renders a phone-size PNG. For art comparisons when a battle capture shows no units.
+- 2026-11-27 — [mistral] balance/wave-generator-2 — Issue #17 done, pass in 3 runs: the pure generator gave 25 of 30 waves within 20% of the target cost on Forest belts (0 not held, mean error 14.4%, Balance run 45926887097). The three findings of the Claude review 2 on PR #9: waves 1-3 need at least 4 infantry in `tools/balance/make_waves.py` (a smaller wave leaks at the 25 minimum budget), 75 armour probe waves with little infantry were measured (run 1) and added to the training set (tag mixed-train4; the first armour waves 21-23 are within 20% now), and `make_waves.py` takes an optional `targets` argument (comma-separated target costs) so the endless mode can pass the target without `tools/balance/target_costs.csv`. Model and training set in `docs/balance/mistral/wave-generator-2/` (`model.json` is the refit that generated the passing run 3). Dev files (`target_costs.csv`, generated `waves.csv`) removed from the branch again.
+- 2026-11-27 — [mistral] balance/wave-generator-2 — Follow-up of PR #9 (issue #17, findings 4 and 5 of the Claude review 2): `tools/balance/make_waves.py` now requires at least 4 infantry in waves 1-3 (a smaller wave leaks at the 25 minimum budget, measured in run 45916087929 wave 2) and takes an optional `targets` argument (comma-separated target costs) so the endless mode can pass the target costs without `tools/balance/target_costs.csv`; the model copy and the training set moved to `docs/balance/mistral/wave-generator-2/` with 75 new armour probe waves (1-3 armour units with little infantry, `make_probe_waves_armour.py`, tag mixed-train4). Dev files for the Balance runs: `tools/balance/target_costs.csv`, `tools/balance/run.json`, the generated `unity/Assets/Data/waves.csv` (all removed before the PR).
+- 2026-11-25 — [codex] render — Increase the fallen special infantry pose to match other units.
+
+- 2026-11-25 — [codex] render — Launch loose helmets from the head when infantry falls.
+
+- 2026-11-25 — [codex] render — Add unbranded fictional rifles to infantry walk and shooting art.
+
+- 2026-11-25 — [codex] render — Add persistent loose helmets and visible snouts to infantry deaths.
+
+- 2026-11-25 — [codex] render — Align blood streaks with nearby shot traces and reduce fall sprite scale.
+
+- 2026-11-25 — [codex] render — Add cartoon blood sprays and visual kill streak messages.
+
+- 2026-11-24 — [codex] render — Add visible muzzle flashes to infantry firing poses.
+
+- 2026-11-24 — [codex] render — Add drawn firing and recoil frames for infantry.
+
+- 2026-11-24 — [codex] render — Move the recruit crutch opposite the supporting leg.
+
+- 2026-11-24 — [codex] render — Show a bandaged missing leg in the recruit crutch hop.
+
+- 2026-11-24 — [codex] render — Add a recruit shuffle and a separate crutch hop.
+
+- 2026-11-24 — [codex] render — Add a crutch and a lifted leg to the recruit walk frames.
+
+- 2026-11-24 — [codex] render — Add a limping recruit walk and slower infantry walk cycles.
+
+- 2026-11-24 — [codex] render — Add drawn base walk frames for recruit and regular infantry.
+
+- 2026-11-24 — [codex] render — Offset the special infantry rifle in the walking pose.
+
+- 2026-11-24 — [codex] render — Add a two-handed walk for special infantry and remove sprite sway.
+
+- 2026-11-24 — [codex] render — Add forward fall frames for regular and special infantry.
+
+- 2026-11-24 — [codex] render — Remove extra pixels around the fallen recruit snout.
+
+- 2026-11-24 — [codex] render — Keep the recruit snout size in the fallen pose.
+
+- 2026-11-24 — [codex] render — Show the recruit snout in the forward fall pose.
+
+- 2026-11-24 — [codex] render — Match recruit fall frame scale to the walking sprite.
+
+- 2026-11-24 — [codex] render — Fix recruit fall frame boundaries and pixel filtering.
+
+- 2026-11-24 — [codex] render — Keep infantry legs connected during walk frames.
+
+- 2026-11-24 — [codex] render — Add drawn frames for the recruit falling forward.
+
+- 2026-11-24 — [codex] render — Add front and back fall poses. Show the knees before the forward fall.
+
+- 2026-11-24 — [codex] render — Rework infantry falls, add blood splashes and remove detached snouts after 10 seconds.
+
+- 2026-11-24 — [codex] render — Keep fallen infantry on the field and add distinct knockback and kneeling falls.
+
+- 2026-11-24 — [codex] render — Enable blood by default and add three temporary infantry death reactions with snout spirits.
+
+- 2026-11-24 — [codex] render — Add a saved blood setting and a short blood effect for infantry deaths.
+
+- 2026-11-24 — [codex] render — Add infantry art and visual poses for walking, firing and falling. Keep five recruit walk styles.
+
+- 2026-11-24 — [codex] render — Add five recruit walking styles with different steps and rhythms.
+
+- 2026-11-24 — [codex] render — Add alternating infantry footstep frames and reduce body sway to make walking clearer.
+
+- 2026-11-24 — [codex] render — Keep infantry sprites upright while they walk so their helmets stay above their snouts.
+
+- 2026-11-24 — [codex] render — Add walking motion for the three infantry types. Use a separate step phase for each unit.
+
+- 2026-11-24 — [codex] render — Add three larger infantry sprites with distinct helmets and uniforms. Remove their sprite shadows. Keep the first version for review.
 - 2026-11-27 — [mistral] balance/squads — Review fixes in PR #56 (issue #23): 5-slot row and per-slot best squads in the report's 3-vs-4-vs-5 table, duplicate heading removed, note that the cost premium can fall below 1 when held share is below 1.00, caveat that the air_defence finding rests on the single helicopter wave, UTF-8 fix in the journal, clearer assert in `make_squads.py`. No value or measurement changed.
 
 - 2026-11-27 — [mistral] balance/squads — Measured which squads hold which waves (`docs/agents/mistral.md` section 11, issue #23). 3 Balance runs on `mistral/squads`: 40 mixed probe waves (cost 500-6000 on Forest belts) x every squad of 4 types on all 3 fields (run 45928428025), of 3 types and of 5 types on Forest belts (runs 46048257867, 46053203953); `tools/balance/make_squads.py`, `squads.csv`, `squad_waves.csv` are the inputs, `WaveCost.cs` `SQUADS_FILE` the tool. Findings in `docs/balance/mistral/squads/report.md`: 23 dominant squads of 4 on Forest belts and 27 on River crossing (0 on Balka and railway), every one with anti_tank, because `stop.csv` gives anti_tank the only strong values against armour; no type is must-have above 0.35 or unused above 0.475; air_defence is in the best 10 for 0% of helicopter waves; no drone-attacker wave is in the cost band. No game value changed; the report has a proposal (second armour counter via fpv_operator, stronger machine_gun vs special_forces, stronger air_defence vs helicopter, drone waves in the next probe set). `tools/balance/run.json` removed so new `mistral/**` branches do not run the squad mode.
