@@ -615,7 +615,7 @@ namespace Treeline.Render
                 if (velocity.sqrMagnitude > 0.000001f)
                 {
                     visual.MotionAge = 0f;
-                    if (type == "recruit")
+                    if (type == "recruit" || type == "regular")
                         visual.DirectionView = Mathf.Abs(velocity.x) < Mathf.Abs(velocity.y) * 0.41421356f
                             ? 0 : velocity.x < 0f ? -1 : 1;
                 }
@@ -633,10 +633,11 @@ namespace Treeline.Render
                         float cycle = Mathf.Repeat(visual.WalkPhase, Mathf.PI * 2f) / (Mathf.PI * 2f);
                         frame = cycle < 0.34f ? 0 : cycle < 0.54f ? 1 : cycle < 0.76f ? 2 : 3;
                     }
-                    visual.Body.sprite = type == "recruit" && visual.DirectionView != 0
-                        ? sprites.GetRecruitDiagonalWalkFrame(frame, visual.WalkVariant)
+                    visual.Body.sprite = visual.DirectionView == 0 ? sprites.GetWalkFrame(type, frame, visual.WalkVariant)
+                        : type == "recruit" ? sprites.GetRecruitDiagonalWalkFrame(frame, visual.WalkVariant)
+                        : type == "regular" ? sprites.GetRegularDiagonalWalkFrame(frame)
                         : sprites.GetWalkFrame(type, frame, visual.WalkVariant);
-                    visual.Body.flipX = type == "recruit" && visual.DirectionView > 0;
+                    visual.Body.flipX = (type == "recruit" || type == "regular") && visual.DirectionView > 0;
                     visual.Body.transform.localRotation = Quaternion.identity;
                     float hop = type == "recruit" && visual.WalkVariant == 0 && frame == 2 ? 0.25f : 0f;
                     visual.Body.transform.localPosition = new Vector3(0f, Mathf.Abs(step) * 0.04f + hop, 0f);
@@ -645,10 +646,11 @@ namespace Treeline.Render
                 {
                     visual.Body.transform.localRotation = Quaternion.identity;
                     visual.Body.transform.localPosition = Vector3.zero;
-                    visual.Body.sprite = type == "recruit" && visual.DirectionView != 0
-                        ? sprites.GetRecruitDiagonalWalkFrame(1, visual.WalkVariant)
+                    visual.Body.sprite = visual.DirectionView == 0 ? sprites.GetWalkFrame(type, 1, visual.WalkVariant)
+                        : type == "recruit" ? sprites.GetRecruitDiagonalWalkFrame(1, visual.WalkVariant)
+                        : type == "regular" ? sprites.GetRegularDiagonalWalkFrame(1)
                         : sprites.GetWalkFrame(type, 1, visual.WalkVariant);
-                    visual.Body.flipX = type == "recruit" && visual.DirectionView > 0;
+                    visual.Body.flipX = (type == "recruit" || type == "regular") && visual.DirectionView > 0;
                 }
                 if (Time.time < visual.ShotUntil)
                 {

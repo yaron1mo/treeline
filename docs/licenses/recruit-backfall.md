@@ -7,3 +7,5 @@
 - Date: 2026-11-28.
 
 The file `infantry_parts.png` uses the same source and permission.
+
+The file `regular_diagonal_walk.png` uses the same source and permission.

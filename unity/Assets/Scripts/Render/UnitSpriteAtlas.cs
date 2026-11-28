@@ -60,6 +60,7 @@ namespace Treeline.Render
         Sprite[] recruitCrutchFrames;
         Sprite[] recruitDiagonalWalkFrames;
         Sprite[] recruitDiagonalCrutchFrames;
+        Sprite[] regularDiagonalWalkFrames;
         readonly List<Texture2D> walkTextures = new List<Texture2D>();
         readonly Dictionary<string, Sprite> aimSprites = new Dictionary<string, Sprite>();
         readonly Dictionary<string, Sprite> headlessSprites = new Dictionary<string, Sprite>();
@@ -236,6 +237,22 @@ namespace Treeline.Render
 
         public Sprite GetRecruitDiagonalWalkFrame(int frame, int variant) =>
             variant == 0 ? recruitDiagonalCrutchFrames[frame] : recruitDiagonalWalkFrames[frame];
+
+        public Sprite GetRegularDiagonalWalkFrame(int frame)
+        {
+            if (regularDiagonalWalkFrames == null)
+            {
+                var texture = Resources.Load<Texture2D>("Art/Units/regular_diagonal_walk");
+                if (texture == null) throw new InvalidOperationException("Missing regular diagonal art");
+                float size = texture.width / 4f;
+                float bottom = (texture.height - size) * 0.5f;
+                regularDiagonalWalkFrames = new Sprite[4];
+                for (int i = 0; i < regularDiagonalWalkFrames.Length; i++)
+                    regularDiagonalWalkFrames[i] = Sprite.Create(texture, new Rect(i * size, bottom, size, size),
+                        new Vector2(0.5f, 0.5f), size / 12f, 0, SpriteMeshType.FullRect);
+            }
+            return regularDiagonalWalkFrames[frame];
+        }
 
         public Sprite GetAim(string unitId) => aimSprites[unitId];
         public Sprite GetHeadless(string unitId) => headlessSprites[unitId];
@@ -446,6 +463,8 @@ namespace Treeline.Render
             foreach (var frames in infantryShootFrames.Values)
                 foreach (var frame in frames) UnityEngine.Object.Destroy(frame);
             infantryShootFrames.Clear();
+            if (regularDiagonalWalkFrames != null)
+                foreach (var frame in regularDiagonalWalkFrames) UnityEngine.Object.Destroy(frame);
             if (recruitCrutchFrames != null)
                 foreach (var frame in recruitCrutchFrames) UnityEngine.Object.Destroy(frame);
             if (recruitDiagonalWalkFrames != null)
