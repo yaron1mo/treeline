@@ -110,13 +110,13 @@ Categories: A river, B hills, C forest, D open steppe, V village.
 | Open steppe | Kept, with the kurgan | A burial mound is the one hill. Without it the steppe gives the defender no tools. |
 | Village street, Crossroads | Added (Claude's prototypes) | The layout is taken from the Sim field files. The sheets add functions, fill and life. |
 
-## Open questions (for Yaroslav)
+## Decisions of Yaroslav (2026-11-28)
 
-1. **Which maps stay?** Goal: 20 strong maps. Options: (a) keep all 22; (b) keep 20: cut Open steppe and Ridge (the most like other maps); (c) keep 15: the best per category, build the rest later. Recommendation: (a) for now, and cut after the Balance run shows which maps play the same.
-2. **Do crop rows count as "filled"?** The sheets count them as decoration (20–40% of a map). Options: (a) yes, as drawn; (b) no, they count as empty and each map gets more objects; (c) crop rows only as a visual layer, not a fill. Recommendation: (a), because 10 m is a large cell and a field is not empty land. If you see these maps as too empty on screen, we change to (b).
-3. **New Sim rows:** five rows (`stack`, `shed`, `silo`, `camo_net`, `dugout`). Options: (a) all five; (b) only `stack`, `silo`, `dugout`, and use `house` for sheds and `bush` for nets; (c) none, reuse `heap`, `house`, `rock`, `trench`. Recommendation: (a), the cost is five rows and no new code paths except burning stacks.
-4. **Designed maps and real terrain** (decided: real-terrain map prototypes). Options: (a) these sheets are the target; real terrain gives only the style; (b) use the OSM terrain where it fits a sheet and redraw the rest; (c) stop the designed maps and use real terrain only. Recommendation: (a): the sheets say what the map must do for the defender. Real terrain is checked against the sheets.
-5. **Campaign order.** The "Fits" line of each sheet is a proposal only (chapter and endless length). Options: (a) decide with the campaign structure; (b) decide now: Overlook and Farmstead for chapter 1. Recommendation: (a).
+1. **Maps:** keep all 22. Cut later, when the Balance run shows which maps play the same.
+2. **Crop rows:** they count as filled (decoration, 20–40% of a map). If a map looks empty on screen, add objects.
+3. **New Sim rows:** add all five (`stack`, `shed`, `silo`, `camo_net`, `dugout`).
+4. **Designed maps and real terrain:** the sheets are the target. Real terrain gives only the style.
+5. **Campaign order:** decide with the campaign structure (issue #21).
 
 ## What Claude must build or measure
 
