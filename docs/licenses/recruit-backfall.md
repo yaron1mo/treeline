@@ -15,3 +15,5 @@ The files `regular_diagonal_shoot.png`, `regular_diagonal_fall.png`, `regular_di
 The file `regular_backfall.png` uses the same source and permission.
 
 The file `special_forces_diagonal_walk.png` uses the same source and permission.
+
+The files `special_forces_diagonal_shoot.png`, `special_forces_diagonal_fall.png`, `special_forces_diagonal_bare_fall.png`, `special_forces_diagonal_backfall.png`, and `special_forces_backfall.png` use the same source and permission.

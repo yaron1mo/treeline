@@ -297,9 +297,9 @@ namespace Treeline.Render
             }
             return frames[frame];
         }
-        public Sprite GetRegularFrame(string pose, int frame, bool diagonal = true)
+        public Sprite GetDirectionalFrame(string unitId, string pose, int frame, bool diagonal = true)
         {
-            string key = "regular_" + (diagonal ? "diagonal_" : "") + pose;
+            string key = unitId + "_" + (diagonal ? "diagonal_" : "") + pose;
             var cache = pose == "shoot" ? infantryShootFrames : infantryFallFrames;
             if (!cache.TryGetValue(key, out var frames))
             {
@@ -307,7 +307,7 @@ namespace Treeline.Render
                 if (texture == null) throw new InvalidOperationException("Missing infantry art: " + key);
                 int count = pose == "shoot" ? 3 : 6;
                 float cell = texture.width / (float)count;
-                float size = pose == "shoot" ? cell * 0.7f : cell;
+                float size = pose == "shoot" ? cell * (unitId == "special_forces" ? 0.85f : 0.7f) : cell;
                 float bottom = (texture.height - size) * 0.5f;
                 frames = new Sprite[count];
                 for (int i = 0; i < count; i++)

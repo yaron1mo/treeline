@@ -499,15 +499,15 @@ namespace Treeline.Render
         void UpdateFallPose(Visual fallen, float elapsed)
         {
             Transform body = fallen.Body.transform;
-            bool diagonal = (fallen.UnitId == "recruit" || fallen.UnitId == "regular") && fallen.DirectionView != 0;
+            bool diagonal = fallen.DirectionView != 0;
             bool crutch = fallen.UnitId == "recruit" && fallen.WalkVariant == 0;
-            if (fallen.DeathVariant == 1 || fallen.UnitId == "recruit" || fallen.UnitId == "regular")
+            if (fallen.DeathVariant == 1 || fallen.UnitId == "recruit" || fallen.UnitId == "regular" || fallen.UnitId == "special_forces")
             {
                 int frame = Mathf.Min(5, Mathf.FloorToInt(elapsed / 0.09f));
                 bool backFall = fallen.UnitId == "recruit" && fallen.DeathVariant == 0;
                 fallen.Body.sprite = backFall ? sprites.GetRecruitBackFallFrame(frame, diagonal, fallen.WalkVariant)
-                    : fallen.UnitId == "regular" && (diagonal || fallen.DeathVariant == 0) ? sprites.GetRegularFrame(
-                        fallen.DeathVariant == 0 ? "backfall" : fallen.HelmetComesOff ? "bare_fall" : "fall", frame, diagonal)
+                    : fallen.UnitId != "recruit" && (diagonal || fallen.DeathVariant == 0) ? sprites.GetDirectionalFrame(
+                        fallen.UnitId, fallen.DeathVariant == 0 ? "backfall" : fallen.HelmetComesOff ? "bare_fall" : "fall", frame, diagonal)
                     : fallen.HelmetComesOff ? sprites.GetBareFallFrame(fallen.UnitId, frame, diagonal, fallen.WalkVariant)
                     : sprites.GetInfantryFallFrame(fallen.UnitId, frame, diagonal, fallen.WalkVariant);
                 fallen.Snout.gameObject.SetActive(!backFall && fallen.DeathVariant != 0 && !diagonal && !crutch && frame >= 4);
@@ -656,8 +656,8 @@ namespace Treeline.Render
                 {
                     float shotElapsed = 0.3f - (visual.ShotUntil - Time.time);
                     int shotFrame = shotElapsed < 0.08f ? 0 : shotElapsed < 0.18f ? 1 : 2;
-                    bool diagonal = (type == "recruit" || type == "regular") && visual.DirectionView != 0;
-                    visual.Body.sprite = type == "regular" && diagonal ? sprites.GetRegularFrame("shoot", shotFrame)
+                    bool diagonal = visual.DirectionView != 0;
+                    visual.Body.sprite = type != "recruit" && diagonal ? sprites.GetDirectionalFrame(type, "shoot", shotFrame)
                         : sprites.GetInfantryShootFrame(type, shotFrame, visual.WalkVariant, diagonal);
                     visual.Body.flipX = diagonal && visual.DirectionView > 0;
                     visual.Body.transform.localRotation = Quaternion.identity;
