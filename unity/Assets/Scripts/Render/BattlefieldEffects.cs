@@ -38,6 +38,9 @@ namespace Treeline.Render
         int cursor;
         bool ready, demo;
         float demoClock;
+        Camera shakeCamera;
+        Vector3 shakeOffset;
+        float shakeLeft, shakeStrength;
         readonly Vector2[] longSmoke = new Vector2[6];
         readonly float[] smokeTime = new float[6];
         readonly float[] smokeLeft = new float[6];
@@ -184,6 +187,11 @@ namespace Treeline.Render
         public void Explosion(Vector2 at, float radiusMetres)
         {
             float r = Mathf.Clamp(radiusMetres, 2f, 26f);
+            if (radiusMetres >= 8f)
+            {
+                shakeLeft = 0.16f;
+                shakeStrength = Mathf.Clamp01(radiusMetres / 16f);
+            }
             Emit(at, Vector2.zero, new Color(1f, 0.87f, 0.42f, 1f),
                 0.30f, r * 0.75f, r * 1.45f);
             for (int j = 0; j < 6; j++)
@@ -317,6 +325,28 @@ namespace Treeline.Render
                     WreckSmoke(new Vector2(mapWidth * 0.60f, mapHeight * 0.48f));
                 }
             }
+        }
+
+        void LateUpdate()
+        {
+            if (shakeCamera != null) shakeCamera.transform.position -= shakeOffset;
+            shakeOffset = Vector3.zero;
+            if (shakeLeft <= 0f) { shakeCamera = null; return; }
+            shakeLeft = Mathf.Max(0f, shakeLeft - Mathf.Min(0.05f, Time.unscaledDeltaTime));
+            shakeCamera = Camera.main;
+            if (shakeCamera == null) return;
+            float strength = shakeCamera.orthographicSize * 0.003f * shakeStrength * (shakeLeft / 0.16f);
+            float t = Time.unscaledTime * 87f;
+            shakeOffset = new Vector3(Mathf.Sin(t), Mathf.Cos(t * 1.37f), 0f) * strength;
+            shakeCamera.transform.position += shakeOffset;
+        }
+
+        void OnDisable()
+        {
+            if (shakeCamera != null) shakeCamera.transform.position -= shakeOffset;
+            shakeCamera = null;
+            shakeOffset = Vector3.zero;
+            shakeLeft = 0f;
         }
 
         void OnDestroy()

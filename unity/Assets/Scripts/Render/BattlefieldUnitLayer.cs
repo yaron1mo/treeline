@@ -100,6 +100,8 @@ namespace Treeline.Render
         float streakDisplayUntil;
         string streakLabel;
         GUIStyle streakStyle;
+        int slowFrames;
+        float previousTimeScale, appliedTimeScale;
         float widthMetres = 200f, heightMetres = 400f;
         bool showCatalog = true;
         bool ready;
@@ -137,6 +139,7 @@ namespace Treeline.Render
         public void BindBattle(Battle current)
         {
             if (battle == current) return;
+            RestoreTimeScale();
             ClearVisuals();
             previousShotTimes.Clear();
             priorProjectiles.Clear();
@@ -722,9 +725,37 @@ namespace Treeline.Render
             killStreak = time - lastKillTime <= 4f ? killStreak + 1 : 1;
             lastKillTime = time;
             if (killStreak < 2) return;
+            BeginSlowMotion();
             streakLabel = killStreak == 2 ? "DOUBLE KILL" : killStreak == 3 ? "TRIPLE KILL" : killStreak == 4 ? "MULTI KILL" : "ULTRA KILL";
             streakDisplayUntil = time + 1.8f;
         }
+
+        void BeginSlowMotion()
+        {
+            if (slowFrames == 0)
+            {
+                previousTimeScale = Time.timeScale;
+                if (previousTimeScale <= 0f) return;
+                appliedTimeScale = previousTimeScale * 0.3f;
+                Time.timeScale = appliedTimeScale;
+            }
+            slowFrames = 3;
+        }
+
+        void LateUpdate()
+        {
+            if (slowFrames == 1) RestoreTimeScale();
+            else if (slowFrames > 1) slowFrames--;
+        }
+
+        void RestoreTimeScale()
+        {
+            if (slowFrames > 0 && Mathf.Approximately(Time.timeScale, appliedTimeScale))
+                Time.timeScale = previousTimeScale;
+            slowFrames = 0;
+        }
+
+        void OnDisable() { RestoreTimeScale(); }
 
         Vector2 FindImpactDirection(Attacker attacker)
         {

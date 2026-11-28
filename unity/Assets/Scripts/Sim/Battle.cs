@@ -450,7 +450,7 @@ namespace Treeline.Sim
         /// <summary>Our defenders killed so far in this battle, oldest first.</summary>
         public IReadOnlyList<Loss> Losses => losses;
 
-        /// <summary>Kill rewards earned and not yet paid (battle_rules kill_reward_share Ãƒâ€” threat_value).</summary>
+        /// <summary>Kill rewards earned and not yet paid (battle_rules kill_reward_share × threat_value).</summary>
         public float Rewards { get; private set; }
 
         /// <summary>Pay the earned kill rewards into the budget (the game does it when a wave is held). Returns them.</summary>
