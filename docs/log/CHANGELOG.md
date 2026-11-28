@@ -1,5 +1,7 @@
 # Change log
 
+2026-11-28 — [codex] art — Add the recruit diagonal-vehicle GIF.
+
 2026-11-28 — [codex] art — Add the recruit diagonal-mortar GIF.
 
 2026-11-28 — [codex] art — Add the recruit diagonal-grenade GIF.
