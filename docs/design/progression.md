@@ -46,10 +46,11 @@ Write all text in ASD-STE100. Mark each item as **Decided** (with date and who) 
 
 ## 2. Open
 
-- **Death or wounded:** a unit at 0 HP is wounded ("300") or killed ("200"); proposal 50/50; what evacuation costs; recovery time.
+- **Death or wounded:** a unit at 0 HP is wounded ("300") or killed ("200"); proposal 50/50; what evacuation costs; recovery time. Proposal: [unit-progression.md](unit-progression.md), sections 5 and 9.
 - **Unit roster for release** (10 attacker types, 10 defender types, 3 support calls), EW station numbers and effects, air-defence rules, roster cuts. Proposal and options: [unit-roster.md](unit-roster.md).
 - **Roster follow-up (2026-11-27, second round on PR #28):** how the EW station is placed when it is a recon-drone utility; how many utility slots and what else goes in them; whether an upgraded Shahed resists EW. Options: [unit-roster.md](unit-roster.md), section 11.
-- **Barracks size** and units per level.
+- **Barracks size** and units per level. Proposal: [unit-progression.md](unit-progression.md), section 6.
+- **Unit upgrade paths and experience** (designer, 2026-11-28, issue #20): paths for rifleman, mortar and recon drone; experience as a discount; whether a step needs the branch level. Options: [unit-progression.md](unit-progression.md), sections 3, 4 and 9.
 - **Slots:** how many at start, how they open.
 - **Veteran slots and general slots** (Yaroslav's idea, 2026-11-27): if all upgraded veterans die, where do new units come from? Separate veteran slots and general slots; effect on the weekly challenge (nothing is carried over). To design together.
 - **Weekly challenge squad:** later (separate balance).
