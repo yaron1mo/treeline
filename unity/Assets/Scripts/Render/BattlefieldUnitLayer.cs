@@ -674,7 +674,14 @@ namespace Treeline.Render
                     if (visual.MuzzleFlash != null)
                     {
                         if (diagonal)
-                            visual.MuzzleFlash.transform.localPosition = new Vector3(visual.DirectionView > 0 ? 4.4f : -4.4f, -2.9f, 0f);
+                        {
+                            // Match the muzzle in each current diagonal shooting frame.
+                            Vector2 muzzle = type == "recruit"
+                                ? (visual.WalkVariant == 0 ? new Vector2(-4.3f, -3.0f) : new Vector2(-3.9f, -3.0f))
+                                : type == "regular" ? new Vector2(-2.3f, -2.8f) : new Vector2(-3.6f, -1.3f);
+                            visual.MuzzleFlash.transform.localPosition = new Vector3(
+                                visual.DirectionView > 0 ? -muzzle.x : muzzle.x, muzzle.y, 0f);
+                        }
                         else if (type == "recruit")
                             visual.MuzzleFlash.transform.localPosition = visual.WalkVariant == 0
                                 ? new Vector3(-1.5f, -1.5f, 0f) : new Vector3(-2.2f, -3.7f, 0f);
