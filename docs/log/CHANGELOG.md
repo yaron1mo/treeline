@@ -1,5 +1,7 @@
 # Change log
 
+2026-11-28 — [codex] art — Add the special forces straight-vehicle GIF.
+
 2026-11-28 — [codex] art — Add the special forces straight-mortar GIF.
 
 2026-11-28 — [codex] art — Add the special forces straight-grenade GIF.
