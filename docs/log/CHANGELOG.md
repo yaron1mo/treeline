@@ -1,5 +1,7 @@
 # Change log
 
+2026-11-28 — [codex] art — Add the regular diagonal-mortar GIF.
+
 2026-11-28 — [codex] art — Add the regular diagonal-grenade GIF.
 
 2026-11-28 — [codex] art — Add the regular diagonal-loose-helmet GIF.
