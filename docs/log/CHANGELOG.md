@@ -1,5 +1,7 @@
 # Change log
 
+2026-11-28 — [codex] art — Add the regular straight-fall-forward GIF.
+
 2026-11-28 — [codex] art — Add the regular straight-hit GIF.
 
 2026-11-28 — [codex] art — Add the regular straight-shoot GIF.
