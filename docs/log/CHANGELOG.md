@@ -1,5 +1,7 @@
 # Change log
 
+2026-11-28 — [codex] art — Add the special forces diagonal-hit GIF.
+
 2026-11-28 — [codex] art — Add the special forces diagonal-shoot GIF.
 
 2026-11-28 — [codex] art — Add the special forces diagonal-walk GIF.
