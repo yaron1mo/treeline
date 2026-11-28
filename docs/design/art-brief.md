@@ -18,6 +18,7 @@ Written by Claude (CTO) from Yaroslav's decisions, 2026-11-27. Every visual task
 - **Authentic gear, stylised bodies.** The gear (camouflage, plate carriers, radios, drones) is recognisable and accurate. The bodies and faces are stylised for satire.
 - **In-game sprites are not key art.** On a phone a unit is about 1 cm. A detailed concept is key art (store page, menus, loading screens). In-game sprites are simpler: a clear silhouette, a few colours, one or two signature details (pig snout, skull, helmet).
 - **Camera:** top-down, phone screen.
+- **Buildings and props use the unit view** (Yaroslav, 2026-11-28): draw houses, sheds, silos, fences and other props like the units. You see the front side, with a small tilt from above. Do not draw a flat roof plan seen from directly above.
 - **No real flags, national symbols, unit insignia, letters such as Z, or real people.** Fictional patches only.
 
 ## 2. References: modern military culture (especially Ukrainian)
