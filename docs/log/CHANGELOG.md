@@ -1,5 +1,7 @@
 # Change log
 
+2026-11-28 — [codex] art — Add the special forces straight-hit GIF.
+
 2026-11-28 — [codex] art — Add the special forces straight-shoot GIF.
 
 2026-11-28 — [codex] art — Add the special forces straight-walk GIF and preview tool.
