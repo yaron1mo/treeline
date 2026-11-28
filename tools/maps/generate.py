@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Generate the designed sector maps (issue #46) into unity/Assets/Resources/Fields/.
+"""Generate the designed maps (issue #46) into unity/Assets/Resources/Fields/.
 
-Reads tools/maps/concepts.json, builds each map with tools/maps/grammar.py (same seed +
-same parameters -> same map) and writes sector-<file>.json in the Forest belts field
-format, plus the Unity .meta file with a fresh GUID.
+Reads tools/maps/concepts.json, builds each map with tools/maps/grammar.py and
+writes <file>.json in the Forest belts field format, plus the Unity .meta file
+with a fresh GUID. Maps with a "sheet" key are built from their approved concept
+sheet (docs/design/maps/*.md, PR #51); same seed + same parameters -> same map.
 
 Usage: python3 tools/maps/generate.py [--check-only]
 """
@@ -20,12 +21,14 @@ FIELDS_DIR = os.path.join(ROOT, "unity", "Assets", "Resources", "Fields")
 sys.path.insert(0, HERE)
 import grammar  # noqa: E402
 
-# Feature types the Sim knows (TerrainTable names + obstacle ids used on fields).
-# bridge_ruins is decoration only (the Sim ignores it; the road is split at the banks).
+# Feature types the Sim/render know: TerrainTable names, obstacle ids, and the
+# render-only decorations (tracks, craters, bridge_ruins, field).
 KNOWN_TYPES = {
     "field", "tracks", "craters", "grove", "pond", "belt", "road",
     "rock", "wreck", "bush", "heap", "embankment", "hill", "trench", "balka",
     "river", "ford", "pipe", "wire", "hedgehog", "bridge_ruins",
+    "house", "ruin", "fence", "sunflower", "burned_belt",
+    "stack", "shed", "silo", "camo_net", "dugout",
 }
 
 
@@ -33,36 +36,41 @@ def validate(field, concept):
     w, h = field["size"]
     assert field["name"] == concept["name"]
     assert 0 < w <= 400 and 0 < h <= 800
-    assert 1 <= len(field["spawns"]) <= 2, "1-2 spawns"
-    for s in field["spawns"]:
-        assert grammar.RULES["edge_margin"] <= s <= w - grammar.RULES["edge_margin"]
-    belts = [f for f in field["features"] if f["type"] == "belt"]
-    assert len(belts) <= 12, "at most 12 belt features"
+    spawns = field.get("spawns", [])
+    assert len(spawns) <= 3, "at most 3 spawns"
+    for s in spawns:
+        assert grammar.RULES["edge_margin"] <= s <= w - grammar.RULES["edge_margin"], s
     for f in field["features"]:
         assert f["type"] in KNOWN_TYPES, f["type"]
         pts = f.get("poly") or f.get("line") or f.get("points")
         assert pts, "feature without geometry"
         for p in (f.get("poly") or f.get("line") or []):
             assert len(p) == 2
-    # every belt row keeps its designed gaps: the Sim covers a point within half the
-    # belt width of the segment, so the gap centre must stay open and the effective
-    # opening (gap width - belt width, as in Forest belts) must stay positive
-    lay = field["_layout"]
-    for y, gaps, gws, bw in zip(lay["belt_ys"], lay["gaps"], lay["gap_widths"], lay["belt_ws"]):
-        for gx, gw in zip(gaps, gws):
-            assert gw - bw >= 3.5, f"gap at x={gx} y={y} is narrower than the belt: {gw} - {bw}"
-            for f in belts:
-                line = f.get("line")
-                if line is None or not any(abs(p[1] - y) < 20 for p in line):
+            assert 0 <= p[0] <= w + 1e-6 and 0 <= p[1] <= h + 1e-6, (f["type"], p)
+    if "sheet" in concept:
+        # the sheet grid is the source: every non-decor cell must appear as a feature
+        grid = field["_layout"]["grid"]
+        cell = grammar.SHEET_CELL
+        placed = set()
+        for f in field["features"]:
+            if f.get("poly"):
+                xs = [p[0] for p in f["poly"]]
+                ys = [p[1] for p in f["poly"]]
+                for r in range(int(min(ys) // cell), int(max(ys) // cell) + 1):
+                    for c in range(int(min(xs) // cell), int(max(xs) // cell) + 1):
+                        placed.add((r, c))
+            for p in (f.get("line") or []):
+                placed.add((int(p[1] // cell), int(p[0] // cell)))
+            for q in (f.get("points") or []):
+                placed.add((int(q[1] // cell), int(q[0] // cell)))
+        missing = []
+        for r, row in enumerate(grid):
+            for c, ch in enumerate(row):
+                if ch in grammar.SHEET_DECOR:
                     continue
-                half = max(f.get("width", 12) / 2, 1.5)
-                for a, b in zip(line, line[1:]):
-                    if not (min(a[0], b[0]) - 0.01 <= gx <= max(a[0], b[0]) + 0.01):
-                        continue
-                    t = 0.0 if b[0] == a[0] else (gx - a[0]) / (b[0] - a[0])
-                    sy = a[1] + t * (b[1] - a[1])
-                    if abs(sy - y) <= half:
-                        raise AssertionError(f"belt covers the gap centre at x={gx} y={y}")
+                if (r, c) not in placed:
+                    missing.append((ch, r, c))
+        assert not missing, f"sheet cells without a feature: {missing[:10]}"
     return True
 
 
@@ -89,8 +97,8 @@ def main():
         # determinism: generating twice gives the same file
         again = json.dumps(grammar.strip_layout(grammar.generate(concept)), indent=1)
         assert again.replace("\r\n", "\n") == json.dumps(data, indent=1).replace("\r\n", "\n"), concept["name"]
-        written.append((concept["file"], concept["name"], len(data["features"]), data["spawns"]))
-        print(f"{concept['file']}.json  {concept['name']:22s} features={len(data['features']):3d} spawns={data['spawns']}")
+        written.append((concept["file"], concept["name"], len(data["features"]), data.get("spawns")))
+        print(f"{concept['file']}.json  {concept['name']:20s} features={len(data['features']):3d} spawns={data.get('spawns')}")
     print(f"{len(written)} maps OK" + (" (check only)" if check_only else ""))
 
 

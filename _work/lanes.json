@@ -1,0 +1,479 @@
+[
+ {
+  "name": "Ruined bridge",
+  "file": "ruined-bridge",
+  "category": "A",
+  "lanes_placing": [
+   91.0
+  ],
+  "lanes_placing_weights": [
+   20
+  ],
+  "lanes_mid": [
+   91.0
+  ],
+  "expect_lanes": 3,
+  "spawns": null,
+  "reach": [
+   "inf:ok(13/15)",
+   "veh:ok(7/15)",
+   "arm:ok(15/15)"
+  ]
+ },
+ {
+  "name": "River bend",
+  "file": "river-bend",
+  "category": "A",
+  "lanes_placing": [
+   61.0,
+   93.0
+  ],
+  "lanes_placing_weights": [
+   13,
+   11
+  ],
+  "lanes_mid": [
+   69.0
+  ],
+  "expect_lanes": 3,
+  "spawns": null,
+  "reach": [
+   "inf:ok(13/15)",
+   "veh:ok(11/15)",
+   "arm:ok(11/15)"
+  ]
+ },
+ {
+  "name": "Confluence",
+  "file": "confluence",
+  "category": "A",
+  "lanes_placing": [
+   41.0,
+   129.0
+  ],
+  "lanes_placing_weights": [
+   21,
+   1
+  ],
+  "lanes_mid": [
+   41.0,
+   99.0,
+   169.0
+  ],
+  "expect_lanes": 3,
+  "spawns": null,
+  "reach": [
+   "inf:ok(13/15)",
+   "veh:ok(9/15)",
+   "arm:ok(14/15)"
+  ]
+ },
+ {
+  "name": "Overlook",
+  "file": "overlook",
+  "category": "A",
+  "lanes_placing": [
+   101.0
+  ],
+  "lanes_placing_weights": [
+   18
+  ],
+  "lanes_mid": [
+   101.0
+  ],
+  "expect_lanes": 3,
+  "spawns": null,
+  "reach": [
+   "inf:ok(13/15)",
+   "veh:ok(5/15)",
+   "arm:ok(15/15)"
+  ]
+ },
+ {
+  "name": "Enemy heights",
+  "file": "enemy-heights",
+  "category": "A",
+  "lanes_placing": [
+   131.0,
+   69.0
+  ],
+  "lanes_placing_weights": [
+   13,
+   13
+  ],
+  "lanes_mid": [
+   141.0
+  ],
+  "expect_lanes": 3,
+  "spawns": null,
+  "reach": [
+   "inf:ok(13/15)",
+   "veh:ok(13/15)",
+   "arm:ok(13/15)"
+  ]
+ },
+ {
+  "name": "Left hill",
+  "file": "left-hill",
+  "category": "B",
+  "lanes_placing": [
+   121.0
+  ],
+  "lanes_placing_weights": [
+   26
+  ],
+  "lanes_mid": [
+   121.0
+  ],
+  "expect_lanes": 3,
+  "spawns": null,
+  "reach": [
+   "inf:ok(13/15)",
+   "veh:ok(13/15)",
+   "arm:ok(13/15)"
+  ]
+ },
+ {
+  "name": "Ridge",
+  "file": "ridge",
+  "category": "B",
+  "lanes_placing": [
+   69.0
+  ],
+  "lanes_placing_weights": [
+   22
+  ],
+  "lanes_mid": [
+   69.0
+  ],
+  "expect_lanes": 3,
+  "spawns": null,
+  "reach": [
+   "inf:ok(12/15)",
+   "veh:ok(10/15)",
+   "arm:ok(13/15)"
+  ]
+ },
+ {
+  "name": "Valley",
+  "file": "valley",
+  "category": "B",
+  "lanes_placing": [
+   99.0
+  ],
+  "lanes_placing_weights": [
+   18
+  ],
+  "lanes_mid": [
+   99.0
+  ],
+  "expect_lanes": 3,
+  "spawns": null,
+  "reach": [
+   "inf:ok(13/15)",
+   "veh:ok(5/15)",
+   "arm:ok(15/15)"
+  ]
+ },
+ {
+  "name": "Long slope",
+  "file": "long-slope",
+  "category": "B",
+  "lanes_placing": [
+   99.0
+  ],
+  "lanes_placing_weights": [
+   26
+  ],
+  "lanes_mid": [
+   99.0
+  ],
+  "expect_lanes": 3,
+  "spawns": null,
+  "reach": [
+   "inf:ok(13/15)",
+   "veh:ok(13/15)",
+   "arm:ok(13/15)"
+  ]
+ },
+ {
+  "name": "Gully mouth",
+  "file": "gully-mouth",
+  "category": "B",
+  "lanes_placing": [
+   151.0,
+   43.0
+  ],
+  "lanes_placing_weights": [
+   18,
+   4
+  ],
+  "lanes_mid": [
+   151.0,
+   43.0
+  ],
+  "expect_lanes": 3,
+  "spawns": null,
+  "reach": [
+   "inf:ok(12/15)",
+   "veh:ok(10/15)",
+   "arm:ok(10/15)"
+  ]
+ },
+ {
+  "name": "Clearings",
+  "file": "clearings",
+  "category": "C",
+  "lanes_placing": [
+   91.0
+  ],
+  "lanes_placing_weights": [
+   13
+  ],
+  "lanes_mid": [
+   109.0
+  ],
+  "expect_lanes": 3,
+  "spawns": null,
+  "reach": [
+   "inf:ok(13/15)",
+   "veh:BLOCKED(0/15)",
+   "arm:ok(15/15)"
+  ]
+ },
+ {
+  "name": "Forest road",
+  "file": "forest-road",
+  "category": "C",
+  "lanes_placing": [
+   111.0
+  ],
+  "lanes_placing_weights": [
+   14
+  ],
+  "lanes_mid": [
+   99.0
+  ],
+  "expect_lanes": 1,
+  "spawns": null,
+  "reach": [
+   "inf:ok(13/15)",
+   "veh:BLOCKED(1/15)",
+   "arm:ok(15/15)"
+  ]
+ },
+ {
+  "name": "Forest and steppe",
+  "file": "forest-and-steppe",
+  "category": "C",
+  "lanes_placing": [
+   91.0
+  ],
+  "lanes_placing_weights": [
+   20
+  ],
+  "lanes_mid": [
+   91.0
+  ],
+  "expect_lanes": 3,
+  "spawns": null,
+  "reach": [
+   "inf:ok(13/15)",
+   "veh:ok(7/15)",
+   "arm:ok(14/15)"
+  ]
+ },
+ {
+  "name": "Grove islands",
+  "file": "grove-islands",
+  "category": "C",
+  "lanes_placing": [
+   91.0
+  ],
+  "lanes_placing_weights": [
+   26
+  ],
+  "lanes_mid": [
+   99.0,
+   69.0
+  ],
+  "expect_lanes": 3,
+  "spawns": null,
+  "reach": [
+   "inf:ok(13/15)",
+   "veh:ok(13/15)",
+   "arm:ok(13/15)"
+  ]
+ },
+ {
+  "name": "Burned edge",
+  "file": "burned-edge",
+  "category": "C",
+  "lanes_placing": [
+   101.0
+  ],
+  "lanes_placing_weights": [
+   18
+  ],
+  "lanes_mid": [
+   99.0
+  ],
+  "expect_lanes": 3,
+  "spawns": null,
+  "reach": [
+   "inf:ok(13/15)",
+   "veh:ok(5/15)",
+   "arm:ok(15/15)"
+  ]
+ },
+ {
+  "name": "Open steppe",
+  "file": "open-steppe",
+  "category": "D",
+  "lanes_placing": [
+   149.0
+  ],
+  "lanes_placing_weights": [
+   26
+  ],
+  "lanes_mid": [
+   149.0
+  ],
+  "expect_lanes": 3,
+  "spawns": null,
+  "reach": [
+   "inf:ok(13/15)",
+   "veh:ok(13/15)",
+   "arm:ok(13/15)"
+  ]
+ },
+ {
+  "name": "Sunflower",
+  "file": "sunflower",
+  "category": "D",
+  "lanes_placing": [
+   51.0,
+   151.0
+  ],
+  "lanes_placing_weights": [
+   12,
+   11
+  ],
+  "lanes_mid": [
+   51.0,
+   151.0
+  ],
+  "expect_lanes": 3,
+  "spawns": null,
+  "reach": [
+   "inf:ok(13/15)",
+   "veh:ok(10/15)",
+   "arm:ok(13/15)"
+  ]
+ },
+ {
+  "name": "Old trenches",
+  "file": "old-trenches",
+  "category": "D",
+  "lanes_placing": [
+   101.0
+  ],
+  "lanes_placing_weights": [
+   26
+  ],
+  "lanes_mid": [
+   101.0
+  ],
+  "expect_lanes": 3,
+  "spawns": null,
+  "reach": [
+   "inf:ok(13/15)",
+   "veh:ok(13/15)",
+   "arm:ok(15/15)"
+  ]
+ },
+ {
+  "name": "Wreck field",
+  "file": "wreck-field",
+  "category": "D",
+  "lanes_placing": [
+   101.0
+  ],
+  "lanes_placing_weights": [
+   20
+  ],
+  "lanes_mid": [
+   101.0
+  ],
+  "expect_lanes": 3,
+  "spawns": null,
+  "reach": [
+   "inf:ok(13/15)",
+   "veh:ok(7/15)",
+   "arm:ok(12/15)"
+  ]
+ },
+ {
+  "name": "Farmstead",
+  "file": "farmstead",
+  "category": "D",
+  "lanes_placing": [
+   99.0
+  ],
+  "lanes_placing_weights": [
+   19
+  ],
+  "lanes_mid": [
+   99.0
+  ],
+  "expect_lanes": 3,
+  "spawns": null,
+  "reach": [
+   "inf:ok(13/15)",
+   "veh:ok(6/15)",
+   "arm:ok(6/15)"
+  ]
+ },
+ {
+  "name": "Village street",
+  "file": "village-street",
+  "category": "V",
+  "lanes_placing": [
+   99.0
+  ],
+  "lanes_placing_weights": [
+   26
+  ],
+  "lanes_mid": [
+   99.0
+  ],
+  "expect_lanes": 3,
+  "spawns": null,
+  "reach": [
+   "inf:ok(13/15)",
+   "veh:ok(13/15)",
+   "arm:ok(13/15)"
+  ]
+ },
+ {
+  "name": "Crossroads",
+  "file": "village-crossroads",
+  "category": "V",
+  "lanes_placing": [
+   101.0
+  ],
+  "lanes_placing_weights": [
+   24
+  ],
+  "lanes_mid": [
+   101.0
+  ],
+  "expect_lanes": 4,
+  "spawns": null,
+  "reach": [
+   "inf:ok(13/15)",
+   "veh:ok(11/15)",
+   "arm:ok(11/15)"
+  ]
+ }
+]

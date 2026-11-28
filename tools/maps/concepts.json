@@ -1,2085 +1,247 @@
 {
- "comment": "Issue #46, brief of 2026-11-27 (replaces group A): 20 designed maps in 4 categories (A river, B hills, C forest-heavy, D open steppe), each with its own main idea; at most one map per category may be parallel belts across the field (none is). Each entry is a parameter set for tools/maps/grammar.py. Same seed + same parameters -> same map. gap_x gives the gap centres of every belt row (top row first). Map 15's burned strip is a normal belt until the Sim has a burned-belt rule; map 17's sunflower field is bushes until the Sim has a crop rule.",
+ "brief": "Issue #46, brief of 2026-11-27, reworked 2026-11-28: the 22 approved concept sheets of docs/design/maps/*.md (PR #51) are the target. Each map below points at its sheet; the generator builds the field straight from the sheet grid (same sheet + same seed -> same field file). Categories: A river, B hills and slopes, C forest-heavy, D open steppe, V village (sheets 21-22, added by #51).",
  "maps": [
   {
    "no": 1,
-   "category": "A",
-   "name": "Ruined bridge",
    "file": "ruined-bridge",
+   "name": "Ruined bridge",
+   "category": "A",
+   "sheet": "docs/design/maps/ruined-bridge.md",
+   "seed": 1,
    "sector": "Sector 41",
-   "seed": 4701,
-   "expect_lanes": 2,
-   "spawns": [
-    60,
-    140
-   ],
-   "idea": "River across the middle, one ruined bridge, one ford far to the side: vehicles must use the far ford; infantry can use a pipe.",
-   "rivers": [
-    {
-     "shape": "across",
-     "y": 200,
-     "wiggle": 8,
-     "width": 16
-    }
-   ],
-   "bridge_ruins": [
-    {
-     "line": [
-      [
-       128,
-       190
-      ],
-      [
-       126,
-       214
-      ]
-     ],
-     "width": 7
-    }
-   ],
-   "roads": [
-    {
-     "line": [
-      [
-       132,
-       -4
-      ],
-      [
-       130,
-       100
-      ],
-      [
-       128,
-       190
-      ]
-     ],
-     "width": 5
-    },
-    {
-     "line": [
-      [
-       124,
-       216
-      ],
-      [
-       123,
-       288
-      ]
-     ],
-     "width": 5
-    },
-    {
-     "line": [
-      [
-       120,
-       314
-      ],
-      [
-       121,
-       360
-      ],
-      [
-       120,
-       404
-      ]
-     ],
-     "width": 5
-    }
-   ],
-   "fords": [
-    {
-     "x": 38,
-     "y": 200,
-     "r": 9,
-     "ry": 17
-    }
-   ],
-   "pipes": [
-    {
-     "line": [
-      [
-       166,
-       184
-      ],
-      [
-       164,
-       218
-      ]
-     ],
-     "width": 6
-    }
-   ],
-   "belts": {
-    "count": 1,
-    "y0": 300,
-    "gap_x": [
-     [
-      70,
-      150
-     ]
-    ],
-    "gap_width": 18,
-    "width": 12
-   },
-   "groves": [
-    {
-     "x": 110,
-     "y": 345,
-     "r": 11
-    },
-    {
-     "x": 30,
-     "y": 110,
-     "r": 10
-    }
-   ],
-   "tracks": {
-    "lines": [
-     [
-      [
-       60,
-       -4
-      ],
-      [
-       62,
-       100
-      ],
-      [
-       66,
-       220
-      ],
-      [
-       70,
-       296
-      ],
-      [
-       68,
-       404
-      ]
-     ],
-     [
-      [
-       140,
-       -4
-      ],
-      [
-       138,
-       120
-      ],
-      [
-       120,
-       240
-      ],
-      [
-       100,
-       300
-      ],
-      [
-       95,
-       404
-      ]
-     ]
-    ]
-   },
-   "craters": 60,
-   "fields": {
-    "tones": [
-     "stubble",
-     "plowed",
-     "sunflower"
-    ],
-    "wavy": 6
-   },
-   "subtitle": "A river across the middle with a ruined bridge on the road and one ford far to the left; a pipe on the right for infantry."
+   "subtitle": "A river cuts the field in two. The bridge is broken, so vehicles must queue at one ford far on the side.",
+   "expect_lanes": 3
   },
   {
    "no": 2,
-   "category": "A",
-   "name": "River bend",
    "file": "river-bend",
+   "name": "River bend",
+   "category": "A",
+   "sheet": "docs/design/maps/river-bend.md",
+   "seed": 2,
    "sector": "Sector 42",
-   "seed": 4702,
-   "expect_lanes": 2,
-   "spawns": [
-    50,
-    120
-   ],
-   "idea": "River along the right side, bending into the field: the attack comes along the bank; the defence holds a bend (the ford).",
-   "rivers": [
-    {
-     "line": [
-      [
-       175,
-       -6
-      ],
-      [
-       178,
-       70
-      ],
-      [
-       166,
-       150
-      ],
-      [
-       132,
-       225
-      ],
-      [
-       92,
-       285
-      ],
-      [
-       52,
-       335
-      ],
-      [
-       -6,
-       352
-      ]
-     ],
-     "wiggle": 0,
-     "width": 14
-    }
-   ],
-   "fords": [
-    {
-     "x": 86,
-     "y": 292,
-     "r": 9,
-     "ry": 15
-    }
-   ],
-   "pipes": [
-    {
-     "line": [
-      [
-       121,
-       231
-      ],
-      [
-       119,
-       255
-      ]
-     ],
-     "width": 6
-    }
-   ],
-   "belts": {
-    "count": 1,
-    "y0": 362,
-    "gap_x": [
-     [
-      80,
-      150
-     ]
-    ],
-    "gap_width": 18,
-    "width": 10
-   },
-   "groves": [
-    {
-     "x": 58,
-     "y": 328,
-     "r": 12
-    },
-    {
-     "x": 135,
-     "y": 350,
-     "r": 11
-    }
-   ],
-   "bushes": [
-    {
-     "x": 122,
-     "y": 300,
-     "r": 4
-    },
-    {
-     "x": 38,
-     "y": 298,
-     "r": 4
-    },
-    {
-     "x": 152,
-     "y": 332,
-     "r": 4
-    }
-   ],
-   "tracks": {
-    "lines": [
-     [
-      [
-       50,
-       -4
-      ],
-      [
-       55,
-       120
-      ],
-      [
-       60,
-       240
-      ],
-      [
-       70,
-       330
-      ],
-      [
-       80,
-       404
-      ]
-     ],
-     [
-      [
-       120,
-       -4
-      ],
-      [
-       118,
-       150
-      ],
-      [
-       102,
-       250
-      ],
-      [
-       92,
-       292
-      ],
-      [
-       90,
-       404
-      ]
-     ]
-    ]
-   },
-   "craters": 55,
-   "fields": {
-    "tones": [
-     "plowed",
-     "stubble",
-     "rape"
-    ],
-    "wavy": 5
-   },
-   "subtitle": "A river enters at the top right and bends deep into the field; the attack comes down the left bank and the defence holds the bend at the ford."
+   "subtitle": "The river bends deep into the field. The attack runs along the west bank.",
+   "expect_lanes": 3
   },
   {
    "no": 3,
-   "category": "A",
-   "name": "Confluence",
    "file": "confluence",
+   "name": "Confluence",
+   "category": "A",
+   "sheet": "docs/design/maps/confluence.md",
+   "seed": 3,
    "sector": "Sector 43",
-   "seed": 4703,
-   "expect_lanes": 2,
-   "spawns": [
-    40,
-    160
-   ],
-   "idea": "Two rivers, a tributary joins the main one in a Y: the attack splits into a west and an east lane; fords on both rivers.",
-   "rivers": [
-    {
-     "shape": "across",
-     "y": 300,
-     "wiggle": 6,
-     "width": 14
-    },
-    {
-     "line": [
-      [
-       100,
-       -6
-      ],
-      [
-       97,
-       70
-      ],
-      [
-       103,
-       150
-      ],
-      [
-       98,
-       230
-      ],
-      [
-       100,
-       298
-      ]
-     ],
-     "wiggle": 0,
-     "width": 10
-    }
-   ],
-   "fords": [
-    {
-     "x": 40,
-     "y": 300,
-     "r": 8,
-     "ry": 16
-    },
-    {
-     "x": 160,
-     "y": 298,
-     "r": 8,
-     "ry": 16
-    },
-    {
-     "x": 100,
-     "y": 150,
-     "r": 12,
-     "ry": 8
-    }
-   ],
-   "pipes": [
-    {
-     "line": [
-      [
-       60,
-       292
-      ],
-      [
-       58,
-       310
-      ]
-     ],
-     "width": 6
-    }
-   ],
-   "belts": {
-    "count": 1,
-    "y0": 352,
-    "gap_x": [
-     [
-      70,
-      130
-     ]
-    ],
-    "gap_width": 18,
-    "width": 12
-   },
-   "groves": [
-    {
-     "x": 30,
-     "y": 250,
-     "r": 10
-    },
-    {
-     "x": 172,
-     "y": 245,
-     "r": 10
-    }
-   ],
-   "tracks": {
-    "lines": [
-     [
-      [
-       40,
-       -4
-      ],
-      [
-       44,
-       150
-      ],
-      [
-       40,
-       296
-      ],
-      [
-       45,
-       404
-      ]
-     ],
-     [
-      [
-       160,
-       -4
-      ],
-      [
-       158,
-       140
-      ],
-      [
-       160,
-       296
-      ],
-      [
-       155,
-       404
-      ]
-     ]
-    ]
-   },
-   "craters": 55,
-   "fields": {
-    "tones": [
-     "stubble",
-     "plowed",
-     "sunflower"
-    ],
-    "wavy": 6
-   },
-   "subtitle": "A tributary joins the main river in a Y; the attack splits into two lanes and each river has its own ford."
+   "subtitle": "A tributary meets the main river in a Y. The attack splits into a west lane and an east lane.",
+   "expect_lanes": 3
   },
   {
    "no": 4,
-   "category": "A",
-   "name": "Overlook",
    "file": "overlook",
+   "name": "Overlook",
+   "category": "A",
+   "sheet": "docs/design/maps/overlook.md",
+   "seed": 4,
    "sector": "Sector 44",
-   "seed": 4704,
-   "expect_lanes": 2,
-   "spawns": [
-    60,
-    140
-   ],
-   "idea": "River plus a hill on our bank above the only crossing: the defender on the hill has the height advantage over the ford.",
-   "rivers": [
-    {
-     "shape": "across",
-     "y": 210,
-     "wiggle": 8,
-     "width": 16
-    }
-   ],
-   "fords": [
-    {
-     "x": 100,
-     "y": 211,
-     "r": 9,
-     "ry": 17
-    }
-   ],
-   "hills": [
-    {
-     "x": 100,
-     "y": 302,
-     "rx": 26,
-     "ry": 20
-    }
-   ],
-   "groves": [
-    {
-     "x": 35,
-     "y": 322,
-     "r": 11
-    },
-    {
-     "x": 165,
-     "y": 315,
-     "r": 11
-    }
-   ],
-   "tracks": {
-    "lines": [
-     [
-      [
-       60,
-       -4
-      ],
-      [
-       70,
-       100
-      ],
-      [
-       90,
-       200
-      ],
-      [
-       100,
-       240
-      ],
-      [
-       100,
-       404
-      ]
-     ],
-     [
-      [
-       140,
-       -4
-      ],
-      [
-       130,
-       120
-      ],
-      [
-       110,
-       210
-      ],
-      [
-       102,
-       250
-      ],
-      [
-       100,
-       404
-      ]
-     ]
-    ]
-   },
-   "craters": 60,
-   "fields": {
-    "tones": [
-     "plowed",
-     "stubble",
-     "rape"
-    ],
-    "wavy": 5
-   },
-   "subtitle": "One ford is the only vehicle crossing; a hill on our bank overlooks it."
+   "subtitle": "One ford, and our hill stands right above it.",
+   "expect_lanes": 3
   },
   {
    "no": 5,
-   "category": "A",
-   "name": "Enemy heights",
    "file": "enemy-heights",
+   "name": "Enemy heights",
+   "category": "A",
+   "sheet": "docs/design/maps/enemy-heights.md",
+   "seed": 5,
    "sector": "Sector 45",
-   "seed": 4705,
-   "expect_lanes": 2,
-   "spawns": [
-    60,
-    140
-   ],
-   "idea": "River plus a hill on THEIR bank: the enemy has the height over the crossing; the player holds behind the river with belts and groves.",
-   "rivers": [
-    {
-     "shape": "across",
-     "y": 170,
-     "wiggle": 10,
-     "width": 16
-    }
-   ],
-   "hills": [
-    {
-     "x": 100,
-     "y": 103,
-     "rx": 30,
-     "ry": 22
-    }
-   ],
-   "fords": [
-    {
-     "x": 150,
-     "y": 171,
-     "r": 9,
-     "ry": 17
-    }
-   ],
-   "pipes": [
-    {
-     "line": [
-      [
-       45,
-       155
-      ],
-      [
-       43,
-       187
-      ]
-     ],
-     "width": 6
-    }
-   ],
-   "belts": {
-    "count": 2,
-    "y0": 250,
-    "spacing": 80,
-    "gap_x": [
-     [
-      40,
-      160
-     ],
-     [
-      100
-     ]
-    ],
-    "gap_width": 18,
-    "width": 12
-   },
-   "groves": [
-    {
-     "x": 70,
-     "y": 325,
-     "r": 11
-    },
-    {
-     "x": 150,
-     "y": 348,
-     "r": 10
-    }
-   ],
-   "tracks": {
-    "lines": [
-     [
-      [
-       60,
-       -4
-      ],
-      [
-       50,
-       80
-      ],
-      [
-       45,
-       170
-      ],
-      [
-       60,
-       260
-      ],
-      [
-       80,
-       404
-      ]
-     ],
-     [
-      [
-       140,
-       -4
-      ],
-      [
-       146,
-       90
-      ],
-      [
-       150,
-       171
-      ],
-      [
-       130,
-       260
-      ],
-      [
-       120,
-       404
-      ]
-     ]
-    ]
-   },
-   "craters": 60,
-   "fields": {
-    "tones": [
-     "stubble",
-     "plowed",
-     "sunflower"
-    ],
-    "wavy": 6
-   },
-   "subtitle": "The enemy hill overlooks the river; the defence holds behind the river between two belts."
+   "subtitle": "The enemy owns the hill on its own bank and sees our line.",
+   "expect_lanes": 3
   },
   {
    "no": 6,
-   "category": "B",
-   "name": "Left hill",
    "file": "left-hill",
+   "name": "Left hill",
+   "category": "B",
+   "sheet": "docs/design/maps/left-hill.md",
+   "seed": 6,
    "sector": "Sector 46",
-   "seed": 4706,
-   "expect_lanes": 2,
-   "spawns": [
-    80,
-    150
-   ],
-   "idea": "A hill on the left flank: whoever holds it sees half the map.",
-   "hills": [
-    {
-     "x": 45,
-     "y": 200,
-     "rx": 32,
-     "ry": 26
-    }
-   ],
-   "belts": {
-    "count": 1,
-    "y0": 290,
-    "gap_x": [
-     [
-      110,
-      160
-     ]
-    ],
-    "gap_width": 18,
-    "width": 12
-   },
-   "groves": [
-    {
-     "x": 150,
-     "y": 120,
-     "r": 12
-    },
-    {
-     "x": 140,
-     "y": 335,
-     "r": 11
-    }
-   ],
-   "pond": {
-    "x": 172,
-    "y": 242,
-    "r": 8
-   },
-   "tracks": {
-    "mode": "gaps"
-   },
-   "craters": 60,
-   "fields": {
-    "tones": [
-     "plowed",
-     "stubble",
-     "rape"
-    ],
-    "wavy": 5
-   },
-   "subtitle": "One big hill on the left flank; the rest is open. Whoever holds the hill sees half the map."
+   "subtitle": "A big hill covers the left flank. Whoever holds it sees half the map.",
+   "expect_lanes": 3
   },
   {
    "no": 7,
-   "category": "B",
-   "name": "Ridge",
    "file": "ridge",
+   "name": "Ridge",
+   "category": "B",
+   "sheet": "docs/design/maps/ridge.md",
+   "seed": 7,
    "sector": "Sector 47",
-   "seed": 4707,
-   "expect_lanes": 2,
-   "spawns": [
-    60,
-    120
-   ],
-   "idea": "A ridge across the field with 2 saddles: the attack must go through the saddles.",
-   "ridges": [
-    {
-     "y": 210,
-     "r": 16,
-     "xs": [
-      35,
-      90,
-      145
-     ]
-    }
-   ],
-   "belts": {
-    "count": 1,
-    "y0": 312,
-    "gap_x": [
-     [
-      62,
-      118
-     ]
-    ],
-    "gap_width": 18,
-    "width": 10
-   },
-   "groves": [
-    {
-     "x": 30,
-     "y": 352,
-     "r": 10
-    },
-    {
-     "x": 170,
-     "y": 348,
-     "r": 10
-    },
-    {
-     "x": 100,
-     "y": 115,
-     "r": 10
-    }
-   ],
-   "tracks": {
-    "mode": "gaps"
-   },
-   "craters": 55,
-   "fields": {
-    "tones": [
-     "stubble",
-     "plowed",
-     "sunflower"
-    ],
-    "wavy": 6
-   },
-   "subtitle": "Three hills in a row form a ridge; the two saddles between them are the only comfortable way through."
+   "subtitle": "A ridge crosses the field. The attack must go through two saddles.",
+   "expect_lanes": 3
   },
   {
    "no": 8,
-   "category": "B",
-   "name": "Valley",
    "file": "valley",
+   "name": "Valley",
+   "category": "B",
+   "sheet": "docs/design/maps/valley.md",
+   "seed": 8,
    "sector": "Sector 48",
-   "seed": 4708,
-   "expect_lanes": 2,
-   "spawns": [
-    80,
-    120
-   ],
-   "idea": "Two hills with a valley between: the attack goes through the valley; crossfire from both hills.",
-   "hills": [
-    {
-     "x": 42,
-     "y": 210,
-     "rx": 28,
-     "ry": 24
-    },
-    {
-     "x": 158,
-     "y": 210,
-     "rx": 28,
-     "ry": 24
-    }
-   ],
-   "belts": {
-    "count": 1,
-    "y0": 315,
-    "gap_x": [
-     [
-      70,
-      130
-     ]
-    ],
-    "gap_width": 18,
-    "width": 12
-   },
-   "groves": [
-    {
-     "x": 100,
-     "y": 265,
-     "r": 10
-    },
-    {
-     "x": 28,
-     "y": 115,
-     "r": 10
-    },
-    {
-     "x": 172,
-     "y": 118,
-     "r": 10
-    }
-   ],
-   "tracks": {
-    "mode": "gaps"
-   },
-   "craters": 50,
-   "fields": {
-    "tones": [
-     "plowed",
-     "stubble",
-     "rape"
-    ],
-    "wavy": 5
-   },
-   "subtitle": "Two hills flank a valley; the attack must come through the valley under crossfire from both hills."
+   "subtitle": "Two hills with a valley between them. The attack goes through the valley.",
+   "expect_lanes": 3
   },
   {
    "no": 9,
-   "category": "B",
-   "name": "Long slope",
    "file": "long-slope",
+   "name": "Long slope",
+   "category": "B",
+   "sheet": "docs/design/maps/long-slope.md",
+   "seed": 9,
    "sector": "Sector 49",
-   "seed": 4709,
-   "expect_lanes": 2,
-   "spawns": [
-    40,
-    160
-   ],
-   "idea": "A long slope down to our line: the attackers have the height at the start; a small hill near our line changes it on the way.",
-   "slopes": [
-    {
-     "x": 100,
-     "y": 150,
-     "rx": 55,
-     "ry": 105
-    }
-   ],
-   "hills": [
-    {
-     "x": 100,
-     "y": 330,
-     "r": 16
-    }
-   ],
-   "belts": {
-    "count": 1,
-    "y0": 352,
-    "gap_x": [
-     [
-      55,
-      145
-     ]
-    ],
-    "gap_width": 18,
-    "width": 10
-   },
-   "groves": [
-    {
-     "x": 25,
-     "y": 300,
-     "r": 10
-    },
-    {
-     "x": 175,
-     "y": 295,
-     "r": 10
-    }
-   ],
-   "tracks": {
-    "mode": "gaps"
-   },
-   "craters": 60,
-   "fields": {
-    "tones": [
-     "stubble",
-     "plowed",
-     "sunflower"
-    ],
-    "wavy": 6
-   },
-   "subtitle": "A long slope from the attacker edge to mid-field; the attackers start with the height, a small hill near our line gives it back."
+   "subtitle": "The ground slopes down to our line. The enemy starts high and sees us.",
+   "expect_lanes": 3
   },
   {
    "no": 10,
-   "category": "B",
-   "name": "Gully mouth",
    "file": "gully-mouth",
+   "name": "Gully mouth",
+   "category": "B",
+   "sheet": "docs/design/maps/gully-mouth.md",
+   "seed": 10,
    "sector": "Sector 50",
-   "seed": 4710,
-   "expect_lanes": 2,
-   "spawns": [
-    60,
-    140
-   ],
-   "idea": "A gully (balka) along the line of advance plus a hill at its mouth: a hidden route for infantry, vehicles must go around.",
-   "balkas": [
-    {
-     "line": [
-      [
-       100,
-       -6
-      ],
-      [
-       96,
-       80
-      ],
-      [
-       104,
-       170
-      ],
-      [
-       98,
-       260
-      ],
-      [
-       100,
-       330
-      ]
-     ],
-     "wiggle": 0,
-     "width": 8
-    }
-   ],
-   "hills": [
-    {
-     "x": 100,
-     "y": 354,
-     "r": 16
-    }
-   ],
-   "bushes": [
-    {
-     "x": 88,
-     "y": 60,
-     "r": 4
-    },
-    {
-     "x": 112,
-     "y": 120,
-     "r": 4
-    },
-    {
-     "x": 90,
-     "y": 200,
-     "r": 4
-    },
-    {
-     "x": 110,
-     "y": 280,
-     "r": 4
-    }
-   ],
-   "groves": [
-    {
-     "x": 35,
-     "y": 180,
-     "r": 12
-    },
-    {
-     "x": 165,
-     "y": 170,
-     "r": 12
-    },
-    {
-     "x": 40,
-     "y": 330,
-     "r": 10
-    },
-    {
-     "x": 160,
-     "y": 325,
-     "r": 10
-    }
-   ],
-   "tracks": {
-    "lines": [
-     [
-      [
-       60,
-       -4
-      ],
-      [
-       58,
-       160
-      ],
-      [
-       55,
-       330
-      ],
-      [
-       60,
-       404
-      ]
-     ],
-     [
-      [
-       140,
-       -4
-      ],
-      [
-       142,
-       160
-      ],
-      [
-       145,
-       330
-      ],
-      [
-       140,
-       404
-      ]
-     ]
-    ]
-   },
-   "craters": 50,
-   "fields": {
-    "tones": [
-     "plowed",
-     "stubble",
-     "rape"
-    ],
-    "wavy": 5
-   },
-   "subtitle": "A gully runs down the middle of the field; infantry can use it hidden, vehicles go around, and a hill stands at its mouth."
+   "subtitle": "A gully runs along the line of advance and ends in front of our hill.",
+   "expect_lanes": 3
   },
   {
    "no": 11,
-   "category": "C",
-   "name": "Clearings",
    "file": "clearings",
+   "name": "Clearings",
+   "category": "C",
+   "sheet": "docs/design/maps/clearings.md",
+   "seed": 11,
    "sector": "Sector 51",
-   "seed": 4711,
-   "expect_lanes": 2,
-   "spawns": [
-    60,
-    140
-   ],
-   "idea": "A big forest with clearings: short sight lines; the fights are at the clearing edges.",
-   "groves": [
-    {
-     "x": 67,
-     "y": 80,
-     "rx": 24,
-     "ry": 22
-    },
-    {
-     "x": 132,
-     "y": 70,
-     "rx": 22,
-     "ry": 20
-    },
-    {
-     "x": 67,
-     "y": 200,
-     "rx": 26,
-     "ry": 24
-    },
-    {
-     "x": 132,
-     "y": 190,
-     "rx": 24,
-     "ry": 22
-    },
-    {
-     "x": 67,
-     "y": 320,
-     "rx": 24,
-     "ry": 22
-    },
-    {
-     "x": 132,
-     "y": 310,
-     "rx": 26,
-     "ry": 24
-    }
-   ],
-   "tracks": {
-    "lines": [
-     [
-      [
-       35,
-       -4
-      ],
-      [
-       37,
-       130
-      ],
-      [
-       35,
-       260
-      ],
-      [
-       36,
-       404
-      ]
-     ],
-     [
-      [
-       100,
-       -4
-      ],
-      [
-       100,
-       130
-      ],
-      [
-       102,
-       260
-      ],
-      [
-       100,
-       404
-      ]
-     ],
-     [
-      [
-       165,
-       -4
-      ],
-      [
-       163,
-       130
-      ],
-      [
-       165,
-       260
-      ],
-      [
-       164,
-       404
-      ]
-     ]
-    ]
-   },
-   "craters": 30,
-   "fields": {
-    "tones": [
-     "stubble",
-     "sunflower",
-     "plowed",
-     "fallow"
-    ],
-    "wavy": 7,
-    "patchwork": true
-   },
-   "subtitle": "A forest of big groves with three open clearings running down the field; every fight is at a clearing edge."
+   "subtitle": "A big forest with clearings. Sight is short.",
+   "expect_lanes": 3
   },
   {
    "no": 12,
-   "category": "C",
-   "name": "Forest road",
    "file": "forest-road",
+   "name": "Forest road",
+   "category": "C",
+   "sheet": "docs/design/maps/forest-road.md",
+   "seed": 12,
    "sector": "Sector 52",
-   "seed": 4712,
-   "expect_lanes": 1,
-   "spawns": [
-    90,
-    110
-   ],
-   "idea": "A forest corridor: one wide road through the forest; ambushes from the edges.",
-   "belt_lines": [
-    {
-     "shape": "vertical",
-     "x": 70,
-     "wiggle": 5,
-     "width": 18
-    },
-    {
-     "shape": "vertical",
-     "x": 130,
-     "wiggle": 5,
-     "width": 18
-    }
-   ],
-   "roads": [
-    {
-     "shape": "vertical",
-     "x": 100,
-     "wiggle": 4,
-     "width": 6
-    }
-   ],
-   "groves": [
-    {
-     "x": 30,
-     "y": 100,
-     "rx": 16,
-     "ry": 14
-    },
-    {
-     "x": 170,
-     "y": 150,
-     "rx": 18,
-     "ry": 15
-    },
-    {
-     "x": 35,
-     "y": 300,
-     "rx": 15,
-     "ry": 13
-    },
-    {
-     "x": 168,
-     "y": 310,
-     "rx": 16,
-     "ry": 14
-    }
-   ],
-   "craters": 40,
-   "fields": {
-    "tones": [
-     "stubble",
-     "sunflower",
-     "plowed",
-     "fallow"
-    ],
-    "wavy": 7,
-    "patchwork": true
-   },
-   "subtitle": "Two forest walls with one road between them; the ambushes come from the forest edges."
+   "subtitle": "One wide road runs through a dark forest. This is the map of ambushes: one lane by design.",
+   "expect_lanes": 1
   },
   {
    "no": 13,
+   "file": "forest-and-steppe",
+   "name": "Forest and steppe",
    "category": "C",
-   "name": "Half forest",
-   "file": "half-forest",
-   "sector": "Sector 53",
-   "seed": 4713,
-   "expect_lanes": 2,
-   "spawns": [
-    130,
-    170
-   ],
-   "idea": "Forest on one half, open field on the other: the player chooses where to hold.",
-   "belt_lines": [
-    {
-     "shape": "vertical",
-     "x": 102,
-     "wiggle": 4,
-     "width": 12
-    }
-   ],
-   "groves": [
-    {
-     "x": 40,
-     "y": 90,
-     "rx": 26,
-     "ry": 22
-    },
-    {
-     "x": 65,
-     "y": 190,
-     "rx": 28,
-     "ry": 24
-    },
-    {
-     "x": 35,
-     "y": 290,
-     "rx": 24,
-     "ry": 20
-    },
-    {
-     "x": 70,
-     "y": 365,
-     "rx": 24,
-     "ry": 18
-    }
-   ],
-   "roads": [
-    {
-     "line": [
-      [
-       102,
-       200
-      ],
-      [
-       206,
-       196
-      ]
-     ],
-     "width": 5
-    }
-   ],
-   "bushes": [
-    {
-     "x": 150,
-     "y": 120,
-     "r": 4
-    },
-    {
-     "x": 160,
-     "y": 300,
-     "r": 4
-    }
-   ],
-   "heaps": [
-    {
-     "x": 140,
-     "y": 250,
-     "r": 7
-    }
-   ],
-   "craters": 50,
-   "fields": {
-    "tones": [
-     "stubble",
-     "sunflower",
-     "plowed",
-     "fallow"
-    ],
-    "wavy": 7,
-    "patchwork": true
-   },
-   "subtitle": "The left half is forest, the right half is open field with a road; the player chooses where to hold."
+   "sheet": "docs/design/maps/forest-and-steppe.md",
+   "seed": 13,
+   "sector": "Sector 61",
+   "subtitle": "Forest on the left, open steppe on the right, a road and a farm between.",
+   "expect_lanes": 3
   },
   {
    "no": 14,
-   "category": "C",
-   "name": "Grove islands",
    "file": "grove-islands",
+   "name": "Grove islands",
+   "category": "C",
+   "sheet": "docs/design/maps/grove-islands.md",
+   "seed": 14,
    "sector": "Sector 54",
-   "seed": 4714,
-   "expect_lanes": 2,
-   "spawns": [
-    60,
-    140
-   ],
-   "idea": "Islands of forest: many groves of different size; who sees first wins.",
-   "grove_scatter": {
-    "zone": [
-     15,
-     20,
-     185,
-     380
-    ],
-    "count": 12,
-    "r": [
-     6,
-     16
-    ]
-   },
-   "pond": {
-    "x": 100,
-    "y": 330,
-    "r": 8
-   },
-   "tracks": {
-    "mode": "none",
-    "extra": 2
-   },
-   "craters": 40,
-   "fields": {
-    "tones": [
-     "stubble",
-     "sunflower",
-     "plowed",
-     "fallow"
-    ],
-    "wavy": 7,
-    "patchwork": true
-   },
-   "subtitle": "Twelve groves of different sizes scattered over open ground; whoever sees first wins."
+   "subtitle": "Eleven groves of different size stand in the field like islands.",
+   "expect_lanes": 3
   },
   {
    "no": 15,
-   "category": "C",
-   "name": "Burned edge",
    "file": "burned-edge",
+   "name": "Burned edge",
+   "category": "C",
+   "sheet": "docs/design/maps/burned-edge.md",
+   "seed": 15,
    "sector": "Sector 55",
-   "seed": 4715,
-   "expect_lanes": 2,
-   "spawns": [
-    60,
-    140
-   ],
-   "idea": "Forest edge with a burned strip: the burned strip looks like cover but gives none (Sim rule needed; a normal belt stands in until Claude adds it).",
-   "belts": {
-    "count": 3,
-    "y0": 80,
-    "spacing": 75,
-    "gap_x": [
-     [
-      60
-     ],
-     [
-      150
-     ],
-     [
-      95
-     ]
-    ],
-    "gap_width": 18,
-    "width": 14
-   },
-   "burned_belt": 2,
-   "groves": [
-    {
-     "x": 40,
-     "y": 40,
-     "r": 12
-    },
-    {
-     "x": 160,
-     "y": 45,
-     "r": 12
-    }
-   ],
-   "bushes": [
-    {
-     "x": 60,
-     "y": 305,
-     "r": 4
-    },
-    {
-     "x": 140,
-     "y": 325,
-     "r": 4
-    }
-   ],
-   "heaps": [
-    {
-     "x": 100,
-     "y": 335,
-     "r": 7
-    }
-   ],
-   "tracks": {
-    "mode": "gaps",
-    "extra": 1
-   },
-   "craters": 50,
-   "fields": {
-    "tones": [
-     "plowed",
-     "stubble",
-     "rape"
-    ],
-    "wavy": 5
-   },
-   "subtitle": "Forest in the upper half; the lowest belt burned - it looks like cover but gives none. Needs a Sim rule; a normal belt stands in for now."
+   "subtitle": "In front of our forest edge is a burned strip that looks like trees but hides nothing and gives no cover.",
+   "expect_lanes": 3
   },
   {
    "no": 16,
-   "category": "D",
-   "name": "Open steppe",
    "file": "open-steppe",
+   "name": "Open steppe",
+   "category": "D",
+   "sheet": "docs/design/maps/open-steppe.md",
+   "seed": 16,
    "sector": "Sector 56",
-   "seed": 4716,
-   "expect_lanes": 2,
-   "spawns": [
-    60,
-    140
-   ],
-   "idea": "Open steppe: almost no trees; bushes, heaps, wrecks, rocks, craters only; long sight lines.",
-   "bush_zones": [
-    {
-     "zone": [
-      15,
-      30,
-      185,
-      370
-     ],
-     "count": 14,
-     "r": [
-      3,
-      5
-     ]
-    }
-   ],
-   "heaps": [
-    {
-     "x": 50,
-     "y": 120,
-     "r": 8
-    },
-    {
-     "x": 150,
-     "y": 200,
-     "r": 9
-    },
-    {
-     "x": 80,
-     "y": 300,
-     "r": 7
-    },
-    {
-     "x": 160,
-     "y": 340,
-     "r": 8
-    }
-   ],
-   "wrecks": [
-    {
-     "x": 110,
-     "y": 150,
-     "r": 4
-    },
-    {
-     "x": 40,
-     "y": 240,
-     "r": 4
-    }
-   ],
-   "rocks": [
-    {
-     "x": 100,
-     "y": 90,
-     "r": 5
-    }
-   ],
-   "roads": [
-    {
-     "shape": "across",
-     "y": 200,
-     "wiggle": 8,
-     "width": 5
-    }
-   ],
-   "tracks": {
-    "lines": [
-     [
-      [
-       60,
-       -4
-      ],
-      [
-       58,
-       130
-      ],
-      [
-       62,
-       260
-      ],
-      [
-       60,
-       404
-      ]
-     ],
-     [
-      [
-       140,
-       -4
-      ],
-      [
-       142,
-       130
-      ],
-      [
-       138,
-       260
-      ],
-      [
-       140,
-       404
-      ]
-     ]
-    ]
-   },
-   "craters": 80,
-   "fields": {
-    "tones": [
-     "stubble",
-     "plowed",
-     "sunflower"
-    ],
-    "wavy": 6
-   },
-   "subtitle": "Almost no trees: bushes, spoil heaps, wrecks, rocks and craters only; long sight lines decide."
+   "subtitle": "Almost no trees. Long sight lines; bushes, heaps, wrecks and craters only.",
+   "expect_lanes": 3
   },
   {
    "no": 17,
-   "category": "D",
-   "name": "Sunflower",
    "file": "sunflower",
+   "name": "Sunflower",
+   "category": "D",
+   "sheet": "docs/design/maps/sunflower.md",
+   "seed": 17,
    "sector": "Sector 57",
-   "seed": 4717,
-   "expect_lanes": 2,
-   "spawns": [
-    60,
-    140
-   ],
-   "idea": "A big sunflower field that blocks vision but gives no cover (Sim rule needed; bushes stand in until Claude adds it).",
-   "sunflower": {
-    "zone": [
-     30,
-     110,
-     170,
-     320
-    ],
-    "count": 48,
-    "r": [
-     2.5,
-     4.5
-    ]
-   },
-   "belts": {
-    "count": 1,
-    "y0": 352,
-    "gap_x": [
-     [
-      60,
-      140
-     ]
-    ],
-    "gap_width": 16,
-    "width": 8
-   },
-   "tracks": {
-    "mode": "gaps"
-   },
-   "craters": 40,
-   "fields": {
-    "tones": [
-     "sunflower",
-     "stubble",
-     "plowed"
-    ],
-    "wavy": 6
-   },
-   "subtitle": "A big sunflower field in the middle blocks vision but gives no cover. Needs a Sim rule; bushes stand in for now."
+   "subtitle": "A big sunflower field fills the middle of the map: it hides but gives no cover.",
+   "expect_lanes": 3
   },
   {
    "no": 18,
-   "category": "D",
-   "name": "Old trenches",
    "file": "old-trenches",
+   "name": "Old trenches",
+   "category": "D",
+   "sheet": "docs/design/maps/old-trenches.md",
+   "seed": 18,
    "sector": "Sector 58",
-   "seed": 4718,
-   "expect_lanes": 2,
-   "spawns": [
-    60,
-    140
-   ],
-   "idea": "A field crossed by old trench lines and wire.",
-   "trenches": [
-    {
-     "shape": "across",
-     "y": 180,
-     "wiggle": 6,
-     "width": 5
-    },
-    {
-     "shape": "across",
-     "y": 280,
-     "wiggle": 6,
-     "width": 5
-    }
-   ],
-   "wires": [
-    {
-     "shape": "across",
-     "y": 205,
-     "wiggle": 6,
-     "width": 2
-    },
-    {
-     "shape": "across",
-     "y": 305,
-     "wiggle": 6,
-     "width": 2
-    }
-   ],
-   "bush_zones": [
-    {
-     "zone": [
-      15,
-      60,
-      185,
-      370
-     ],
-     "count": 6,
-     "r": [
-      3,
-      4
-     ]
-    }
-   ],
-   "heaps": [
-    {
-     "x": 45,
-     "y": 240,
-     "r": 7
-    },
-    {
-     "x": 155,
-     "y": 130,
-     "r": 7
-    }
-   ],
-   "tracks": {
-    "lines": [
-     [
-      [
-       60,
-       -4
-      ],
-      [
-       58,
-       200
-      ],
-      [
-       62,
-       330
-      ],
-      [
-       60,
-       404
-      ]
-     ],
-     [
-      [
-       140,
-       -4
-      ],
-      [
-       142,
-       200
-      ],
-      [
-       138,
-       330
-      ],
-      [
-       140,
-       404
-      ]
-     ]
-    ]
-   },
-   "craters": 70,
-   "fields": {
-    "tones": [
-     "plowed",
-     "stubble",
-     "rape"
-    ],
-    "wavy": 5
-   },
-   "subtitle": "Two old trench lines with wire behind them cross the open field; the trenches are free cover."
+   "subtitle": "Three old trench lines with wire cross the field.",
+   "expect_lanes": 3
   },
   {
    "no": 19,
-   "category": "D",
-   "name": "Wreck field",
    "file": "wreck-field",
+   "name": "Wreck field",
+   "category": "D",
+   "sheet": "docs/design/maps/wreck-field.md",
+   "seed": 19,
    "sector": "Sector 59",
-   "seed": 4719,
-   "expect_lanes": 2,
-   "spawns": [
-    60,
-    140
-   ],
-   "idea": "A destroyed column of vehicles across the field: the only cover.",
-   "wreck_columns": [
-    {
-     "from": [
-      30,
-      130
-     ],
-     "to": [
-      175,
-      290
-     ],
-     "count": 9,
-     "r": 4
-    }
-   ],
-   "rocks": [
-    {
-     "x": 60,
-     "y": 350,
-     "r": 5
-    },
-    {
-     "x": 150,
-     "y": 120,
-     "r": 5
-    }
-   ],
-   "bush_zones": [
-    {
-     "zone": [
-      15,
-      300,
-      185,
-      380
-     ],
-     "count": 6,
-     "r": [
-      3,
-      4
-     ]
-    }
-   ],
-   "tracks": {
-    "lines": [
-     [
-      [
-       60,
-       -4
-      ],
-      [
-       55,
-       200
-      ],
-      [
-       60,
-       330
-      ],
-      [
-       58,
-       404
-      ]
-     ],
-     [
-      [
-       140,
-       -4
-      ],
-      [
-       145,
-       200
-      ],
-      [
-       140,
-       330
-      ],
-      [
-       142,
-       404
-      ]
-     ]
-    ]
-   },
-   "craters": 60,
-   "fields": {
-    "tones": [
-     "stubble",
-     "plowed",
-     "sunflower"
-    ],
-    "wavy": 6
-   },
-   "subtitle": "A destroyed column of vehicles runs diagonally across the field; the wrecks are the only cover."
+   "subtitle": "A destroyed column of vehicles lies in a diagonal line across the field.",
+   "expect_lanes": 3
   },
   {
    "no": 20,
+   "file": "farmstead",
+   "name": "Farmstead",
    "category": "D",
-   "name": "Tree line",
-   "file": "tree-line",
+   "sheet": "docs/design/maps/farmstead.md",
+   "seed": 20,
    "sector": "Sector 60",
-   "seed": 4720,
-   "expect_lanes": 2,
-   "spawns": [
-    60,
-    140
-   ],
-   "idea": "A single thin tree line plus spoil heaps: one belt, the rest is open.",
-   "belts": {
-    "count": 1,
-    "y0": 220,
-    "gap_x": [
-     [
-      50,
-      150
-     ]
-    ],
-    "gap_width": 16,
-    "width": 6
-   },
-   "heaps": [
-    {
-     "x": 30,
-     "y": 120,
-     "r": 8
-    },
-    {
-     "x": 95,
-     "y": 80,
-     "r": 7
-    },
-    {
-     "x": 160,
-     "y": 140,
-     "r": 8
-    },
-    {
-     "x": 45,
-     "y": 310,
-     "r": 8
-    },
-    {
-     "x": 120,
-     "y": 345,
-     "r": 7
-    },
-    {
-     "x": 175,
-     "y": 270,
-     "r": 8
-    }
-   ],
-   "bushes": [
-    {
-     "x": 80,
-     "y": 180,
-     "r": 4
-    },
-    {
-     "x": 140,
-     "y": 260,
-     "r": 4
-    }
-   ],
-   "tracks": {
-    "mode": "gaps"
-   },
-   "craters": 60,
-   "fields": {
-    "tones": [
-     "plowed",
-     "stubble",
-     "rape"
-    ],
-    "wavy": 5
-   },
-   "subtitle": "One thin belt across the middle and spoil heaps scattered over the rest; the rest is open."
+   "subtitle": "A farm with a silo, sheds and a combine stands north of a thin tree line.",
+   "expect_lanes": 3
+  },
+  {
+   "no": 21,
+   "file": "village-street",
+   "name": "Village street",
+   "category": "V",
+   "sheet": "docs/design/maps/village-street.md",
+   "seed": 21,
+   "sector": "village-street",
+   "subtitle": "A long village street from the enemy edge to our line.",
+   "expect_lanes": 3
+  },
+  {
+   "no": 22,
+   "file": "village-crossroads",
+   "name": "Crossroads",
+   "category": "V",
+   "sheet": "docs/design/maps/village-crossroads.md",
+   "seed": 22,
+   "sector": "village-crossroads",
+   "subtitle": "Two village streets cross in the middle. Whoever holds the houses at the crossroads controls both routes.",
+   "expect_lanes": 4
   }
  ]
 }

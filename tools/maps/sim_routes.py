@@ -109,8 +109,8 @@ class NavGrid:
                 oi, ov = obstacles.get(t, (None, None))
                 raw_i[i] = FALLBACK_INF[t] if oi is None else oi
                 raw_v[i] = FALLBACK_VEH[t] if ov is None else ov
-        # objects (rock, wreck, ...) paint over the terrain; none of the designed
-        # group A features are objects, so this is a no-op for them
+        # objects (rock, wreck, ...) paint over the terrain
+        has_object = [False] * (self.cols * self.rows)
         for f in field["features"]:
             t = f["type"]
             if t in TERRAIN_ORDER:
@@ -134,6 +134,7 @@ class NavGrid:
                     covered = _in_poly(x, y, pts) if f.get("poly") else _dist_line(x, y, pts) <= pad
                     if covered:
                         i = r * self.cols + c
+                        has_object[i] = True
                         if oi is not None:
                             raw_i[i] = oi
                         if ov is not None:
@@ -148,7 +149,18 @@ class NavGrid:
                         raw_i[i] = INF
                         raw_v[i] = INF
         self.cost_i = list(raw_i)
+        self.raw_v = list(raw_v)
+        self.has_object = has_object
         self.cost_v = self._clearance(raw_v)
+
+    def cost_v_tree(self, tree=5.0):
+        """NavGrid.CostFor(UnitClass.Vehicle, treeMoveCost): armoured vehicles push
+        through groves and belts at `tree` instead of the table's vehicle cost."""
+        src = list(self.raw_v)
+        for i in range(len(src)):
+            if not self.has_object[i] and self.cells[i] in ("grove", "belt"):
+                src[i] = tree
+        return self._clearance(src)
 
     def _clearance(self, src):
         out = list(src)

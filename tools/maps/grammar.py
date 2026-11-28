@@ -23,7 +23,9 @@ Used by tools/maps/generate.py (writes the field JSON) and tools/maps/check.py.
 """
 
 import math
+import os
 import random
+import re
 
 # Rule values from docs/design/maps.md section 4.2 (defaults; a concept may override).
 RULES = {
@@ -521,7 +523,13 @@ def crater_features(concept, rng):
 # ---------------------------------------------------------------- assembly
 
 def generate(concept):
-    """Build one field dict (the Forest belts format) from a concept parameter set."""
+    """Build one field dict (the Forest belts format) from a concept parameter set.
+
+    A concept with a "sheet" key is built from its approved concept sheet
+    (docs/design/maps/*.md, PR #51) instead of free parameters.
+    """
+    if concept.get("sheet"):
+        return sheet_field(concept)
     rng = _rng(concept)
     size = concept.get("size", RULES["field_size"])
     concept = dict(concept)
@@ -585,3 +593,382 @@ def generate(concept):
 def strip_layout(field):
     """Field dict without the generator-only _layout key (what goes into the JSON file)."""
     return {k: v for k, v in field.items() if not k.startswith("_")}
+
+
+# ---------------------------------------------------------------- concept sheets (#51)
+#
+# The approved map sheets of docs/design/maps/*.md (PR #51) are the target for the
+# field files: each sheet has a 20 x 40 grid, one character = 10 m, row 1 = the
+# enemy edge (y = 0), row 40 = our line (y = 400). A concept with a "sheet" key
+# builds the field straight from that grid, so a field file and its sheet cannot
+# drift apart. Same sheet + same seed -> same field file.
+
+SHEET_CELL = 10.0
+SHEET_ROWS, SHEET_COLS = 40, 20
+
+ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
+
+# grid char -> feature type, closed polygon (the Sim rasterises a poly with InPoly)
+SHEET_POLY = {
+    "H": "hill", "G": "grove", "P": "pond", "K": "balka", "E": "embankment",
+    "M": "heap", "p": "pipe", "F": "ford",
+    "O": "rock", "W": "wreck", "S": "bush", "T": "trench", "X": "wire", "Y": "hedgehog",
+    "h": "house", "r": "ruin", "f": "fence", "u": "sunflower", "N": "burned_belt",
+    "a": "stack", "s": "shed", "i": "silo", "z": "camo_net", "d": "dugout",
+}
+
+# chars drawn from "line" + "width" by the renderer; belt and river also carry the
+# exact "poly", so the Sim rasterises the real sheet cells, not the centre line
+SHEET_LINE = {"B": ("belt", 12), "R": ("river", 12), "=": ("road", 5)}
+
+# background field tones (look only): char -> (tone, angle)
+SHEET_FIELD = {",": ("stubble", 88), ".": ("fallow", 2)}
+
+# decoration only in the sheet (no Sim row, not written to the field file)
+SHEET_DECOR = {"v", "*"}
+
+
+def parse_sheet(path):
+    """Read the 20 x 40 layout grid from a concept sheet .md."""
+    with open(path, encoding="utf-8") as fh:
+        text = fh.read()
+    m = re.search(r"```\n(.*?)```", text, re.S)
+    if not m:
+        raise ValueError(f"no layout grid in {path}")
+    grid = [ln for ln in m.group(1).strip("\n").split("\n") if ln]
+    assert len(grid) == SHEET_ROWS and all(len(r) == SHEET_COLS for r in grid), \
+        f"{path}: grid is not {SHEET_COLS}x{SHEET_ROWS}"
+    return grid
+
+
+def resolve_markers(grid):
+    """The digits 1-9 mark defender functions on the sheet; they are not objects.
+
+    A digit cell keeps the terrain it stands on: a ford/river digit stays water,
+    a digit inside a grove stays grove, anything else is open ground.
+    """
+    out = []
+    for r, row in enumerate(grid):
+        line = ""
+        for c, ch in enumerate(row):
+            if not ch.isdigit():
+                line += ch
+                continue
+            nb = []
+            if r > 0: nb.append(grid[r - 1][c])
+            if r < SHEET_ROWS - 1: nb.append(grid[r + 1][c])
+            if c > 0: nb.append(row[c - 1])
+            if c < SHEET_COLS - 1: nb.append(row[c + 1])
+            if "F" in nb: line += "F"
+            elif any(n in "RpQ" for n in nb): line += "R"
+            elif "G" in nb: line += "G"
+            elif "B" in nb: line += "B"
+            elif "u" in nb: line += "u"
+            else: line += "."
+        out.append(line)
+    return out
+
+
+def _row_runs(grid, r, chars=None):
+    runs = []
+    c = 0
+    while c < SHEET_COLS:
+        ch = grid[r][c]
+        if chars is None or ch in chars:
+            c0 = c
+            while c < SHEET_COLS and grid[r][c] == ch:
+                c += 1
+            runs.append((ch, c0, c - 1))
+        else:
+            c += 1
+    return runs
+
+
+def _rects(grid, chars):
+    """Merge same-char horizontal runs into rectangles: (char, r0, r1, c0, c1)."""
+    rects = []
+    prev = {}
+    for r in range(SHEET_ROWS):
+        cur = {}
+        for ch, c0, c1 in _row_runs(grid, r, chars):
+            key = (ch, c0, c1)
+            if key in prev:
+                i = prev[key]
+                rects[i][2] = r
+                cur[key] = i
+            else:
+                rects.append([ch, r, r, c0, c1])
+                cur[key] = len(rects) - 1
+        prev = cur
+    return [tuple(x) for x in rects]
+
+
+def _rect_poly(r0, r1, c0, c1):
+    x0, x1 = c0 * SHEET_CELL, (c1 + 1) * SHEET_CELL
+    y0, y1 = r0 * SHEET_CELL, (r1 + 1) * SHEET_CELL
+    return [[x0, y0], [x1, y0], [x1, y1], [x0, y1]]
+
+
+def _track_lines(grid):
+    """Chain ':' run centres of neighbouring rows into polylines (decoration)."""
+    paths = []          # list of point lists
+    prev = {}           # run key -> path index
+    for r in range(SHEET_ROWS):
+        cur = {}
+        yc = (r + 0.5) * SHEET_CELL
+        for _ch, c0, c1 in _row_runs(grid, r, {":"}):
+            xc = (c0 + c1 + 1) / 2.0 * SHEET_CELL
+            hit = None
+            for key, i in prev.items():
+                if not (c1 < key[0] or c0 > key[1]):
+                    hit = i
+                    break
+            if hit is None:
+                paths.append([[xc, yc]])
+                cur[(c0, c1)] = len(paths) - 1
+            else:
+                paths[hit].append([xc, yc])
+                cur[(c0, c1)] = hit
+        prev = cur
+    return [p for p in paths if len(p) >= 2]
+
+
+def _bridge_lines(grid):
+    """One 'bridge_ruins' line per connected group of 'Q' cells."""
+    cells = [(r, c) for r in range(SHEET_ROWS) for c in range(SHEET_COLS) if grid[r][c] == "Q"]
+    groups = []
+    for cell in cells:
+        merged = None
+        for g in groups:
+            if any(abs(cell[0] - o[0]) + abs(cell[1] - o[1]) == 1 for o in g):
+                merged = g
+                break
+        if merged is None:
+            groups.append([cell])
+        else:
+            merged.append(cell)
+    # merge groups that touch (a cell added to one group may bridge two groups)
+    changed = True
+    while changed:
+        changed = False
+        for i in range(len(groups)):
+            for j in range(i + 1, len(groups)):
+                if any(abs(a[0] - b[0]) + abs(a[1] - b[1]) == 1 for a in groups[i] for b in groups[j]):
+                    groups[i] += groups[j]
+                    del groups[j]
+                    changed = True
+                    break
+            if changed:
+                break
+    lines = []
+    for g in groups:
+        g.sort()
+        lines.append([[(c + 0.5) * SHEET_CELL, (r + 0.5) * SHEET_CELL] for r, c in g])
+    return [ln for ln in lines if len(ln) >= 2]
+
+
+def sheet_features(grid, rng):
+    """Convert a resolved sheet grid into field features (draw order)."""
+    feats = []
+    # background field tones
+    for ch, (tone, ang) in SHEET_FIELD.items():
+        for _ch, r0, r1, c0, c1 in _rects(grid, {ch}):
+            feats.append({"type": "field", "poly": _rect_poly(r0, r1, c0, c1),
+                          "tone": tone, "angle": round(ang + rng.uniform(-5, 5), 1)})
+    # belt, river, road: exact poly for the Sim + centre line for the renderer
+    for ch, (ftype, width) in SHEET_LINE.items():
+        for r in range(SHEET_ROWS):
+            for _c, c0, c1 in _row_runs(grid, r, {ch}):
+                yc = (r + 0.5) * SHEET_CELL
+                feats.append({"type": ftype, "poly": _rect_poly(r, r, c0, c1),
+                              "line": [[c0 * SHEET_CELL, yc], [(c1 + 1) * SHEET_CELL, yc]],
+                              "width": width})
+    # closed polygons: terrain and objects
+    for ch, ftype in SHEET_POLY.items():
+        for _c, r0, r1, c0, c1 in _rects(grid, {ch}):
+            feats.append({"type": ftype, "poly": _rect_poly(r0, r1, c0, c1)})
+    # tracks and the ruined bridge are drawn from lines; the Sim ignores both
+    for ln in _track_lines(grid):
+        feats.append({"type": "tracks", "line": ln})
+    for ln in _bridge_lines(grid):
+        feats.append({"type": "bridge_ruins", "line": ln, "width": 7})
+    # craters: one feature with all points
+    pts = []
+    for r in range(SHEET_ROWS):
+        for c in range(SHEET_COLS):
+            if grid[r][c] == "c":
+                pts.append([round((c + 0.5) * SHEET_CELL + rng.uniform(-2, 2), 1),
+                            round((r + 0.5) * SHEET_CELL + rng.uniform(-2, 2), 1),
+                            round(rng.uniform(1.2, 2.2), 1)])
+    if pts:
+        feats.append({"type": "craters", "points": pts})
+    return feats
+
+
+def sheet_spawns(grid, w):
+    """Attacker entries: where a road or a field track meets the top edge.
+
+    Entries closer than 25 m are one entry (one road). With fewer than two
+    separated entries the map keeps no spawns: the attack comes over the whole
+    top edge (a front, not a gate), which is what the sheets' lanes assume.
+    """
+    xs = set()
+    for r in range(2):
+        for c in range(SHEET_COLS):
+            if grid[r][c] == "=" and grid[0][c] not in "RFpQ":
+                xs.add((c + 0.5) * SHEET_CELL)
+    xs = sorted(xs)
+    merged = []
+    for x in xs:
+        if not merged or x - merged[-1] >= 25:
+            merged.append(x)
+    if len(merged) < 2:
+        return []
+    if len(merged) > 3:
+        step = (len(merged) - 1) / 2.0
+        merged = [merged[round(i * step)] for i in range(3)]
+    margin = RULES["edge_margin"]
+    return [round(min(max(x, margin), w - margin), 1) for x in merged]
+
+
+# Chars a sheet road never drives through: water and crossings (the road stops
+# at the river, vehicles use the ford), open field ground (the road does not
+# widen into the field), buildings and stacks (solid), sunflower (crop rows).
+ROAD_NEVER = set("RPFpQ,.hrsadau")
+
+
+def heal_roads(grid):
+    """Let every sheet road cut through whatever lies on its own path.
+
+    The Sim's vehicle clearance rule blocks a vehicle cell that touches an
+    impassable one, so an embankment, wreck or grove cell on the road would stop
+    all vehicles there. A road cell is exempt from that rule, so the road wins
+    on its own corridor: short gaps (<= 3 cells) between road cells in the same
+    row or column are bridged, and a road end extends to the map edge through
+    non-open cells. Water, open field ground, buildings, stacks and crops are
+    never overwritten, so the road does not widen into fields or eat a farm.
+    """
+    g = [list(row) for row in grid]
+
+    def through(ch):
+        return ch != "=" and ch not in ROAD_NEVER
+
+    changed = True
+    while changed:
+        changed = False
+        # bridge short gaps between road cells in the same row / column
+        for r in range(SHEET_ROWS):
+            cols = [c for c in range(SHEET_COLS) if g[r][c] == "="]
+            for a, b in zip(cols, cols[1:]):
+                if 1 < b - a <= 4:
+                    for c in range(a + 1, b):
+                        if through(g[r][c]):
+                            g[r][c] = "="
+                            changed = True
+        for c in range(SHEET_COLS):
+            rows = [r for r in range(SHEET_ROWS) if g[r][c] == "="]
+            for a, b in zip(rows, rows[1:]):
+                if 1 < b - a <= 4:
+                    for r in range(a + 1, b):
+                        if through(g[r][c]):
+                            g[r][c] = "="
+                            changed = True
+        # extend road ends to the map edge (vertically) through non-open cells
+        for c in range(SHEET_COLS):
+            rows = [r for r in range(SHEET_ROWS) if g[r][c] == "="]
+            if not rows:
+                continue
+            for r in range(rows[0] - 1, -1, -1):
+                if through(g[r][c]):
+                    g[r][c] = "="
+                    changed = True
+                else:
+                    break
+            for r in range(rows[-1] + 1, SHEET_ROWS):
+                if through(g[r][c]):
+                    g[r][c] = "="
+                    changed = True
+                else:
+                    break
+    return ["".join(row) for row in g]
+
+
+def span_fords(grid):
+    """Make every ford span its river and clear its mouths.
+
+    A ford column converts the river cells above and below it, so vehicles can
+    drive across (ford cells are exempt from the vehicle clearance rule, river
+    cells are not). One apron cell beyond the band is also converted (open
+    ground included), so a wreck at the ford mouth does not block the approach.
+    """
+    g = [list(row) for row in grid]
+    for c in range(SHEET_COLS):
+        rows = [r for r in range(SHEET_ROWS) if g[r][c] == "F"]
+        if not rows:
+            continue
+        for r in rows:
+            for dr in (-1, 1):
+                rr = r + dr
+                while 0 <= rr < SHEET_ROWS and g[rr][c] == "R":
+                    g[rr][c] = "F"
+                    rr += dr
+        top, bot = min(rows), max(rows)
+        for rr in (top - 1, bot + 1):
+            if 0 <= rr < SHEET_ROWS and g[rr][c] not in "hrsidaRPFpQ":
+                g[rr][c] = "F"
+    return ["".join(row) for row in g]
+
+
+# chars a bank road never overwrites: the river itself, the bridge, buildings
+BANK_NEVER = set("RPhQrsida")
+
+
+def bank_roads(grid):
+    """A road along the bank connects the road network to every ford.
+
+    Cells next to a river are blocked for vehicles (clearance rule) unless they
+    are road or ford, so without a bank road the ford is a dead end: vehicles
+    cross and cannot leave the pocket between river and the next obstacle line.
+    On the bank rows, the sheet's road and ford columns are joined by a road.
+    """
+    g = [list(row) for row in grid]
+    river_rows = [r for r in range(SHEET_ROWS) if "R" in g[r]]
+    bands = []
+    for r in river_rows:
+        if bands and r == bands[-1][1] + 1:
+            bands[-1][1] = r
+        else:
+            bands.append([r, r])
+    for top, bot in bands:
+        for r in (top - 1, bot + 1):
+            if not (0 <= r < SHEET_ROWS):
+                continue
+            cols = [c for c in range(SHEET_COLS) if g[r][c] in "=F"]
+            if len(cols) < 2:
+                continue
+            for c in range(min(cols), max(cols) + 1):
+                if g[r][c] not in BANK_NEVER and g[r][c] != "=":
+                    g[r][c] = "="
+    return ["".join(row) for row in g]
+
+
+def sheet_field(concept):
+    """Build one field dict from the concept sheet named by concept['sheet']."""
+    path = os.path.join(ROOT, concept["sheet"])
+    grid = resolve_markers(parse_sheet(path))
+    grid = bank_roads(span_fords(heal_roads(grid)))
+    rng = random.Random(concept.get("seed", 1))
+    w, h = concept.get("size", RULES["field_size"])
+    features = sheet_features(grid, rng)
+    spawns = concept.get("spawns") or sheet_spawns(grid, w)
+    field = {
+        "name": concept["name"],
+        "sector": concept.get("sector", "Sector 07"),
+        "size": [w, h],
+        "subtitle": concept.get("subtitle", ""),
+        "features": features,
+    }
+    if spawns:
+        field["spawns"] = spawns
+    field["_layout"] = {"sheet": concept["sheet"], "grid": grid, "spawns": spawns}
+    return field
