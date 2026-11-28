@@ -1,5 +1,7 @@
 # Change log
 
+2026-11-28 — [codex] art — Add the recruit diagonal-crutch-fall-backward GIF.
+
 2026-11-28 — [codex] art — Add the recruit diagonal-fall-backward GIF.
 
 2026-11-28 — [codex] art — Add the recruit diagonal-crutch-fall-forward GIF.
