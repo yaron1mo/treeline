@@ -1,0 +1,247 @@
+{
+ "brief": "Issue #46, brief of 2026-11-27, reworked 2026-11-28: the 22 approved concept sheets of docs/design/maps/*.md (PR #51) are the target. Each map below points at its sheet; the generator builds the field straight from the sheet grid (same sheet + same seed -> same field file). Categories: A river, B hills and slopes, C forest-heavy, D open steppe, V village (sheets 21-22, added by #51).",
+ "maps": [
+  {
+   "no": 1,
+   "file": "ruined-bridge",
+   "name": "Ruined bridge",
+   "category": "A",
+   "sheet": "docs/design/maps/ruined-bridge.md",
+   "seed": 1,
+   "sector": "Sector 41",
+   "subtitle": "A river cuts the field in two. The bridge is broken, so vehicles must queue at one ford far on the side.",
+   "expect_lanes": 3
+  },
+  {
+   "no": 2,
+   "file": "river-bend",
+   "name": "River bend",
+   "category": "A",
+   "sheet": "docs/design/maps/river-bend.md",
+   "seed": 2,
+   "sector": "Sector 42",
+   "subtitle": "The river bends deep into the field. The attack runs along the west bank.",
+   "expect_lanes": 3
+  },
+  {
+   "no": 3,
+   "file": "confluence",
+   "name": "Confluence",
+   "category": "A",
+   "sheet": "docs/design/maps/confluence.md",
+   "seed": 3,
+   "sector": "Sector 43",
+   "subtitle": "A tributary meets the main river in a Y. The attack splits into a west lane and an east lane.",
+   "expect_lanes": 3
+  },
+  {
+   "no": 4,
+   "file": "overlook",
+   "name": "Overlook",
+   "category": "A",
+   "sheet": "docs/design/maps/overlook.md",
+   "seed": 4,
+   "sector": "Sector 44",
+   "subtitle": "One ford, and our hill stands right above it.",
+   "expect_lanes": 3
+  },
+  {
+   "no": 5,
+   "file": "enemy-heights",
+   "name": "Enemy heights",
+   "category": "A",
+   "sheet": "docs/design/maps/enemy-heights.md",
+   "seed": 5,
+   "sector": "Sector 45",
+   "subtitle": "The enemy owns the hill on its own bank and sees our line.",
+   "expect_lanes": 3
+  },
+  {
+   "no": 6,
+   "file": "left-hill",
+   "name": "Left hill",
+   "category": "B",
+   "sheet": "docs/design/maps/left-hill.md",
+   "seed": 6,
+   "sector": "Sector 46",
+   "subtitle": "A big hill covers the left flank. Whoever holds it sees half the map.",
+   "expect_lanes": 3
+  },
+  {
+   "no": 7,
+   "file": "ridge",
+   "name": "Ridge",
+   "category": "B",
+   "sheet": "docs/design/maps/ridge.md",
+   "seed": 7,
+   "sector": "Sector 47",
+   "subtitle": "A ridge crosses the field. The attack must go through two saddles.",
+   "expect_lanes": 3
+  },
+  {
+   "no": 8,
+   "file": "valley",
+   "name": "Valley",
+   "category": "B",
+   "sheet": "docs/design/maps/valley.md",
+   "seed": 8,
+   "sector": "Sector 48",
+   "subtitle": "Two hills with a valley between them. The attack goes through the valley.",
+   "expect_lanes": 3
+  },
+  {
+   "no": 9,
+   "file": "long-slope",
+   "name": "Long slope",
+   "category": "B",
+   "sheet": "docs/design/maps/long-slope.md",
+   "seed": 9,
+   "sector": "Sector 49",
+   "subtitle": "The ground slopes down to our line. The enemy starts high and sees us.",
+   "expect_lanes": 3
+  },
+  {
+   "no": 10,
+   "file": "gully-mouth",
+   "name": "Gully mouth",
+   "category": "B",
+   "sheet": "docs/design/maps/gully-mouth.md",
+   "seed": 10,
+   "sector": "Sector 50",
+   "subtitle": "A gully runs along the line of advance and ends in front of our hill.",
+   "expect_lanes": 3
+  },
+  {
+   "no": 11,
+   "file": "clearings",
+   "name": "Clearings",
+   "category": "C",
+   "sheet": "docs/design/maps/clearings.md",
+   "seed": 11,
+   "sector": "Sector 51",
+   "subtitle": "A big forest with clearings. Sight is short.",
+   "expect_lanes": 3
+  },
+  {
+   "no": 12,
+   "file": "forest-road",
+   "name": "Forest road",
+   "category": "C",
+   "sheet": "docs/design/maps/forest-road.md",
+   "seed": 12,
+   "sector": "Sector 52",
+   "subtitle": "One wide road runs through a dark forest. This is the map of ambushes: one lane by design.",
+   "expect_lanes": 1
+  },
+  {
+   "no": 13,
+   "file": "forest-and-steppe",
+   "name": "Forest and steppe",
+   "category": "C",
+   "sheet": "docs/design/maps/forest-and-steppe.md",
+   "seed": 13,
+   "sector": "Sector 61",
+   "subtitle": "Forest on the left, open steppe on the right, a road and a farm between.",
+   "expect_lanes": 3
+  },
+  {
+   "no": 14,
+   "file": "grove-islands",
+   "name": "Grove islands",
+   "category": "C",
+   "sheet": "docs/design/maps/grove-islands.md",
+   "seed": 14,
+   "sector": "Sector 54",
+   "subtitle": "Eleven groves of different size stand in the field like islands.",
+   "expect_lanes": 3
+  },
+  {
+   "no": 15,
+   "file": "burned-edge",
+   "name": "Burned edge",
+   "category": "C",
+   "sheet": "docs/design/maps/burned-edge.md",
+   "seed": 15,
+   "sector": "Sector 55",
+   "subtitle": "In front of our forest edge is a burned strip that looks like trees but hides nothing and gives no cover.",
+   "expect_lanes": 3
+  },
+  {
+   "no": 16,
+   "file": "open-steppe",
+   "name": "Open steppe",
+   "category": "D",
+   "sheet": "docs/design/maps/open-steppe.md",
+   "seed": 16,
+   "sector": "Sector 56",
+   "subtitle": "Almost no trees. Long sight lines; bushes, heaps, wrecks and craters only.",
+   "expect_lanes": 3
+  },
+  {
+   "no": 17,
+   "file": "sunflower",
+   "name": "Sunflower",
+   "category": "D",
+   "sheet": "docs/design/maps/sunflower.md",
+   "seed": 17,
+   "sector": "Sector 57",
+   "subtitle": "A big sunflower field fills the middle of the map: it hides but gives no cover.",
+   "expect_lanes": 3
+  },
+  {
+   "no": 18,
+   "file": "old-trenches",
+   "name": "Old trenches",
+   "category": "D",
+   "sheet": "docs/design/maps/old-trenches.md",
+   "seed": 18,
+   "sector": "Sector 58",
+   "subtitle": "Three old trench lines with wire cross the field.",
+   "expect_lanes": 3
+  },
+  {
+   "no": 19,
+   "file": "wreck-field",
+   "name": "Wreck field",
+   "category": "D",
+   "sheet": "docs/design/maps/wreck-field.md",
+   "seed": 19,
+   "sector": "Sector 59",
+   "subtitle": "A destroyed column of vehicles lies in a diagonal line across the field.",
+   "expect_lanes": 3
+  },
+  {
+   "no": 20,
+   "file": "farmstead",
+   "name": "Farmstead",
+   "category": "D",
+   "sheet": "docs/design/maps/farmstead.md",
+   "seed": 20,
+   "sector": "Sector 60",
+   "subtitle": "A farm with a silo, sheds and a combine stands north of a thin tree line.",
+   "expect_lanes": 3
+  },
+  {
+   "no": 21,
+   "file": "village-street",
+   "name": "Village street",
+   "category": "V",
+   "sheet": "docs/design/maps/village-street.md",
+   "seed": 21,
+   "sector": "village-street",
+   "subtitle": "A long village street from the enemy edge to our line.",
+   "expect_lanes": 3
+  },
+  {
+   "no": 22,
+   "file": "village-crossroads",
+   "name": "Crossroads",
+   "category": "V",
+   "sheet": "docs/design/maps/village-crossroads.md",
+   "seed": 22,
+   "sector": "village-crossroads",
+   "subtitle": "Two village streets cross in the middle. Whoever holds the houses at the crossroads controls both routes.",
+   "expect_lanes": 4
+  }
+ ]
+}
