@@ -5,6 +5,9 @@
 //   AgentTools.CapturePlay   enters play mode, waits, then renders the main camera to a PNG.
 //     Battle options for CapturePlay: -agentDefenders "machine_gun:60:350,rifle_squad:140:350" places defenders,
 //     -agentWave starts that many waves (default 0), -agentTimeScale speeds up the battle (default 1).
+//     -agentBudget adds funds; -agentAttackers id:count:delay:interval adds attackers after the wave starts.
+//     -agentFocusWorld x:y and -agentOrtho set the camera for the capture.
+//     -agentWaitForMixed 1 waits up to 30 s for corpses and scattered parts.
 //   AgentTools.Showroom      lays out PNG sprites (pixel-perfect) on a background and renders a phone-size PNG.
 //     -agentImages <folder of PNGs> -agentBackground <png, optional> -agentScale <screen px per sprite px, default 3>
 //     -agentOut <png> -agentWidth 1080 -agentHeight 2340. Sprites are placed left to right, top to bottom, in name order.
@@ -90,6 +93,11 @@ public static class AgentTools
         if (view == null) { Debug.Log("[AgentTools] PlaytestView not in the scene"); return; }
         var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public;
         object run = viewType.GetField("run", flags)?.GetValue(view);
+        object battle = run?.GetType().GetProperty("Battle")?.GetValue(run);
+        float.TryParse(Arg("-agentBudget", "0"), System.Globalization.NumberStyles.Float,
+            System.Globalization.CultureInfo.InvariantCulture, out float extraBudget);
+        if (battle != null && extraBudget > 0f)
+            battle.GetType().GetMethod("AddBudget")?.Invoke(battle, new object[] { extraBudget });
         string defs = Arg("-agentDefenders", "");
         if (run != null && defs.Length > 0)
         {
@@ -107,6 +115,20 @@ public static class AgentTools
         int waves = ArgInt("-agentWave", 0);
         var start = viewType.GetMethod("StartNextWave", flags);
         for (int i = 0; i < waves && start != null; i++) start.Invoke(view, null);
+        string attackers = Arg("-agentAttackers", "");
+        if (battle != null && attackers.Length > 0)
+        {
+            var queue = battle.GetType().GetMethod("QueueWave");
+            foreach (string entry in attackers.Split(','))
+            {
+                string[] p = entry.Split(':');
+                if (p.Length != 4 || queue == null) continue;
+                object ok = queue.Invoke(battle, new object[] { p[0], int.Parse(p[1]),
+                    float.Parse(p[2], System.Globalization.CultureInfo.InvariantCulture),
+                    float.Parse(p[3], System.Globalization.CultureInfo.InvariantCulture) });
+                Debug.Log("[AgentTools] queue " + entry + ": " + ok);
+            }
+        }
         float ts = 1f;
         float.TryParse(Arg("-agentTimeScale", "1"), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out ts);
         Time.timeScale = Mathf.Max(0.1f, ts);
@@ -118,12 +140,75 @@ public static class AgentTools
         if (!EditorApplication.isPlaying) return;
         if (playStart < 0) playStart = EditorApplication.timeSinceStartup;
         if (!battleSet && EditorApplication.timeSinceStartup - playStart > 1.0) SetUpBattle();
-        if (EditorApplication.timeSinceStartup - playStart < waitSeconds) return;
+        double age = EditorApplication.timeSinceStartup - playStart;
+        if (age < waitSeconds) return;
+        if (Arg("-agentWaitForMixed", "0") == "1" && !HasMixedMarks() && age < waitSeconds + 30.0) return;
         EditorApplication.update -= PlayTick;
         int code = 0;
-        try { Save(FindCamera(), Arg("-agentOut", "capture.png")); }
+        try
+        {
+            var cam = FindCamera();
+            string[] focus = Arg("-agentFocusWorld", "").Split(':');
+            if (focus.Length == 2)
+            {
+                float x = float.Parse(focus[0], System.Globalization.CultureInfo.InvariantCulture);
+                float y = float.Parse(focus[1], System.Globalization.CultureInfo.InvariantCulture);
+                cam.transform.position = new Vector3(x, y, cam.transform.position.z);
+            }
+            if (float.TryParse(Arg("-agentOrtho", ""), System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out float ortho) && ortho > 0f)
+                cam.orthographicSize = ortho;
+            cam.rect = new Rect(0f, 0f, 1f, 1f);
+            LogCaptureState();
+            Save(cam, Arg("-agentOut", "capture.png"));
+        }
         catch (Exception e) { Debug.LogError("[AgentTools] " + e); code = 1; }
         EditorApplication.Exit(code);
+    }
+
+    static bool HasMixedMarks()
+    {
+        var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            var type = assembly.GetType("Treeline.Render.BattlefieldUnitLayer");
+            if (type == null) continue;
+            var layer = UnityEngine.Object.FindFirstObjectByType(type);
+            if (layer == null) continue;
+            var corpses = type.GetField("corpses", flags)?.GetValue(layer) as System.Collections.ICollection;
+            var parts = type.GetField("flyingParts", flags)?.GetValue(layer) as System.Collections.ICollection;
+            return corpses != null && corpses.Count > 0 && parts != null && parts.Count > 0;
+        }
+        return false;
+    }
+
+    static void LogCaptureState()
+    {
+        var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public;
+        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            var viewType = assembly.GetType("Treeline.Game.PlaytestView");
+            if (viewType != null)
+            {
+                var view = UnityEngine.Object.FindFirstObjectByType(viewType);
+                object run = view == null ? null : viewType.GetField("run", flags)?.GetValue(view);
+                object battle = run?.GetType().GetProperty("Battle")?.GetValue(run);
+                if (battle != null)
+                {
+                    var attackers = battle.GetType().GetProperty("Attackers")?.GetValue(battle) as System.Collections.ICollection;
+                    var defenders = battle.GetType().GetProperty("Defenders")?.GetValue(battle) as System.Collections.ICollection;
+                    Debug.Log("[AgentTools] capture units: attackers " + attackers?.Count + ", defenders " + defenders?.Count);
+                }
+            }
+            var layerType = assembly.GetType("Treeline.Render.BattlefieldUnitLayer");
+            if (layerType == null) continue;
+            var layer = UnityEngine.Object.FindFirstObjectByType(layerType);
+            if (layer == null) continue;
+            var corpses = layerType.GetField("corpses", flags)?.GetValue(layer) as System.Collections.ICollection;
+            var parts = layerType.GetField("flyingParts", flags)?.GetValue(layer) as System.Collections.ICollection;
+            var blood = layerType.GetField("bloodMarks", flags)?.GetValue(layer) as System.Collections.ICollection;
+            Debug.Log("[AgentTools] capture marks: corpses " + corpses?.Count + ", parts " + parts?.Count + ", blood " + blood?.Count);
+        }
     }
 
     public static void Showroom()
