@@ -1,5 +1,7 @@
 # Change log
 
+2026-11-28 — [codex] art — Set the flash position in the special forces diagonal shooting GIF.
+
 2026-11-28 — [codex] art — Set the flash position in the regular diagonal shooting GIF.
 
 2026-11-28 — [codex] art — Set the flash position in the diagonal crutch shooting GIF.
