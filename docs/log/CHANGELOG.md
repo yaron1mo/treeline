@@ -1,5 +1,7 @@
 # Change log
 
+2026-11-28 — [codex] art — Add backward fall frames for the recruit in both views.
+
 2026-11-28 — [codex] Render — Mirror the loose helmet when the recruit faces right.
 
 - 2026-11-27 ? [codex] art ? Add straight crutch falls and new fall transition frames.

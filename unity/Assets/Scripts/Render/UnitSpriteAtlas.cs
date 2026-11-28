@@ -279,6 +279,26 @@ namespace Treeline.Render
             }
             return frames[frame];
         }
+        public Sprite GetRecruitBackFallFrame(int frame, bool diagonal, int variant)
+        {
+            string key = "recruit" + (diagonal ? "_diagonal" : "")
+                + (variant == 0 ? "_crutch" : "") + "_backfall";
+            if (!infantryFallFrames.TryGetValue(key, out var frames))
+            {
+                Texture2D texture = Resources.Load<Texture2D>("Art/Units/" + key);
+                if (texture == null) throw new InvalidOperationException("Missing infantry art: " + key);
+                float cell = texture.width / 6f;
+                float size = diagonal && variant == 0 ? cell * 0.8f : cell;
+                float bottom = (texture.height - size) * 0.5f;
+                frames = new Sprite[6];
+                for (int i = 0; i < frames.Length; i++)
+                    frames[i] = Sprite.Create(texture, new Rect((i + 0.5f) * cell - size * 0.5f, bottom, size, size),
+                        new Vector2(0.5f, 0.5f), size / 12f, 0, SpriteMeshType.FullRect);
+                infantryFallFrames[key] = frames;
+            }
+            return frames[frame];
+        }
+
         public Sprite GetInfantryFallFrame(string unitId, int frame, bool diagonal = false, int variant = 1)
         {
             string key = unitId == "recruit" && variant == 0
