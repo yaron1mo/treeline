@@ -1,5 +1,7 @@
 # Change log
 
+2026-11-28 — [codex] art — Add the recruit straight-hit GIF.
+
 2026-11-28 — [codex] art — Add the recruit straight-crutch-shoot GIF.
 
 2026-11-28 — [codex] art — Add the recruit straight-shoot GIF.
