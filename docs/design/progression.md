@@ -56,6 +56,7 @@ Write all text in ASD-STE100. Mark each item as **Decided** (with date and who) 
 - **Monetisation model** (Yaroslav, 2026-11-25, not decided): (a) free first chapters + one purchase of the full campaign, (b) paid game, (c) free with rewarded ads and purchases.
 - **Campaign length for release:** proposal 10–15 hours, the rest as updates.
 - **Story:** the tutorial character, advisors, the ending.
+- **Map concept sheets** (designer, 2026-11-27, issue #48): 22 maps in [maps/README.md](maps/README.md). Open: which maps stay (goal 20); whether crop rows count as "filled"; five new Sim rows (`stack`, `shed`, `silo`, `camo_net`, `dugout`); how the designed maps relate to the real-terrain maps; campaign order of the maps.
 
 ## 3. The player's goal (Yaroslav, 2026-11-24)
 
