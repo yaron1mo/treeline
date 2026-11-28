@@ -60,7 +60,7 @@ namespace Treeline.Render
         Sprite[] recruitCrutchFrames;
         Sprite[] recruitDiagonalWalkFrames;
         Sprite[] recruitDiagonalCrutchFrames;
-        Sprite[] regularDiagonalWalkFrames;
+        readonly Dictionary<string, Sprite[]> diagonalWalkFrames = new Dictionary<string, Sprite[]>();
         readonly List<Texture2D> walkTextures = new List<Texture2D>();
         readonly Dictionary<string, Sprite> aimSprites = new Dictionary<string, Sprite>();
         readonly Dictionary<string, Sprite> headlessSprites = new Dictionary<string, Sprite>();
@@ -238,20 +238,21 @@ namespace Treeline.Render
         public Sprite GetRecruitDiagonalWalkFrame(int frame, int variant) =>
             variant == 0 ? recruitDiagonalCrutchFrames[frame] : recruitDiagonalWalkFrames[frame];
 
-        public Sprite GetRegularDiagonalWalkFrame(int frame)
+        public Sprite GetDiagonalWalkFrame(string unitId, int frame)
         {
-            if (regularDiagonalWalkFrames == null)
+            if (!diagonalWalkFrames.TryGetValue(unitId, out var frames))
             {
-                var texture = Resources.Load<Texture2D>("Art/Units/regular_diagonal_walk");
-                if (texture == null) throw new InvalidOperationException("Missing regular diagonal art");
+                var texture = Resources.Load<Texture2D>("Art/Units/" + unitId + "_diagonal_walk");
+                if (texture == null) throw new InvalidOperationException("Missing diagonal art: " + unitId);
                 float size = texture.width / 4f;
                 float bottom = (texture.height - size) * 0.5f;
-                regularDiagonalWalkFrames = new Sprite[4];
-                for (int i = 0; i < regularDiagonalWalkFrames.Length; i++)
-                    regularDiagonalWalkFrames[i] = Sprite.Create(texture, new Rect(i * size, bottom, size, size),
+                frames = new Sprite[4];
+                for (int i = 0; i < frames.Length; i++)
+                    frames[i] = Sprite.Create(texture, new Rect(i * size, bottom, size, size),
                         new Vector2(0.5f, 0.5f), size / 12f, 0, SpriteMeshType.FullRect);
+                diagonalWalkFrames[unitId] = frames;
             }
-            return regularDiagonalWalkFrames[frame];
+            return frames[frame];
         }
 
         public Sprite GetAim(string unitId) => aimSprites[unitId];
@@ -484,8 +485,9 @@ namespace Treeline.Render
             foreach (var frames in infantryShootFrames.Values)
                 foreach (var frame in frames) UnityEngine.Object.Destroy(frame);
             infantryShootFrames.Clear();
-            if (regularDiagonalWalkFrames != null)
-                foreach (var frame in regularDiagonalWalkFrames) UnityEngine.Object.Destroy(frame);
+            foreach (var frames in diagonalWalkFrames.Values)
+                foreach (var frame in frames) UnityEngine.Object.Destroy(frame);
+            diagonalWalkFrames.Clear();
             if (recruitCrutchFrames != null)
                 foreach (var frame in recruitCrutchFrames) UnityEngine.Object.Destroy(frame);
             if (recruitDiagonalWalkFrames != null)
