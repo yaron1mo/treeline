@@ -28,6 +28,22 @@ namespace Treeline.Tests
             for (float t = 0f; t < seconds && b.Outcome == BattleOutcome.Ongoing; t += dt) b.Step(dt);
         }
 
+        [TestCase(0f, 12f, 20f)]
+        [TestCase(8f, 4f, 6f)]
+        public void FatalHit_KeepsDamageAndImpactData(float radius, float originX, float originY)
+        {
+            var b = Make(Open());
+            var shooter = new Defender { Def = new UnitDef { Id = "test_shooter" }, X = 12f, Y = 20f };
+            var victim = new Attacker { Def = new UnitDef { Id = "test_victim" }, Hp = 10f };
+            var hit = typeof(Battle).GetMethod("Hit", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            hit.Invoke(b, new object[] { shooter, victim, 25f, radius, 4f, 6f });
+            Assert.IsFalse(victim.Alive);
+            Assert.AreEqual(25f, victim.FatalDamage);
+            Assert.AreEqual(radius, victim.FatalBlastRadius);
+            Assert.AreEqual(originX, victim.FatalOriginX);
+            Assert.AreEqual(originY, victim.FatalOriginY);
+        }
+
         [Test]
         public void Unopposed_RecruitsReachTheRearEdgeAndHurtTheLine()
         {

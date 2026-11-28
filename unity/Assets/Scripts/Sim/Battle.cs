@@ -18,6 +18,8 @@ namespace Treeline.Sim
         public float X, Y;
         public float Hp;
         public bool Alive = true;
+        /// <summary>Damage and blast data for the fatal hit. Used by the renderer.</summary>
+        public float FatalDamage, FatalBlastRadius, FatalOriginX, FatalOriginY;
         /// <summary>0..1: how well the other side currently sees this unit (shared vision).</summary>
         public float SeenChance;
 
@@ -448,7 +450,7 @@ namespace Treeline.Sim
         /// <summary>Our defenders killed so far in this battle, oldest first.</summary>
         public IReadOnlyList<Loss> Losses => losses;
 
-        /// <summary>Kill rewards earned and not yet paid (battle_rules kill_reward_share × threat_value).</summary>
+        /// <summary>Kill rewards earned and not yet paid (battle_rules kill_reward_share Ãƒâ€” threat_value).</summary>
         public float Rewards { get; private set; }
 
         /// <summary>Pay the earned kill rewards into the budget (the game does it when a wave is held). Returns them.</summary>
@@ -810,7 +812,7 @@ namespace Treeline.Sim
                 float dist = Math.Max(0f, (float)Math.Sqrt(dx * dx + dy * dy) - HitRadiusOf(d.Def));
                 float scale = BlastFalloff(dist, radius);
                 if (scale <= 0f) continue;
-                Hit(shooter, d, baseDamage * ArmourFactor(shooter.Def.DamageType, d.Def.Armour) * scale);
+                Hit(shooter, d, baseDamage * ArmourFactor(shooter.Def.DamageType, d.Def.Armour) * scale, radius, cx, cy);
             }
         }
 
@@ -1511,7 +1513,7 @@ namespace Treeline.Sim
             return dx * dx + dy * dy <= range * range;
         }
 
-        void Hit(Unit shooter, Unit target, float dmg)
+        void Hit(Unit shooter, Unit target, float dmg, float blastRadius = 0f, float blastX = 0f, float blastY = 0f)
         {
             if (dmg <= 0f || !target.Alive) return;
             float done = Math.Min(dmg, target.Hp);
@@ -1527,6 +1529,10 @@ namespace Treeline.Sim
             target.Hp -= dmg;
             if (target.Hp <= 0f)
             {
+                target.FatalDamage = dmg;
+                target.FatalBlastRadius = blastRadius;
+                target.FatalOriginX = blastRadius > 0f ? blastX : shooter.X;
+                target.FatalOriginY = blastRadius > 0f ? blastY : shooter.Y;
                 target.Alive = false;
                 if (target is Defender)
                     losses.Add(new Loss
@@ -1566,7 +1572,7 @@ namespace Treeline.Sim
                     var obstacle = vision.ObstacleAt(a.X, a.Y);
                     if (obstacle != null && cls != ShooterClass.Indirect) dmg *= obstacle.OnCoverMult;
                 }
-                Hit(shooter, a, dmg);
+                Hit(shooter, a, dmg, radius, cx, cy);
             }
         }
 
@@ -1903,7 +1909,14 @@ namespace Treeline.Sim
                 {
                     if (!o.Alive || o.Class != UnitClass.Infantry) continue;
                     float dx = o.X - a.X, dy = o.Y - a.Y;
-                    if (dx * dx + dy * dy <= r2) { o.Hp = 0f; o.Alive = false; }
+                    if (dx * dx + dy * dy <= r2)
+                    {
+                        o.FatalDamage = o.Hp;
+                        o.FatalBlastRadius = a.Def.BlastRadiusM;
+                        o.FatalOriginX = a.X;
+                        o.FatalOriginY = a.Y;
+                        o.Hp = 0f; o.Alive = false;
+                    }
                 }
             }
 

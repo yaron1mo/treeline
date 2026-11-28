@@ -54,6 +54,18 @@ namespace Treeline.Render
             public float CreatedAt;
         }
 
+        sealed class FlyingPart
+        {
+            public Transform Transform;
+            public Vector3 Start, Travel;
+            public float Started, Duration, Height, Spin;
+            public bool Settled;
+        }
+
+        readonly List<FlyingPart> flyingParts = new List<FlyingPart>();
+        const int MaxParts = 128;
+        Sprite[] partSprites;
+
         readonly Dictionary<int, Visual> live = new Dictionary<int, Visual>();
         readonly List<int> missing = new List<int>();
         readonly List<Visual> showroom = new List<Visual>();
@@ -210,6 +222,7 @@ namespace Treeline.Render
         {
             if (!ready || battle == null) return;
 
+            UpdateFlyingParts();
             for (int i = bloodMarks.Count - 1; i >= 0; i--)
             {
                 BloodMark mark = bloodMarks[i];
@@ -368,9 +381,80 @@ namespace Treeline.Render
                     (fallen.UnitId == "recruit" || fallen.UnitId == "regular" || fallen.UnitId == "special_forces"))
                 {
                     fallen.BloodDirection = FindImpactDirection(former);
-                    BeginFall(fallen, key);
+                    bool blast = former.FatalBlastRadius > 0f;
+                    bool heavy = former.FatalDamage >= former.Def.Hp;
+                    if (fallen.UnitId == "recruit" && (blast || heavy))
+                        BeginBreakApart(fallen, key, former);
+                    else
+                        BeginFall(fallen, key);
                 }
                 priorAttackers.Remove(key);
+            }
+        }
+
+        void LoadPartSprites()
+        {
+            if (partSprites != null) return;
+            var texture = Resources.Load<Texture2D>("Art/Units/infantry_parts");
+            if (texture == null) throw new InvalidOperationException("Missing infantry parts art");
+            float cell = texture.width / 6f;
+            float bottom = (texture.height - cell) * 0.5f;
+            partSprites = new Sprite[6];
+            for (int i = 0; i < partSprites.Length; i++)
+                partSprites[i] = Sprite.Create(texture, new Rect(i * cell, bottom, cell, cell),
+                    new Vector2(0.5f, 0.5f), cell / 12f, 0, SpriteMeshType.FullRect);
+        }
+
+        void BeginBreakApart(Visual fallen, int key, Attacker attacker)
+        {
+            LoadPartSprites();
+            Vector3 start = fallen.Root.transform.localPosition;
+            Vector2 impact = new Vector2(attacker.X - attacker.FatalOriginX,
+                attacker.FatalOriginY - attacker.Y);
+            if (impact.sqrMagnitude < 0.001f) impact = Vector2.down;
+            impact.Normalize();
+            float power = attacker.FatalBlastRadius > 0f
+                ? Mathf.Clamp01(attacker.FatalBlastRadius / 12f) : 0.25f;
+            int chunks = bloodEnabled ? 3 + Mathf.RoundToInt(3f * power) : 0;
+            for (int i = 0; i < 6 + chunks; i++)
+            {
+                while (flyingParts.Count >= MaxParts)
+                {
+                    if (flyingParts[0].Transform != null) Destroy(flyingParts[0].Transform.gameObject);
+                    flyingParts.RemoveAt(0);
+                }
+                int index = i == 0 ? 0 : i <= 2 ? 1 : i <= 5 ? i - 1 : 5;
+                var part = CreatePart(transform, partSprites[index], "Infantry part");
+                part.localPosition = start;
+                float scale = i == 0 || i == 5 ? 0.48f : i == 4 ? 0.42f : 0.30f;
+                part.localScale = Vector3.one * scale * fallen.Root.transform.localScale.x;
+                float angle = (i * 137.5f + (key % 11) * 17f) * Mathf.Deg2Rad;
+                Vector2 scatter = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+                Vector2 direction = (scatter + impact * 0.55f).normalized;
+                float distance = (2f + (i % 4) * 0.65f) * (0.8f + power * 1.6f);
+                flyingParts.Add(new FlyingPart {
+                    Transform = part, Start = start,
+                    Travel = new Vector3(direction.x, direction.y, 0f) * distance,
+                    Started = Time.time, Duration = 0.65f + (i % 3) * 0.09f,
+                    Height = 1.5f + power * 2.5f, Spin = (i % 2 == 0 ? 1f : -1f) * (180f + i * 37f)
+                });
+            }
+            if (bloodEnabled) AddBlood(start, impact);
+            Destroy(fallen.Root);
+            live.Remove(key);
+        }
+
+        void UpdateFlyingParts()
+        {
+            foreach (var part in flyingParts)
+            {
+                if (part.Settled || part.Transform == null) continue;
+                float t = Mathf.Clamp01((Time.time - part.Started) / part.Duration);
+                float arc = t < 0.75f ? Mathf.Sin(t / 0.75f * Mathf.PI)
+                    : 0.18f * Mathf.Sin((t - 0.75f) / 0.25f * Mathf.PI);
+                part.Transform.localPosition = part.Start + part.Travel * t + Vector3.up * (part.Height * arc);
+                part.Transform.localRotation = Quaternion.Euler(0f, 0f, part.Spin * t);
+                if (t >= 1f) part.Settled = true;
             }
         }
 
@@ -620,6 +704,8 @@ namespace Treeline.Render
                 if (mark.Root != null) Destroy(mark.Root);
             bloodMarks.Clear();
             detachedSnouts.Clear();
+            foreach (var part in flyingParts) if (part.Transform != null) Destroy(part.Transform.gameObject);
+            flyingParts.Clear();
         }
 
         void RegisterKill(float time)
@@ -778,6 +864,8 @@ namespace Treeline.Render
             if (spiritTexture != null) Destroy(spiritTexture);
             if (muzzleSprite != null) Destroy(muzzleSprite);
             if (muzzleTexture != null) Destroy(muzzleTexture);
+            if (partSprites != null)
+                foreach (var part in partSprites) if (part != null) Destroy(part);
             if (sprites != null) sprites.Dispose();
         }
     }
