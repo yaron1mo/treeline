@@ -770,6 +770,10 @@ def _bridge_lines(grid):
 def sheet_features(grid, rng):
     """Convert a resolved sheet grid into field features (draw order)."""
     feats = []
+    # a ruined bridge stands in the river: for the terrain the Q cells are water
+    # (otherwise the gap under the rubble is wide enough for vehicles), the
+    # bridge_ruins line below still draws the rubble
+    terr = ["".join("R" if ch == "Q" else ch for ch in row) for row in grid]
     # background field tones
     for ch, (tone, ang) in SHEET_FIELD.items():
         for _ch, r0, r1, c0, c1 in _rects(grid, {ch}):
@@ -777,8 +781,9 @@ def sheet_features(grid, rng):
                           "tone": tone, "angle": round(ang + rng.uniform(-5, 5), 1)})
     # belt, river, road: exact poly for the Sim + centre line for the renderer
     for ch, (ftype, width) in SHEET_LINE.items():
+        src = terr if ch == "R" else grid
         for r in range(SHEET_ROWS):
-            for _c, c0, c1 in _row_runs(grid, r, {ch}):
+            for _c, c0, c1 in _row_runs(src, r, {ch}):
                 yc = (r + 0.5) * SHEET_CELL
                 feats.append({"type": ftype, "poly": _rect_poly(r, r, c0, c1),
                               "line": [[c0 * SHEET_CELL, yc], [(c1 + 1) * SHEET_CELL, yc]],
