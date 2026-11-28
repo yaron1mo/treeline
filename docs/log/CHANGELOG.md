@@ -1,5 +1,7 @@
 # Change log
 
+2026-11-28 — [codex] art — Add the special forces straight-loose-helmet GIF.
+
 2026-11-28 — [codex] art — Add the special forces straight-fall-backward GIF.
 
 2026-11-28 — [codex] art — Add the special forces straight-fall-forward GIF.
