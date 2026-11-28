@@ -5,6 +5,7 @@
 //   AgentTools.CapturePlay   enters play mode, waits, then renders the main camera to a PNG.
 //     Battle options for CapturePlay: -agentDefenders "machine_gun:60:350,rifle_squad:140:350" places defenders,
 //     -agentWave starts that many waves (default 0), -agentTimeScale speeds up the battle (default 1).
+//     -agentField selects a field by its resource name before placing defenders.
 //   AgentTools.Showroom      lays out PNG sprites (pixel-perfect) on a background and renders a phone-size PNG.
 //     -agentImages <folder of PNGs> -agentBackground <png, optional> -agentScale <screen px per sprite px, default 3>
 //     -agentOut <png> -agentWidth 1080 -agentHeight 2340. Sprites are placed left to right, top to bottom, in name order.
@@ -74,6 +75,7 @@ public static class AgentTools
     }
 
     static bool battleSet;
+    static float fieldWidth, fieldHeight;
 
     // Starts a battle in the PlaytestView by reflection, so that a capture shows units (2026-11-27).
     static void SetUpBattle()
@@ -89,6 +91,19 @@ public static class AgentTools
         var view = UnityEngine.Object.FindFirstObjectByType(viewType);
         if (view == null) { Debug.Log("[AgentTools] PlaytestView not in the scene"); return; }
         var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public;
+        string field = Arg("-agentField", "");
+        if (field.Length > 0)
+        {
+            var names = viewType.GetField("fieldFiles", flags)?.GetValue(view) as System.Collections.IList;
+            int index = names == null ? -1 : names.IndexOf(field);
+            if (index < 0) throw new InvalidOperationException("Field not found: " + field);
+            viewType.GetField("current", flags).SetValue(view, index);
+            viewType.GetMethod("NewRun", flags).Invoke(view, null);
+            object grid = viewType.GetField("grid", flags).GetValue(view);
+            fieldWidth = Convert.ToSingle(grid.GetType().GetField("Width").GetValue(grid));
+            fieldHeight = Convert.ToSingle(grid.GetType().GetField("Height").GetValue(grid));
+            Debug.Log("[AgentTools] field " + field);
+        }
         object run = viewType.GetField("run", flags)?.GetValue(view);
         string defs = Arg("-agentDefenders", "");
         if (run != null && defs.Length > 0)
@@ -201,6 +216,13 @@ public static class AgentTools
         int w = ArgInt("-agentWidth", 1280), h = ArgInt("-agentHeight", 720);
         var rt = new RenderTexture(w, h, 24);
         RenderTexture old = cam.targetTexture;
+        Rect oldRect = cam.rect;
+        float oldSize = cam.orthographicSize;
+        if (fieldWidth > 0f && fieldHeight > 0f)
+        {
+            cam.rect = new Rect(0f, 0f, 1f, 1f);
+            cam.orthographicSize = Mathf.Max(fieldHeight * 0.52f, fieldWidth * 0.52f * h / w);
+        }
         cam.targetTexture = rt;
         cam.Render();
         RenderTexture.active = rt;
@@ -208,6 +230,8 @@ public static class AgentTools
         tex.ReadPixels(new Rect(0, 0, w, h), 0, 0);
         tex.Apply();
         cam.targetTexture = old;
+        cam.rect = oldRect;
+        cam.orthographicSize = oldSize;
         RenderTexture.active = null;
         string full = Path.GetFullPath(path);
         Directory.CreateDirectory(Path.GetDirectoryName(full));

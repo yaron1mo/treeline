@@ -1,5 +1,7 @@
 # Change log
 
+- 2026-11-28 ? [codex] tools/render ? Add field selection to Unity captures. Add phone-size battle images for both villages and sunflower details.
+
 - 2026-11-28 ? [codex] game ? Send a selected defender to a tapped house. Select the occupant when no defender is selected.
 
 - 2026-11-28 ? [codex] game ? Mark occupied houses and show the defender type on the roof.

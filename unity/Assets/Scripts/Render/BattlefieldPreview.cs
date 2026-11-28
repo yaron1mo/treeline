@@ -564,6 +564,8 @@ namespace Treeline.Render
                         Hash(x, y, 19) * 0.04f;
                     int i = Idx(x, y);
                     Color32 target = Tint(color, patch + grain + ridge);
+                    if (tone == "sunflower" && inside && x % 5 == 0 && y % 5 == 0 && Hash(x, y, 93) > 0.25f)
+                        target = new Color32(198, 169, 66, 255);
                     pixels[i] = Mix(pixels[i], target, blend);
                     if (crops != null && inside && blend > 0.58f)
                         crops[i] = tone == "sunflower" ? (byte)2 :
