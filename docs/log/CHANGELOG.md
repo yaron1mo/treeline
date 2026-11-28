@@ -1,5 +1,7 @@
 # Change log
 
+2026-11-28 — [codex] art — Add shots and falls for the regular pig.
+
 2026-11-28 — [codex] art — Add the diagonal view for the regular pig.
 
 2026-11-28 — [codex] art — Add the recruit diagonal-vehicle GIF.
