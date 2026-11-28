@@ -65,6 +65,7 @@ namespace Treeline.Render
         readonly List<FlyingPart> flyingParts = new List<FlyingPart>();
         const int MaxParts = 128;
         Sprite[] partSprites;
+        Sprite[] specialPartSprites;
 
         readonly Dictionary<int, Visual> live = new Dictionary<int, Visual>();
         readonly List<int> missing = new List<int>();
@@ -383,7 +384,7 @@ namespace Treeline.Render
                     fallen.BloodDirection = FindImpactDirection(former);
                     bool blast = former.FatalBlastRadius > 0f;
                     bool heavy = former.FatalDamage >= former.Def.Hp;
-                    if ((fallen.UnitId == "recruit" || fallen.UnitId == "regular") && (blast || heavy))
+                    if (blast || heavy)
                         BeginBreakApart(fallen, key, former);
                     else
                         BeginFall(fallen, key);
@@ -392,22 +393,27 @@ namespace Treeline.Render
             }
         }
 
-        void LoadPartSprites()
+        Sprite[] LoadPartSprites(bool special)
         {
-            if (partSprites != null) return;
-            var texture = Resources.Load<Texture2D>("Art/Units/infantry_parts");
+            var cached = special ? specialPartSprites : partSprites;
+            if (cached != null) return cached;
+            var texture = Resources.Load<Texture2D>(special ? "Art/Units/special_forces_parts" : "Art/Units/infantry_parts");
             if (texture == null) throw new InvalidOperationException("Missing infantry parts art");
             float cell = texture.width / 6f;
             float bottom = (texture.height - cell) * 0.5f;
-            partSprites = new Sprite[6];
-            for (int i = 0; i < partSprites.Length; i++)
-                partSprites[i] = Sprite.Create(texture, new Rect(i * cell, bottom, cell, cell),
+            var result = new Sprite[6];
+            for (int i = 0; i < result.Length; i++)
+                result[i] = Sprite.Create(texture, new Rect(i * cell, bottom, cell, cell),
                     new Vector2(0.5f, 0.5f), cell / 12f, 0, SpriteMeshType.FullRect);
+            if (special) specialPartSprites = result;
+            else partSprites = result;
+            return result;
         }
 
         void BeginBreakApart(Visual fallen, int key, Attacker attacker)
         {
-            LoadPartSprites();
+            bool special = fallen.UnitId == "special_forces";
+            Sprite[] parts = LoadPartSprites(special);
             Vector3 start = fallen.Root.transform.localPosition;
             Vector2 impact = new Vector2(attacker.X - attacker.FatalOriginX,
                 attacker.FatalOriginY - attacker.Y);
@@ -424,10 +430,10 @@ namespace Treeline.Render
                     flyingParts.RemoveAt(0);
                 }
                 int index = i == 0 ? 0 : i <= 2 ? 1 : i <= 5 ? i - 1 : 5;
-                var part = CreatePart(transform, partSprites[index], "Infantry part");
+                var part = CreatePart(transform, parts[index], "Infantry part");
                 part.localPosition = start;
                 float scale = i == 0 || i == 5 ? 0.48f : i == 4 ? 0.42f : 0.30f;
-                part.localScale = Vector3.one * scale * fallen.Root.transform.localScale.x;
+                part.localScale = Vector3.one * scale * (special ? 1.5f : 1f) * fallen.Root.transform.localScale.x;
                 float angle = (i * 137.5f + (key % 11) * 17f) * Mathf.Deg2Rad;
                 Vector2 scatter = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
                 Vector2 direction = (scatter + impact * 0.55f).normalized;
@@ -869,6 +875,8 @@ namespace Treeline.Render
             if (muzzleTexture != null) Destroy(muzzleTexture);
             if (partSprites != null)
                 foreach (var part in partSprites) if (part != null) Destroy(part);
+            if (specialPartSprites != null)
+                foreach (var part in specialPartSprites) if (part != null) Destroy(part);
             if (sprites != null) sprites.Dispose();
         }
     }

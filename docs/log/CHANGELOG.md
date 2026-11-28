@@ -1,5 +1,7 @@
 # Change log
 
+2026-11-28 — [codex] art — Add special forces parts for break-apart deaths.
+
 2026-11-28 — [codex] art — Add shots and falls for the special forces pig.
 
 2026-11-28 — [codex] art — Add the diagonal view for the special forces pig.
