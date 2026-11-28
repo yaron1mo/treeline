@@ -1,5 +1,7 @@
 # Change log
 
+2026-11-28 — [codex] tests — Check part landing, persistence, the cap, and cleanup in Unity.
+
 2026-11-28 — [codex] art — Add the special forces diagonal-vehicle GIF.
 
 2026-11-28 — [codex] art — Add the special forces diagonal-mortar GIF.
