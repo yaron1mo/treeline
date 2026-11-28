@@ -1,5 +1,7 @@
 # Change log
 
+2026-11-28 — [codex] art — Set the flash position in the regular diagonal shooting GIF.
+
 2026-11-28 — [codex] art — Set the flash position in the diagonal crutch shooting GIF.
 
 2026-11-28 — [codex] tools — Set the diagonal flash positions in the GIF generator. Update the recruit GIF.
