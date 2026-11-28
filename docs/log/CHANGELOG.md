@@ -1,5 +1,7 @@
 # Change log
 
+2026-11-28 — [codex] art — Add the recruit straight-crutch-walk GIF.
+
 2026-11-28 — [codex] art — Add the straight recruit walk GIF and its preview tool.
 
 2026-11-28 — [codex] Sim and Render — Record fatal hit data and show recruit parts after blasts and heavy hits.
