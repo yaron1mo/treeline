@@ -383,7 +383,7 @@ namespace Treeline.Render
                     fallen.BloodDirection = FindImpactDirection(former);
                     bool blast = former.FatalBlastRadius > 0f;
                     bool heavy = former.FatalDamage >= former.Def.Hp;
-                    if (fallen.UnitId == "recruit" && (blast || heavy))
+                    if ((fallen.UnitId == "recruit" || fallen.UnitId == "regular") && (blast || heavy))
                         BeginBreakApart(fallen, key, former);
                     else
                         BeginFall(fallen, key);
