@@ -21,7 +21,7 @@ Agree one final list of attacker and defender types, so that Mistral balances on
 | 9 | The own EW radius is visible in the placing mode and when the player taps the station. Never in battle without a tap. | Section 4 |
 | 10 | The Shahed-type drone has a fixed base damage per drone. | Section 5 |
 | 11 | EW **slows** a Shahed and gives it **periodic damage**. One station does not destroy it. **Two overlapping stations destroy one Shahed.** (A Shahed that learns: later, probably not.) | Sections 4, 5 |
-| 12 | EW is a **utility module for the player's recon drones**. It uses a separate "utilities" slot that the player takes into the mission. | Sections 4, 6 |
+| 12 | EW is a **utility**, like the recon drone. Each of the 2 utilities has its own slot (Yaroslav, 2026-11-28; see section 11). | Sections 4, 6 |
 
 ## 2. Player experience
 
@@ -157,14 +157,10 @@ Uses: "Full unit roster before more balance work", "EW for both sides", "Air def
 4. Fix `targetable_by` of the recon UAV (the `radar` target does not exist in the defender list). Check helicopter `targetable_by` against section 5.
 5. Mistral: one balance pass with the final roster. Pass: each attacker has a defender with "stopped" above a set value; no defender is best nowhere; the squads measurement can start. Measure motorbike, van and MRAP first (not yet in the counter table).
 
-## 11. Open questions (new, after the second round)
+## 11. Decisions of Yaroslav (2026-11-28) on the third-round questions
 
-1. **How is the EW station placed in the field, if it is a recon-drone utility?**
-   a) The player drops it on the field like a defender; the utilities slot only decides that it is available, and the number of stations is limited per mission. b) The recon drone carries it and drops it where the drone is (the player sends the drone). c) Both: a drone drop is the upgrade of a).
-   Recommendation: a). Reason: it is the simplest on a phone, and the hard choice is where to place it. b) needs a new control.
-2. **Utilities slot: how many, and what else goes in it?**
-   a) One slot, EW only at release. b) One slot; EW and one more module later (for example a decoy or a flare). c) Two slots from the middle of the campaign.
-   Recommendation: a), with b) as a later update. Reason: a slot with one item is not a choice yet; do not add items before the roster is measured.
-3. **Does the later upgraded Shahed (anti-jam antenna) ignore part of the EW effect?**
-   a) Yes: less slowdown and less damage (as in public reports). b) No: it only has more HP. c) Not at release.
-   Recommendation: c). Reason: you said a learning Shahed is "probably not"; keep one Shahed for the first measurement.
+1. **EW station placing:** the player places the EW station on the field like a defender. The number of stations is limited per mission.
+2. **Utilities slots:** the utilities are the recon drone and the EW station. Each has its own slot (2 utilities slots: one for the recon drone, one for EW). This replaces "EW is a module of the recon drones" in sections 1a, 4 and 6: EW and the recon drone are 2 separate utilities.
+3. **Upgraded Shahed (anti-jam antenna):** not at release.
+
+No open questions remain in this file.
