@@ -46,6 +46,12 @@ def field():
     return Image.new('RGBA', (128, 128), (92, 102, 77, 255))
 
 
+def muzzle_position(view, crutch):
+    if view == 'diagonal':
+        return (41 if crutch else 43, 80)
+    return (49, 50)
+
+
 def put(canvas, sprite, x=32, y=32):
     canvas.alpha_composite(sprite, (round(x), round(y)))
 
@@ -90,7 +96,7 @@ def ordinary(view, crutch, kind):
         put(canvas, sprite, 32, 32 + offset)
         if kind == 'shoot' and n < 2:
             d = ImageDraw.Draw(canvas)
-            x, y = (49, 50) if view == 'straight' else (43, 50)
+            x, y = muzzle_position(view, crutch)
             d.polygon([(x - 3, y), (x, y - 4), (x + 3, y), (x, y + 4)], fill=(255, 208, 85, 255))
         if kind == 'loose-helmet':
             helmet = strip('loose_helmet')

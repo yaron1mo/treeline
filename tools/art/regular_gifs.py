@@ -41,6 +41,10 @@ def frame_name(view, crutch, pose):
     return ('diagonal_' if view == 'diagonal' else '') + pose
 
 
+def muzzle_position(view, crutch):
+    return (52, 79) if view == 'diagonal' else (49, 50)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('view', choices=('straight', 'diagonal'))
@@ -48,6 +52,7 @@ def main():
     args = parser.parse_args()
     preview.strip, preview.frames = strip, frames
     preview.back_frames, preview.frame_name = back_frames, frame_name
+    preview.muzzle_position = muzzle_position
     if args.kind in ('grenade', 'mortar', 'vehicle'):
         images, delays = preview.explosion(args.view, args.kind)
     else:

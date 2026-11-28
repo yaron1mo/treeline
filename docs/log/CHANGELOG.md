@@ -1,5 +1,7 @@
 # Change log
 
+2026-11-28 — [codex] tools — Set the diagonal flash positions in the GIF generator. Update the recruit GIF.
+
 2026-11-28 — [codex] Render — Set the flash position for each diagonal rifle.
 
 2026-11-28 — [codex] Render — Reset the muzzle flash position when infantry turns from diagonal to straight.

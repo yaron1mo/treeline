@@ -41,6 +41,10 @@ def frame_name(view, crutch, pose):
     return ('diagonal_' if view == 'diagonal' else '') + pose
 
 
+def muzzle_position(view, crutch):
+    return (45, 71) if view == 'diagonal' else (49, 50)
+
+
 def special_parts():
     image = Image.open(ART / 'special_forces_parts.png').convert('RGBA')
     cell = image.width / 6
@@ -60,6 +64,7 @@ def main():
     args = parser.parse_args()
     preview.strip, preview.frames = strip, frames
     preview.back_frames, preview.frame_name = back_frames, frame_name
+    preview.muzzle_position = muzzle_position
     preview.parts_atlas = special_parts
     if args.kind in ('grenade', 'mortar', 'vehicle'):
         images, delays = preview.explosion(args.view, args.kind)
