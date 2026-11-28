@@ -27,3 +27,4 @@ unity/*.unitypackage
 unity/crashlytics-build.session
 unity/sysinfo.txt
 build/
+_work/
