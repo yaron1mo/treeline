@@ -316,6 +316,21 @@ namespace Treeline.Game
                 mode = ClickMode.Normal;
                 return;
             }
+            int house = battle.HouseAt(x, y);
+            if (house >= 0)
+            {
+                int occupant = battle.HouseOccupant(house);
+                if (selected != null && occupant != selected.Id)
+                {
+                    if (!run.Move(selected.Id, x, y, out string why)) Say(why + ".", 3f);
+                    return;
+                }
+                if (occupant >= 0)
+                {
+                    foreach (var d in battle.Defenders)
+                        if (d.Id == occupant) { selected = d; return; }
+                }
+            }
             // Select the nearest defender under the click.
             Defender best = null;
             float bestD = PickRadiusM * PickRadiusM;

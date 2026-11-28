@@ -1,5 +1,7 @@
 # Change log
 
+- 2026-11-28 ? [codex] game ? Send a selected defender to a tapped house. Select the occupant when no defender is selected.
+
 - 2026-11-28 ? [codex] game ? Mark occupied houses and show the defender type on the roof.
 
 - 2026-11-28 ? [codex] render ? Add village roofs, ruins, fences, gardens, sunflowers, and burned belts. Load both village fields in the renderer.
