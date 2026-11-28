@@ -3,8 +3,10 @@
 
 Reads tools/maps/concepts.json, builds each map with tools/maps/grammar.py and
 writes <file>.json in the Forest belts field format, plus the Unity .meta file
-with a fresh GUID. Maps with a "sheet" key are built from their approved concept
-sheet (docs/design/maps/*.md, PR #51); same seed + same parameters -> same map.
+with a new GUID only for a new map (an existing .meta is kept, so re-running
+the generator does not change any GUID). Maps with a "sheet" key are built
+from their approved concept sheet (docs/design/maps/*.md, PR #51); same seed
++ same parameters -> same map.
 
 Usage: python3 tools/maps/generate.py [--check-only]
 """
@@ -92,8 +94,9 @@ def main():
         if not check_only:
             with open(path, "w", encoding="utf-8", newline="") as fh:
                 fh.write(text)
-            with open(meta, "w", encoding="utf-8", newline="") as fh:
-                fh.write("fileFormatVersion: 2\r\nguid: %s\r\nTextScriptImporter:\r\n  externalObjects: {}\r\n  userData: \r\n  assetBundleName: \r\n  assetBundleVariant: \r\n" % uuid.uuid4().hex)
+            if not os.path.exists(meta):
+                with open(meta, "w", encoding="utf-8", newline="") as fh:
+                    fh.write("fileFormatVersion: 2\r\nguid: %s\r\nTextScriptImporter:\r\n  externalObjects: {}\r\n  userData: \r\n  assetBundleName: \r\n  assetBundleVariant: \r\n" % uuid.uuid4().hex)
         # determinism: generating twice gives the same file
         again = json.dumps(grammar.strip_layout(grammar.generate(concept)), indent=1)
         assert again.replace("\r\n", "\n") == json.dumps(data, indent=1).replace("\r\n", "\n"), concept["name"]
