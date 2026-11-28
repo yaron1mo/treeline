@@ -307,7 +307,7 @@ namespace Treeline.Render
                 int facing = back ? 1 : -1;
 
                 // All coordinates start at the hips. Positive Y points toward the head.
-                void Stroke(int x1, int y1, int x2, int y2, int radius, Color32 fill, bool fabric = false)
+                System.Action<int, int, int, int, int, Color32, bool> Stroke = (x1, y1, x2, y2, radius, fill, fabric) =>
                 {
                     Vector2 a = new Vector2(32 + x1, 31 + facing * y1);
                     Vector2 b = new Vector2(32 + x2, 31 + facing * y2);
@@ -325,28 +325,28 @@ namespace Treeline.Render
                         if (color.a < 200) color = fill;
                         pixels[y * size + x] = distance > (radius - 1) * (radius - 1) ? edge : color;
                     }
-                }
+                };
 
                 int leftFoot = kneel ? -5 : -23;
                 int rightFoot = kneel ? -6 : -19;
                 int leftX = kneel ? -10 : back ? -14 : -8;
                 Stroke(-4, -2, -8, -10, 4, cloth, true);
                 Stroke(-8, -10, leftX, leftFoot, 3, cloth, true);
-                Stroke(leftX, leftFoot, leftX - 2, leftFoot - 2, 3, boot);
+                Stroke(leftX, leftFoot, leftX - 2, leftFoot - 2, 3, boot, false);
                 Stroke(4, -2, 9, -10, 4, cloth, true);
                 Stroke(9, -10, 12, rightFoot, 3, cloth, true);
-                Stroke(12, rightFoot, 14, rightFoot - 2, 3, boot);
+                Stroke(12, rightFoot, 14, rightFoot - 2, 3, boot, false);
                 Stroke(-7, 9, -15, back ? 4 : 12, 3, cloth, true);
-                Stroke(-15, back ? 4 : 12, kneel ? -12 : -19, back ? 8 : 18, 2, webbing);
+                Stroke(-15, back ? 4 : 12, kneel ? -12 : -19, back ? 8 : 18, 2, webbing, false);
                 Stroke(7, 9, kneel ? 12 : 17, back ? 6 : 11, 3, cloth, true);
-                Stroke(kneel ? 12 : 17, back ? 6 : 11, kneel ? 10 : 19, back ? 1 : 19, 2, webbing);
+                Stroke(kneel ? 12 : 17, back ? 6 : 11, kneel ? 10 : 19, back ? 1 : 19, 2, webbing, false);
                 Stroke(0, -2, 0, 8, 8, cloth, true);
                 if (back)
                 {
-                    Stroke(-5, 10, 5, 1, 2, webbing);
-                    Stroke(-5, 0, 5, 0, 2, boot);
+                    Stroke(-5, 10, 5, 1, 2, webbing, false);
+                    Stroke(-5, 0, 5, 0, 2, boot, false);
                 }
-                else Stroke(-1, 2, -1, 8, 5, Palette[5]);
+                else Stroke(-1, 2, -1, 8, 5, Palette[5], false);
 
                 // Map the helmet crown from the idle sprite onto the lowered head.
                 int headY = kneel ? 11 : 17;
@@ -359,7 +359,7 @@ namespace Treeline.Render
                     pixels[(31 + facing * headY + y) * size + 32 + x] =
                         r > 2450 ? edge : c.a > 200 ? c : cloth;
                 }
-                if (back) Stroke(-2, headY - 4, 2, headY - 4, 2, Palette[14]);
+                if (back) Stroke(-2, headY - 4, 2, headY - 4, 2, Palette[14], false);
 
                 var texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
                 texture.filterMode = FilterMode.Point;

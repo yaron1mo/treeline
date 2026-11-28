@@ -30,11 +30,13 @@ namespace UnityEngine
         public void SendMessage(string method, object value, SendMessageOptions options) { }
         public T AddComponent<T>() where T : Component => null;
         public Transform transform => null;
+        public void SetActive(bool value) { }
+        public bool activeSelf => false;
     }
     public class Transform : Component
     {
         public Vector3 position, localPosition, localScale;
-        public Quaternion rotation;
+        public Quaternion rotation, localRotation;
         public void SetParent(Transform p, bool worldPositionStays) { }
     }
     public sealed class SpriteRenderer : Component { public Sprite sprite; public Color color; public int sortingOrder; public bool enabled; }
@@ -51,6 +53,8 @@ namespace UnityEngine
         public static Texture2D whiteTexture => null;
         public TextureWrapMode wrapMode;
         public void SetPixels32(Color32[] c) { }
+        public Color32[] GetPixels32() => new Color32[0];
+        public bool LoadImage(byte[] data) => false;
         public void Apply() { }
         public void Apply(bool updateMipmaps, bool makeNoLongerReadable) { }
     }
@@ -83,6 +87,14 @@ namespace UnityEngine
         public static void LogWarning(object m) { }
         public static void LogError(object m) { }
     }
+    public static class PlayerPrefs
+    {
+        public static int GetInt(string key, int defaultValue) => defaultValue;
+        public static void SetInt(string key, int value) { }
+        public static float GetFloat(string key, float defaultValue) => defaultValue;
+        public static void SetFloat(string key, float value) { }
+        public static void Save() { }
+    }
     public static class Screen { public static int width, height; }
     public static class Time { public static float deltaTime, time, unscaledDeltaTime; public static int frameCount; }
     public enum RuntimeInitializeLoadType { AfterSceneLoad, BeforeSceneLoad }
@@ -95,6 +107,8 @@ namespace UnityEngine
         public Vector2 normalized => this;
         public static Vector2 zero => default(Vector2);
         public static Vector2 right => new Vector2(1f, 0f);
+        public static Vector2 down => new Vector2(0f, -1f);
+        public static Vector2 up => new Vector2(0f, 1f);
         public float magnitude => 0f;
         public float sqrMagnitude => 0f;
         public static float Dot(Vector2 a, Vector2 b) => 0f;
@@ -113,10 +127,16 @@ namespace UnityEngine
         public static Vector3 zero => default(Vector3);
         public static Vector3 one => new Vector3(1f, 1f, 1f);
         public static Vector3 operator *(Vector3 a, float b) => a;
+        public static Vector3 Lerp(Vector3 a, Vector3 b, float t) => a;
+        public static Vector3 up => new Vector3(0f, 1f, 0f);
+        public static Vector3 operator +(Vector3 a, Vector3 b) => a;
+        public static Vector3 operator -(Vector3 a, Vector3 b) => a;
+        public static implicit operator Vector3(Vector2 v) => new Vector3(v.x, v.y, 0f);
     }
     public struct Quaternion
     {
         public static Quaternion Euler(float x, float y, float z) => default(Quaternion);
+        public static Quaternion identity => default(Quaternion);
     }
     public struct Rect { public float x, y, width, height; public Rect(float x, float y, float w, float h) { this.x = x; this.y = y; width = w; height = h; } }
     public struct Matrix4x4 { public static Matrix4x4 Scale(Vector3 v) => default(Matrix4x4); public static Matrix4x4 identity => default(Matrix4x4); }
@@ -142,6 +162,7 @@ namespace UnityEngine
         public static float Atan2(float a, float b) => a;
         public static float Repeat(float t, float length) => t;
         public static float Abs(float v) => v;
+        public static int Abs(int v) => v;
         public static float Lerp(float a, float b, float t) => a;
         public static float Max(float a, float b) => a;
         public static int Max(int a, int b) => a;
