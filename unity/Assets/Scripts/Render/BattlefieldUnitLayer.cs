@@ -386,6 +386,7 @@ namespace Treeline.Render
             if (fallen.HelmetComesOff)
             {
                 fallen.Helmet = CreatePart(fallen.Root.transform, sprites.GetLooseHelmet(fallen.UnitId), "Loose helmet");
+                fallen.Helmet.GetComponent<SpriteRenderer>().flipX = fallen.Body.flipX;
                 int direction = (int)((helmetChoice >> 20) % 3);
                 fallen.HelmetLanding = direction == 0 ? new Vector3(-4f, 3.4f, 0f)
                     : direction == 1 ? new Vector3(4f, 3.4f, 0f) : new Vector3(0.8f, 5.4f, 0f);
