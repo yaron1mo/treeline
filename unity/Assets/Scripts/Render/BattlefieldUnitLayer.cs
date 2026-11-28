@@ -678,6 +678,9 @@ namespace Treeline.Render
                         else if (type == "recruit")
                             visual.MuzzleFlash.transform.localPosition = visual.WalkVariant == 0
                                 ? new Vector3(-1.5f, -1.5f, 0f) : new Vector3(-2.2f, -3.7f, 0f);
+                        else
+                            visual.MuzzleFlash.transform.localPosition = new Vector3(
+                                type == "special_forces" ? -0.5f : 0f, -3.2f, 0f);
                         visual.MuzzleFlash.enabled = shotElapsed < 0.14f;
                     }
                 }

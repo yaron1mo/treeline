@@ -1,5 +1,7 @@
 # Change log
 
+2026-11-28 — [codex] Render — Reset the muzzle flash position when infantry turns from diagonal to straight.
+
 2026-11-28 — [codex] tools — Add battle capture options and a phone-size mixed-death capture.
 
 2026-11-28 — [codex] Render — Add blast shake and short slow motion for kill streaks. Restore a Sim comment.
