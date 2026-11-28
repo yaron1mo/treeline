@@ -1,5 +1,13 @@
 # Change log
 
+- 2026-11-28 ? [codex] tools/render ? Add field selection to Unity captures. Add phone-size battle images for both villages and sunflower details.
+
+- 2026-11-28 ? [codex] game ? Send a selected defender to a tapped house. Select the occupant when no defender is selected.
+
+- 2026-11-28 ? [codex] game ? Mark occupied houses and show the defender type on the roof.
+
+- 2026-11-28 ? [codex] render ? Add village roofs, ruins, fences, gardens, sunflowers, and burned belts. Load both village fields in the renderer.
+
 - 2026-11-28 — [claude] data/maps — Yaroslav approved the 22 map sheets (#51) and the 5 new rows. `obstacles.csv`: `stack` (like a heap), `shed` (like a house, nobody inside), `silo` (like a rock, landmark), `camo_net` (hides, no cover), `dugout` (trench with a roof, strong against indirect fire and aviation). Not in the Sim yet: burning stacks, a spotter on a silo, player-built nets. Values are a proposal. Other decisions of 2026-11-28: no crush death (#44); recon drone and EW have separate utilities slots, EW is placed like a defender, no upgraded Shahed at release (#28); squads: better tests first, no value change (#57).
 - 2026-11-28 — [claude] office/mistral — `mistral-task.yml`: Mistral failed 3 times on #23 because GitHub starts PowerShell with `ErrorActionPreference` Stop, and the Vibe stderr line "Reading API keys from the system keyring" (with `2>&1`) stopped the step. The step now uses `Continue` and only the exit code.
 - 2026-11-28 — [claude] tests — CI `tests` failed on every PR (for example #55): `check_game.sh` uses Mono `mcs`, which cannot compile the local function `Stroke` in `UnitSpriteAtlas.cs`, and the Unity stub had no `PlayerPrefs`, `GameObject.SetActive`, `Transform.localRotation`, `Quaternion.identity`, `Vector2.down`, `Vector3.Lerp`/`up`, `Texture2D.GetPixels32`/`LoadImage`. `Stroke` is now a lambda (same behaviour; each call gives `fabric`). The stub has the missing members. Both test scripts pass (93 tests; game scripts compile).
