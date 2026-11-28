@@ -16,6 +16,8 @@ static class Routes
         public int Weight;
         /// <summary>Route points inside the placing zone.</summary>
         public readonly List<float[]> Points = new List<float[]>();
+        /// <summary>The whole traced route, every third cell (houses and hill tops are scored against it).</summary>
+        public readonly List<float[]> All = new List<float[]>();
     }
 
     static readonly Dictionary<string, List<Lane>> cache = new Dictionary<string, List<Lane>>();
@@ -39,9 +41,12 @@ static class Routes
                 if (path.Count == 0) continue;
                 float crossX = float.NaN;
                 var pts = new List<float[]>();
+                var all = new List<float[]>();
+                int step = 0;
                 foreach (int cell in path)
                 {
                     float x = grid.CenterX(cell), y = grid.CenterY(cell);
+                    if (step++ % 3 == 0) all.Add(new[] { x, y });
                     if (y < zoneTop || y > zoneBottom) continue;
                     pts.Add(new[] { x, y });
                     if (float.IsNaN(crossX) && y >= midY) crossX = x;
@@ -52,6 +57,7 @@ static class Routes
                 if (lane == null) { lane = new Lane { X = crossX }; lanes.Add(lane); }
                 lane.Weight++;
                 lane.Points.AddRange(pts);
+                lane.All.AddRange(all);
             }
         }
         lanes.Sort((a, b) => b.Weight.CompareTo(a.Weight));
@@ -76,5 +82,96 @@ static class Routes
             y = zoneTop + (zoneBottom - zoneTop) * (float)rng.NextDouble();
         }
         x = Math.Max(12f, Math.Min(width - 12f, x));
+    }
+
+    // ---- terrain spots (2026-11-28, issue #49): houses and hill tops as candidate spots ---------------------
+    // The scripted players score houses and hill tops next to the routes, per defender type: a house near the
+    // route scores high for short-range (infantry) types, a hill top that sees the route for long-range types
+    // and recon. A spot above LaneScore (1) is tried before the plain lane points. Deterministic: the same
+    // field and defender type always give the same list in the same order.
+
+    public sealed class Spot
+    {
+        public float X, Y;
+        /// <summary>Index into VisionMap.Houses when this spot is a house, else -1.</summary>
+        public int House = -1;
+        public float Score;
+        /// <summary>Feature order, the tie-break that keeps the sort stable.</summary>
+        public int Order;
+    }
+
+    public const float LaneScore = 1f;   // the score of a plain lane point
+    const float HouseNearRouteM = 60f;   // a house this far from a route counts as "near the route"
+    const float HillSeesRouteChance = 0.25f;
+
+    static readonly Dictionary<string, List<Spot>> spotCache = new Dictionary<string, List<Spot>>();
+
+    /// <summary>House and hill-top spots near the routes, scored for this defender type, best first.
+    /// Only spots inside the placing band count: the scripted players defend from the band, and a house or hill
+    /// on the enemy side of the field is not a spot for them (they would be shot there before they can help).
+    /// Empty on fields without houses or hills in the band (the players then place on the lanes as before).</summary>
+    public static List<Spot> TerrainSpots(string key, Field field, VisionMap vision, List<Lane> lanes, UnitDef def, float zoneTop, float zoneBottom)
+    {
+        string ck = key + "|" + def.Id + "|" + zoneTop + "|" + zoneBottom;
+        if (spotCache.TryGetValue(ck, out var have)) return have;
+        var route = new List<float[]>();
+        foreach (var l in lanes) route.AddRange(l.All);
+        bool recon = def.Type == "aviation" || def.Id == "recon_drone";
+        bool longRange = def.RangeM >= 200f;   // sniper, mortar, anti-tank, air defence: the hill gives them range
+        bool infantry = !recon && !longRange;  // rifle squad, machine gun: the house gives them cover
+        var spots = new List<Spot>();
+        int order = 0;
+        for (int i = 0; i < vision.Houses.Count; i++)
+        {
+            var h = vision.Houses[i];
+            if (h.Y < zoneTop || h.Y > zoneBottom) continue;
+            float d = DistToRoute(h.X, h.Y, route);
+            if (d > HouseNearRouteM) continue;
+            float score = infantry ? 3f + 0.5f * (1f - d / HouseNearRouteM) : 0.8f;
+            spots.Add(new Spot { X = h.X, Y = h.Y, House = i, Score = score, Order = order++ });
+        }
+        foreach (var f in field.Features)
+        {
+            if (!vision.Table.TryGet(f.Type, out var o) || !o.HasOnBonus) continue;   // only hills give an on-top bonus
+            var pts = f.Poly ?? f.Line;
+            if (pts == null || pts.Length == 0) continue;
+            float x = 0f, y = 0f;
+            foreach (var p in pts) { x += p.X; y += p.Y; }
+            x /= pts.Length; y /= pts.Length;
+            if (y < zoneTop || y > zoneBottom) continue;
+            var top = vision.ObstacleAt(x, y);
+            if (top == null || !top.HasOnBonus) continue;   // the top is not painted (too small for a cell)
+            bool sees = SeesRoute(vision, x, y, def, route);
+            float score = (longRange || recon) && sees ? 3f : 0.8f;
+            spots.Add(new Spot { X = x, Y = y, Score = score, Order = order++ });
+        }
+        spots.Sort((a, b) => b.Score != a.Score ? b.Score.CompareTo(a.Score) : a.Order.CompareTo(b.Order));
+        spotCache[ck] = spots;
+        return spots;
+    }
+
+    static float DistToRoute(float x, float y, List<float[]> route)
+    {
+        float best = float.MaxValue;
+        foreach (var p in route)
+        {
+            float dx = p[0] - x, dy = p[1] - y, d = dx * dx + dy * dy;
+            if (d < best) best = d;
+        }
+        return (float)Math.Sqrt(best);
+    }
+
+    // Does a unit of this type standing at (x, y) (on the hill top, with its sight bonus) see any route point?
+    static bool SeesRoute(VisionMap vision, float x, float y, UnitDef def, List<float[]> route)
+    {
+        float sight = def.SightRangeM > 0f ? def.SightRangeM : 30f;
+        float radius = vision.SightRadius(x, y, sight);
+        foreach (var p in route)
+        {
+            float dx = p[0] - x, dy = p[1] - y;
+            if (dx * dx + dy * dy > radius * radius) continue;
+            if (vision.SeeChance(x, y, sight, p[0], p[1]) >= HillSeesRouteChance) return true;
+        }
+        return false;
     }
 }
