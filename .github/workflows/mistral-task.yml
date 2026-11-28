@@ -64,6 +64,9 @@ jobs:
       - name: Run Mistral Vibe
         run: |
           # Mistral often fails in high-demand periods. Retry up to 4 times with a pause; the agent continues from its branch.
+          # GitHub starts PowerShell with ErrorActionPreference Stop. With 2>&1, a Vibe stderr line (for example
+          # "Reading API keys from the system keyring") then stops the step (#23, 2026-11-27). Use the exit code only.
+          $ErrorActionPreference = 'Continue'
           $code = 1
           for ($i = 1; $i -le 4; $i++) {
             vibe --prompt-file "$env:RUNNER_TEMP\task.md" --auto-approve --max-turns 400 --time-limit 13800 --output-dir "$env:RUNNER_TEMP\vibe-out" 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP\vibe-$i.log"
