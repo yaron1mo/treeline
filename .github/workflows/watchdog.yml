@@ -4,6 +4,8 @@ name: Watchdog
 # - A run that is in progress for more than 70 minutes while the task branch got no push for 50 minutes: cancel and start again.
 # - At most 3 restarts per issue in 24 hours; then needs:yaroslav (Telegram).
 # The agent continues from its branch, so a restart does not lose pushed work.
+# GitHub often delays or drops scheduled runs, so the watchdog loops itself: one job checks every 10 minutes for
+# about 5.5 hours, starts the Dispatcher every 3 hours, then starts the next watchdog job. Free on a public repo.
 on:
   schedule:
     - cron: '*/20 * * * *'
@@ -16,7 +18,7 @@ concurrency:
 jobs:
   watch:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 350
     permissions:
       actions: write
       issues: write
@@ -25,79 +27,90 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       REPO: ${{ github.repository }}
     steps:
-      - name: Check and restart
+      - name: Check and restart (loop)
         run: |
           python3 - <<'PY'
-          import json, os, subprocess, datetime as dt
-          repo = os.environ["REPO"]
-          now = dt.datetime.now(dt.timezone.utc)
-          def gh(*a, ok=False):
-              r = subprocess.run(["gh", *a], capture_output=True, text=True)
-              if r.returncode and not ok: print("gh error:", " ".join(a), r.stderr[:300])
-              return r.stdout
-          def api(path): 
-              out = gh("api", path, ok=True)
-              try: return json.loads(out)
-              except Exception: return {}
-          def t(s): return dt.datetime.fromisoformat(s.replace("Z", "+00:00"))
-          import re
-          def issue_no(run):
-              title = run.get("display_title", "")
-              m = re.match(r"Restart issue #(\d+)", title)
-              if m:
-                  i = api(f"repos/{repo}/issues/{m.group(1)}")
-                  return i if i.get("state") == "open" else None
-              for i in api(f"repos/{repo}/issues?state=open&per_page=100"):
-                  if "pull_request" not in i and i["title"] == title: return i
-              return None
-          for wf, agent in (("mistral-task.yml", "mistral"), ("codex-task.yml", "codex")):
-              runs = [r for r in api(f"repos/{repo}/actions/workflows/{wf}/runs?per_page=20").get("workflow_runs", [])
-                      if r["conclusion"] not in ("skipped", "cancelled") and r["event"] in ("issues", "workflow_dispatch")]
-              if not runs: continue
-              last = runs[0]
-              issue = issue_no(last)
-              if not issue: continue
-              n = issue["number"]; labels = {l["name"] for l in issue["labels"]}
-              comments = api(f"repos/{repo}/issues/{n}/comments?per_page=100")
-              restarts = [c for c in comments if c["body"].startswith("Watchdog: restart")
-                          and now - t(c["created_at"]) < dt.timedelta(hours=24)]
-              def restart(reason):
-                  if len(restarts) >= 3:
-                      if "needs:yaroslav" not in labels:
-                          gh("issue", "comment", str(n), "--repo", repo, "--body",
-                             f"@yaron1mo Watchdog: {agent} failed 3 times in 24 hours on this issue ({reason}). Stopped. Check the runner window.")
-                          gh("issue", "edit", str(n), "--repo", repo, "--add-label", "needs:yaroslav")
-                      return
-                  gh("issue", "comment", str(n), "--repo", repo, "--body", f"Watchdog: restart {agent} ({reason}). Restart {len(restarts)+1} of 3.")
-                  gh("workflow", "run", wf, "--repo", repo, "-f", f"issue={n}")
-                  print("restarted", agent, n, reason)
-              busy = labels & {"needs:yaroslav", f"queue:{agent}"}
-              # A run that ended "success" but says the task is not complete: start it again to continue (max 6 per day).
-              if last["status"] == "completed" and last["conclusion"] == "success" and not busy and comments:
-                  lastc = comments[-1]["body"].lower()
-                  conts = [c for c in comments if c["body"].startswith("Watchdog: continue") and now - t(c["created_at"]) < dt.timedelta(hours=24)]
-                  if ("not complete" in lastc or "is not finished" in lastc) and t(comments[-1]["created_at"]) > t(last["created_at"]):
-                      if len(conts) < 6:
-                          gh("issue", "comment", str(n), "--repo", repo, "--body", f"Watchdog: continue {agent} (the last run said the task is not complete). Continue {len(conts)+1} of 6.")
-                          gh("workflow", "run", wf, "--repo", repo, "-f", f"issue={n}")
-                          print("continued", agent, n)
-                      elif "needs:yaroslav" not in labels:
-                          gh("issue", "comment", str(n), "--repo", repo, "--body", f"@yaron1mo Watchdog: {agent} did not finish this task in 6 runs today. Stopped.")
-                          gh("issue", "edit", str(n), "--repo", repo, "--add-label", "needs:yaroslav")
-                      continue
-              if last["status"] == "completed" and last["conclusion"] in ("failure", "timed_out") and not busy:
-                  if now - t(last["updated_at"]) > dt.timedelta(minutes=3):
-                      restart(f"run {last['id']} ended with {last['conclusion']}")
-              elif last["status"] == "in_progress" and now - t(last["run_started_at"]) > dt.timedelta(minutes=70):
-                  branches = api(f"repos/{repo}/branches?per_page=100")
-                  newest = None
-                  for b in branches:
-                      if b["name"].startswith(agent + "/"):
-                          c = api(f"repos/{repo}/commits/{b['commit']['sha']}")
-                          d = t(c["commit"]["committer"]["date"]) if c else None
-                          if d and (newest is None or d > newest): newest = d
-                  if newest is None or now - newest > dt.timedelta(minutes=50):
-                      gh("api", "-X", "POST", f"repos/{repo}/actions/runs/{last['id']}/cancel", ok=True)
-                      restart("no push for 50 minutes; the run looks stalled")
-              print(agent, "last run", last["status"], last["conclusion"], "issue", n)
+          import time
+          for loop in range(33):
+           try:
+            import json, os, subprocess, datetime as dt
+            repo = os.environ["REPO"]
+            now = dt.datetime.now(dt.timezone.utc)
+            def gh(*a, ok=False):
+                r = subprocess.run(["gh", *a], capture_output=True, text=True)
+                if r.returncode and not ok: print("gh error:", " ".join(a), r.stderr[:300])
+                return r.stdout
+            def api(path): 
+                out = gh("api", path, ok=True)
+                try: return json.loads(out)
+                except Exception: return {}
+            def t(s): return dt.datetime.fromisoformat(s.replace("Z", "+00:00"))
+            import re
+            def issue_no(run):
+                title = run.get("display_title", "")
+                m = re.match(r"Restart issue #(\d+)", title)
+                if m:
+                    i = api(f"repos/{repo}/issues/{m.group(1)}")
+                    return i if i.get("state") == "open" else None
+                for i in api(f"repos/{repo}/issues?state=open&per_page=100"):
+                    if "pull_request" not in i and i["title"] == title: return i
+                return None
+            for wf, agent in (("mistral-task.yml", "mistral"), ("codex-task.yml", "codex")):
+                runs = [r for r in api(f"repos/{repo}/actions/workflows/{wf}/runs?per_page=20").get("workflow_runs", [])
+                        if r["conclusion"] not in ("skipped", "cancelled") and r["event"] in ("issues", "workflow_dispatch")]
+                if not runs: continue
+                last = runs[0]
+                issue = issue_no(last)
+                if not issue: continue
+                n = issue["number"]; labels = {l["name"] for l in issue["labels"]}
+                comments = api(f"repos/{repo}/issues/{n}/comments?per_page=100")
+                restarts = [c for c in comments if c["body"].startswith("Watchdog: restart")
+                            and now - t(c["created_at"]) < dt.timedelta(hours=24)]
+                def restart(reason):
+                    if len(restarts) >= 3:
+                        if "needs:yaroslav" not in labels:
+                            gh("issue", "comment", str(n), "--repo", repo, "--body",
+                               f"@yaron1mo Watchdog: {agent} failed 3 times in 24 hours on this issue ({reason}). Stopped. Check the runner window.")
+                            gh("issue", "edit", str(n), "--repo", repo, "--add-label", "needs:yaroslav")
+                        return
+                    gh("issue", "comment", str(n), "--repo", repo, "--body", f"Watchdog: restart {agent} ({reason}). Restart {len(restarts)+1} of 3.")
+                    gh("workflow", "run", wf, "--repo", repo, "-f", f"issue={n}")
+                    print("restarted", agent, n, reason)
+                busy = labels & {"needs:yaroslav", f"queue:{agent}"}
+                # A run that ended "success" but says the task is not complete: start it again to continue (max 6 per day).
+                if last["status"] == "completed" and last["conclusion"] == "success" and not busy and comments:
+                    lastc = comments[-1]["body"].lower()
+                    conts = [c for c in comments if c["body"].startswith("Watchdog: continue") and now - t(c["created_at"]) < dt.timedelta(hours=24)]
+                    if ("not complete" in lastc or "is not finished" in lastc) and t(comments[-1]["created_at"]) > t(last["created_at"]):
+                        if len(conts) < 6:
+                            gh("issue", "comment", str(n), "--repo", repo, "--body", f"Watchdog: continue {agent} (the last run said the task is not complete). Continue {len(conts)+1} of 6.")
+                            gh("workflow", "run", wf, "--repo", repo, "-f", f"issue={n}")
+                            print("continued", agent, n)
+                        elif "needs:yaroslav" not in labels:
+                            gh("issue", "comment", str(n), "--repo", repo, "--body", f"@yaron1mo Watchdog: {agent} did not finish this task in 6 runs today. Stopped.")
+                            gh("issue", "edit", str(n), "--repo", repo, "--add-label", "needs:yaroslav")
+                        continue
+                if last["status"] == "completed" and last["conclusion"] in ("failure", "timed_out") and not busy:
+                    if now - t(last["updated_at"]) > dt.timedelta(minutes=3):
+                        restart(f"run {last['id']} ended with {last['conclusion']}")
+                elif last["status"] == "in_progress" and now - t(last["run_started_at"]) > dt.timedelta(minutes=70):
+                    branches = api(f"repos/{repo}/branches?per_page=100")
+                    newest = None
+                    for b in branches:
+                        if b["name"].startswith(agent + "/"):
+                            c = api(f"repos/{repo}/commits/{b['commit']['sha']}")
+                            d = t(c["commit"]["committer"]["date"]) if c else None
+                            if d and (newest is None or d > newest): newest = d
+                    if newest is None or now - newest > dt.timedelta(minutes=50):
+                        gh("api", "-X", "POST", f"repos/{repo}/actions/runs/{last['id']}/cancel", ok=True)
+                        restart("no push for 50 minutes; the run looks stalled")
+                print(agent, "last run", last["status"], last["conclusion"], "issue", n)
+           except Exception as e:
+              print("loop error:", e)
+           if loop % 18 == 17:
+              subprocess.run(["gh", "workflow", "run", "dispatcher.yml", "--repo", repo])
+              print("dispatcher started")
+           time.sleep(600)
+          subprocess.run(["gh", "workflow", "run", "watchdog.yml", "--repo", repo])
+          print("next watchdog started")
           PY

@@ -5,6 +5,7 @@
 //   saver    - before each wave buys only what that wave needs, keeps the rest of the money
 //   greedy   - the same, then spends everything left on machine gunners and rifle squads
 //   reactive - waits for the wave, sees which entry point it uses, then places (defenders run in) as saver does
+// Houses near a route and hill tops that see it are scored as candidate spots first (Routes.TerrainSpots, issue #49).
 // Compile: mcs -langversion:latest -out:playtest-run.exe unity/Assets/Scripts/Sim/*.cs tools/balance/Routes.cs tools/balance/PlaytestRun.cs
 // Run:     mono playtest-run.exe <data root> [seeds] [style] [stop table csv]
 //   stop table: defender,attacker,stopped (units of that attacker one defender stops in a run)
@@ -50,9 +51,11 @@ static class PlaytestRun
             for (int seed = 1; seed <= seeds; seed++)
             {
                 var grid = new NavGrid(field, obstacles);
-                var b = new Battle(grid, units, rules.StartBudget, new VisionMap(field, obstacles), armour,
+                var vision = new VisionMap(field, obstacles);
+                var b = new Battle(grid, units, rules.StartBudget, vision, armour,
                     Environment.GetEnvironmentVariable("PLAYTEST_LINE") != null ? float.Parse(Environment.GetEnvironmentVariable("PLAYTEST_LINE"), CultureInfo.InvariantCulture) : -1f, seed, rules);
                 b.PlacementMinY = rules.PlacementZoneStart * field.Height;
+                pvision = vision;
                 lanes = Routes.Of(field.Name, grid, field.Height * 0.55f, field.Height * 0.9f);
                 var rng = new Random(seed);
                 int heldWaves = 0;
@@ -99,6 +102,7 @@ static class PlaytestRun
     }
 
     static List<Routes.Lane> lanes;
+    static VisionMap pvision;
 
     static float f0(Field f) => f.Height * 0.3f;   // still far up the field: time to run in
 
@@ -199,11 +203,19 @@ static class PlaytestRun
     }
 
     // Somewhere in front of an entry point (the seen lane if known), at a random depth in the placing zone.
+    // Houses and hill tops that suit this type go first (Routes.TerrainSpots, issue #49).
     static float Place(Battle b, UnitTable units, string id, Field f, float? lane, Random rng)
     {
         var def = units.Get(id);
         float cost = b.CostOf(id);
         if (b.Budget < cost) return 0f;
+        var spots = Routes.TerrainSpots(f.Name, f, pvision, lanes, def, f.Height * 0.55f, f.Height * 0.9f);
+        foreach (var s in spots)
+        {
+            if (s.Score <= Routes.LaneScore) break;   // not worth it for this type: use the lane points below
+            if (s.House >= 0 && b.HouseOccupant(s.House) >= 0) continue;
+            if (b.TryPlace(id, s.X, s.Y, out _, out _)) return cost;
+        }
         for (int tries = 0; tries < 20; tries++)
         {
             float x, y;

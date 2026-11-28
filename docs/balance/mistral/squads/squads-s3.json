@@ -1,0 +1,1129 @@
+{
+ "best_squad": {
+  "Forest belts": "all"
+ },
+ "categories": [
+  "infantry",
+  "vehicles",
+  "armour",
+  "helicopter",
+  "drones"
+ ],
+ "dominant": {
+  "Forest belts": [
+   "all",
+   "mg+at+ad",
+   "mg+at+bo",
+   "mg+at+fpv",
+   "mg+at+rd",
+   "mg+mo+at",
+   "mg+sn+at",
+   "rs+at+fpv",
+   "rs+mg+at"
+  ]
+ },
+ "fields": [
+  "Forest belts"
+ ],
+ "heat": {
+  "Forest belts": {
+   "air_defence": {
+    "armour": 1.0,
+    "drones": null,
+    "helicopter": 0.0,
+    "infantry": 0.975,
+    "vehicles": 1.0
+   },
+   "anti_tank": {
+    "armour": 1.0,
+    "drones": null,
+    "helicopter": 1.0,
+    "infantry": 1.0,
+    "vehicles": 1.0
+   },
+   "bomber_operator": {
+    "armour": 1.0,
+    "drones": null,
+    "helicopter": 1.0,
+    "infantry": 1.0,
+    "vehicles": 1.0
+   },
+   "fpv_operator": {
+    "armour": 1.0,
+    "drones": null,
+    "helicopter": 1.0,
+    "infantry": 1.0,
+    "vehicles": 1.0
+   },
+   "machine_gun": {
+    "armour": 1.0,
+    "drones": null,
+    "helicopter": 1.0,
+    "infantry": 0.95,
+    "vehicles": 1.0
+   },
+   "mortar": {
+    "armour": 1.0,
+    "drones": null,
+    "helicopter": 1.0,
+    "infantry": 0.95,
+    "vehicles": 0.96
+   },
+   "recon_drone": {
+    "armour": 1.0,
+    "drones": null,
+    "helicopter": 1.0,
+    "infantry": 1.0,
+    "vehicles": 1.0
+   },
+   "rifle_squad": {
+    "armour": 1.0,
+    "drones": null,
+    "helicopter": 0.0,
+    "infantry": 0.95,
+    "vehicles": 0.96
+   },
+   "sniper": {
+    "armour": 1.0,
+    "drones": null,
+    "helicopter": 0.0,
+    "infantry": 0.925,
+    "vehicles": 0.96
+   }
+  }
+ },
+ "squads": {
+  "Forest belts": {
+   "ad+bo+rd": {
+    "held": 18,
+    "held_share": 0.45,
+    "n_waves": 40,
+    "premium": 4.7956,
+    "rank": 0
+   },
+   "ad+fpv+bo": {
+    "held": 18,
+    "held_share": 0.45,
+    "n_waves": 40,
+    "premium": 6.8,
+    "rank": 0
+   },
+   "ad+fpv+rd": {
+    "held": 27,
+    "held_share": 0.675,
+    "n_waves": 40,
+    "premium": 3.7111,
+    "rank": 0
+   },
+   "all": {
+    "held": 40,
+    "held_share": 1.0,
+    "n_waves": 40,
+    "premium": 1.0,
+    "rank": 19
+   },
+   "at+ad+bo": {
+    "held": 19,
+    "held_share": 0.475,
+    "n_waves": 40,
+    "premium": 7.2,
+    "rank": 0
+   },
+   "at+ad+fpv": {
+    "held": 21,
+    "held_share": 0.525,
+    "n_waves": 40,
+    "premium": 5.3778,
+    "rank": 0
+   },
+   "at+ad+rd": {
+    "held": 6,
+    "held_share": 0.15,
+    "n_waves": 40,
+    "premium": 3.6588,
+    "rank": 0
+   },
+   "at+bo+rd": {
+    "held": 21,
+    "held_share": 0.525,
+    "n_waves": 40,
+    "premium": 4.85,
+    "rank": 0
+   },
+   "at+fpv+bo": {
+    "held": 21,
+    "held_share": 0.525,
+    "n_waves": 40,
+    "premium": 5.3778,
+    "rank": 0
+   },
+   "at+fpv+rd": {
+    "held": 32,
+    "held_share": 0.8,
+    "n_waves": 40,
+    "premium": 3.7556,
+    "rank": 0
+   },
+   "fpv+bo+rd": {
+    "held": 27,
+    "held_share": 0.675,
+    "n_waves": 40,
+    "premium": 3.7111,
+    "rank": 0
+   },
+   "mg+ad+bo": {
+    "held": 12,
+    "held_share": 0.3,
+    "n_waves": 40,
+    "premium": 1.2,
+    "rank": 1
+   },
+   "mg+ad+fpv": {
+    "held": 28,
+    "held_share": 0.7,
+    "n_waves": 40,
+    "premium": 1.4142,
+    "rank": 1
+   },
+   "mg+ad+rd": {
+    "held": 12,
+    "held_share": 0.3,
+    "n_waves": 40,
+    "premium": 1.2,
+    "rank": 1
+   },
+   "mg+at+ad": {
+    "held": 40,
+    "held_share": 1.0,
+    "n_waves": 40,
+    "premium": 1.1852,
+    "rank": 2
+   },
+   "mg+at+bo": {
+    "held": 40,
+    "held_share": 1.0,
+    "n_waves": 40,
+    "premium": 1.1706,
+    "rank": 3
+   },
+   "mg+at+fpv": {
+    "held": 40,
+    "held_share": 1.0,
+    "n_waves": 40,
+    "premium": 1.1706,
+    "rank": 3
+   },
+   "mg+at+rd": {
+    "held": 40,
+    "held_share": 1.0,
+    "n_waves": 40,
+    "premium": 1.0,
+    "rank": 11
+   },
+   "mg+bo+rd": {
+    "held": 12,
+    "held_share": 0.3,
+    "n_waves": 40,
+    "premium": 1.2,
+    "rank": 2
+   },
+   "mg+fpv+bo": {
+    "held": 28,
+    "held_share": 0.7,
+    "n_waves": 40,
+    "premium": 1.3494,
+    "rank": 2
+   },
+   "mg+fpv+rd": {
+    "held": 30,
+    "held_share": 0.75,
+    "n_waves": 40,
+    "premium": 1.2,
+    "rank": 5
+   },
+   "mg+mo+ad": {
+    "held": 12,
+    "held_share": 0.3,
+    "n_waves": 40,
+    "premium": 1.2,
+    "rank": 1
+   },
+   "mg+mo+at": {
+    "held": 40,
+    "held_share": 1.0,
+    "n_waves": 40,
+    "premium": 1.1706,
+    "rank": 3
+   },
+   "mg+mo+bo": {
+    "held": 12,
+    "held_share": 0.3,
+    "n_waves": 40,
+    "premium": 1.2,
+    "rank": 2
+   },
+   "mg+mo+fpv": {
+    "held": 28,
+    "held_share": 0.7,
+    "n_waves": 40,
+    "premium": 1.3494,
+    "rank": 2
+   },
+   "mg+mo+rd": {
+    "held": 12,
+    "held_share": 0.3,
+    "n_waves": 40,
+    "premium": 1.2,
+    "rank": 2
+   },
+   "mg+sn+ad": {
+    "held": 12,
+    "held_share": 0.3,
+    "n_waves": 40,
+    "premium": 1.2,
+    "rank": 1
+   },
+   "mg+sn+at": {
+    "held": 40,
+    "held_share": 1.0,
+    "n_waves": 40,
+    "premium": 1.1706,
+    "rank": 3
+   },
+   "mg+sn+bo": {
+    "held": 12,
+    "held_share": 0.3,
+    "n_waves": 40,
+    "premium": 1.2,
+    "rank": 2
+   },
+   "mg+sn+fpv": {
+    "held": 28,
+    "held_share": 0.7,
+    "n_waves": 40,
+    "premium": 1.3494,
+    "rank": 2
+   },
+   "mg+sn+mo": {
+    "held": 12,
+    "held_share": 0.3,
+    "n_waves": 40,
+    "premium": 1.2,
+    "rank": 2
+   },
+   "mg+sn+rd": {
+    "held": 12,
+    "held_share": 0.3,
+    "n_waves": 40,
+    "premium": 1.2,
+    "rank": 2
+   },
+   "mo+ad+bo": {
+    "held": 18,
+    "held_share": 0.45,
+    "n_waves": 40,
+    "premium": 6.9644,
+    "rank": 0
+   },
+   "mo+ad+fpv": {
+    "held": 28,
+    "held_share": 0.7,
+    "n_waves": 40,
+    "premium": 4.2348,
+    "rank": 0
+   },
+   "mo+ad+rd": {
+    "held": 18,
+    "held_share": 0.45,
+    "n_waves": 40,
+    "premium": 5.7867,
+    "rank": 0
+   },
+   "mo+at+ad": {
+    "held": 32,
+    "held_share": 0.8,
+    "n_waves": 40,
+    "premium": 3.6892,
+    "rank": 0
+   },
+   "mo+at+bo": {
+    "held": 32,
+    "held_share": 0.8,
+    "n_waves": 40,
+    "premium": 3.6892,
+    "rank": 0
+   },
+   "mo+at+fpv": {
+    "held": 33,
+    "held_share": 0.825,
+    "n_waves": 40,
+    "premium": 3.4222,
+    "rank": 0
+   },
+   "mo+at+rd": {
+    "held": 33,
+    "held_share": 0.825,
+    "n_waves": 40,
+    "premium": 3.5124,
+    "rank": 0
+   },
+   "mo+bo+rd": {
+    "held": 20,
+    "held_share": 0.5,
+    "n_waves": 40,
+    "premium": 5.7486,
+    "rank": 0
+   },
+   "mo+fpv+bo": {
+    "held": 28,
+    "held_share": 0.7,
+    "n_waves": 40,
+    "premium": 4.2348,
+    "rank": 0
+   },
+   "mo+fpv+rd": {
+    "held": 29,
+    "held_share": 0.725,
+    "n_waves": 40,
+    "premium": 3.7769,
+    "rank": 0
+   },
+   "rs+ad+bo": {
+    "held": 12,
+    "held_share": 0.3,
+    "n_waves": 40,
+    "premium": 1.4,
+    "rank": 1
+   },
+   "rs+ad+fpv": {
+    "held": 31,
+    "held_share": 0.775,
+    "n_waves": 40,
+    "premium": 1.5462,
+    "rank": 1
+   },
+   "rs+ad+rd": {
+    "held": 12,
+    "held_share": 0.3,
+    "n_waves": 40,
+    "premium": 1.4,
+    "rank": 1
+   },
+   "rs+at+ad": {
+    "held": 40,
+    "held_share": 1.0,
+    "n_waves": 40,
+    "premium": 1.3084,
+    "rank": 8
+   },
+   "rs+at+bo": {
+    "held": 40,
+    "held_share": 1.0,
+    "n_waves": 40,
+    "premium": 1.2526,
+    "rank": 8
+   },
+   "rs+at+fpv": {
+    "held": 40,
+    "held_share": 1.0,
+    "n_waves": 40,
+    "premium": 1.2,
+    "rank": 6
+   },
+   "rs+at+rd": {
+    "held": 40,
+    "held_share": 1.0,
+    "n_waves": 40,
+    "premium": 1.2215,
+    "rank": 4
+   },
+   "rs+bo+rd": {
+    "held": 12,
+    "held_share": 0.3,
+    "n_waves": 40,
+    "premium": 1.3,
+    "rank": 1
+   },
+   "rs+fpv+bo": {
+    "held": 31,
+    "held_share": 0.775,
+    "n_waves": 40,
+    "premium": 1.4222,
+    "rank": 1
+   },
+   "rs+fpv+rd": {
+    "held": 33,
+    "held_share": 0.825,
+    "n_waves": 40,
+    "premium": 1.4889,
+    "rank": 1
+   },
+   "rs+mg+ad": {
+    "held": 12,
+    "held_share": 0.3,
+    "n_waves": 40,
+    "premium": 1.0,
+    "rank": 7
+   },
+   "rs+mg+at": {
+    "held": 40,
+    "held_share": 1.0,
+    "n_waves": 40,
+    "premium": 1.0424,
+    "rank": 9
+   },
+   "rs+mg+bo": {
+    "held": 12,
+    "held_share": 0.3,
+    "n_waves": 40,
+    "premium": 1.0,
+    "rank": 8
+   },
+   "rs+mg+fpv": {
+    "held": 28,
+    "held_share": 0.7,
+    "n_waves": 40,
+    "premium": 1.2958,
+    "rank": 8
+   },
+   "rs+mg+mo": {
+    "held": 12,
+    "held_share": 0.3,
+    "n_waves": 40,
+    "premium": 1.0,
+    "rank": 8
+   },
+   "rs+mg+rd": {
+    "held": 12,
+    "held_share": 0.3,
+    "n_waves": 40,
+    "premium": 1.0,
+    "rank": 8
+   },
+   "rs+mg+sn": {
+    "held": 12,
+    "held_share": 0.3,
+    "n_waves": 40,
+    "premium": 1.0,
+    "rank": 8
+   },
+   "rs+mo+ad": {
+    "held": 12,
+    "held_share": 0.3,
+    "n_waves": 40,
+    "premium": 1.4,
+    "rank": 0
+   },
+   "rs+mo+at": {
+    "held": 40,
+    "held_share": 1.0,
+    "n_waves": 40,
+    "premium": 1.3569,
+    "rank": 7
+   },
+   "rs+mo+bo": {
+    "held": 12,
+    "held_share": 0.3,
+    "n_waves": 40,
+    "premium": 1.4,
+    "rank": 0
+   },
+   "rs+mo+fpv": {
+    "held": 31,
+    "held_share": 0.775,
+    "n_waves": 40,
+    "premium": 1.5,
+    "rank": 0
+   },
+   "rs+mo+rd": {
+    "held": 12,
+    "held_share": 0.3,
+    "n_waves": 40,
+    "premium": 1.4,
+    "rank": 0
+   },
+   "rs+sn+ad": {
+    "held": 12,
+    "held_share": 0.3,
+    "n_waves": 40,
+    "premium": 1.4,
+    "rank": 4
+   },
+   "rs+sn+at": {
+    "held": 40,
+    "held_share": 1.0,
+    "n_waves": 40,
+    "premium": 1.3933,
+    "rank": 3
+   },
+   "rs+sn+bo": {
+    "held": 12,
+    "held_share": 0.3,
+    "n_waves": 40,
+    "premium": 1.2,
+    "rank": 4
+   },
+   "rs+sn+fpv": {
+    "held": 26,
+    "held_share": 0.65,
+    "n_waves": 40,
+    "premium": 1.3333,
+    "rank": 3
+   },
+   "rs+sn+mo": {
+    "held": 12,
+    "held_share": 0.3,
+    "n_waves": 40,
+    "premium": 1.4,
+    "rank": 2
+   },
+   "rs+sn+rd": {
+    "held": 12,
+    "held_share": 0.3,
+    "n_waves": 40,
+    "premium": 1.2,
+    "rank": 4
+   },
+   "sn+ad+bo": {
+    "held": 12,
+    "held_share": 0.3,
+    "n_waves": 40,
+    "premium": 2.2,
+    "rank": 0
+   },
+   "sn+ad+fpv": {
+    "held": 26,
+    "held_share": 0.65,
+    "n_waves": 40,
+    "premium": 2.196,
+    "rank": 0
+   },
+   "sn+ad+rd": {
+    "held": 12,
+    "held_share": 0.3,
+    "n_waves": 40,
+    "premium": 2.2,
+    "rank": 0
+   },
+   "sn+at+ad": {
+    "held": 40,
+    "held_share": 1.0,
+    "n_waves": 40,
+    "premium": 1.3522,
+    "rank": 1
+   },
+   "sn+at+bo": {
+    "held": 40,
+    "held_share": 1.0,
+    "n_waves": 40,
+    "premium": 1.3448,
+    "rank": 1
+   },
+   "sn+at+fpv": {
+    "held": 40,
+    "held_share": 1.0,
+    "n_waves": 40,
+    "premium": 1.3448,
+    "rank": 1
+   },
+   "sn+at+rd": {
+    "held": 40,
+    "held_share": 1.0,
+    "n_waves": 40,
+    "premium": 1.3379,
+    "rank": 0
+   },
+   "sn+bo+rd": {
+    "held": 12,
+    "held_share": 0.3,
+    "n_waves": 40,
+    "premium": 2.2,
+    "rank": 0
+   },
+   "sn+fpv+bo": {
+    "held": 26,
+    "held_share": 0.65,
+    "n_waves": 40,
+    "premium": 2.1591,
+    "rank": 0
+   },
+   "sn+fpv+rd": {
+    "held": 27,
+    "held_share": 0.675,
+    "n_waves": 40,
+    "premium": 1.4,
+    "rank": 0
+   },
+   "sn+mo+ad": {
+    "held": 12,
+    "held_share": 0.3,
+    "n_waves": 40,
+    "premium": 2.4,
+    "rank": 0
+   },
+   "sn+mo+at": {
+    "held": 40,
+    "held_share": 1.0,
+    "n_waves": 40,
+    "premium": 1.394,
+    "rank": 1
+   },
+   "sn+mo+bo": {
+    "held": 12,
+    "held_share": 0.3,
+    "n_waves": 40,
+    "premium": 2.4,
+    "rank": 0
+   },
+   "sn+mo+fpv": {
+    "held": 25,
+    "held_share": 0.625,
+    "n_waves": 40,
+    "premium": 2.5833,
+    "rank": 0
+   },
+   "sn+mo+rd": {
+    "held": 12,
+    "held_share": 0.3,
+    "n_waves": 40,
+    "premium": 2.2,
+    "rank": 0
+   }
+  }
+ },
+ "type_stats": {
+  "Forest belts": {
+   "air_defence": {
+    "must_have": 0.0,
+    "unused": 0.025
+   },
+   "anti_tank": {
+    "must_have": 0.1,
+    "unused": 0.0
+   },
+   "bomber_operator": {
+    "must_have": 0.0,
+    "unused": 0.0
+   },
+   "fpv_operator": {
+    "must_have": 0.0,
+    "unused": 0.0
+   },
+   "machine_gun": {
+    "must_have": 0.0,
+    "unused": 0.05
+   },
+   "mortar": {
+    "must_have": 0.0,
+    "unused": 0.05
+   },
+   "recon_drone": {
+    "must_have": 0.0,
+    "unused": 0.0
+   },
+   "rifle_squad": {
+    "must_have": 0.0,
+    "unused": 0.05
+   },
+   "sniper": {
+    "must_have": 0.0,
+    "unused": 0.075
+   }
+  }
+ },
+ "types": [
+  "air_defence",
+  "anti_tank",
+  "bomber_operator",
+  "fpv_operator",
+  "machine_gun",
+  "mortar",
+  "recon_drone",
+  "rifle_squad",
+  "sniper"
+ ],
+ "wave_categories": {
+  "1": [
+   "armour",
+   "infantry"
+  ],
+  "10": [
+   "infantry",
+   "vehicles"
+  ],
+  "11": [
+   "infantry",
+   "vehicles"
+  ],
+  "12": [
+   "armour",
+   "infantry",
+   "vehicles"
+  ],
+  "13": [
+   "infantry",
+   "vehicles"
+  ],
+  "14": [
+   "armour",
+   "infantry",
+   "vehicles"
+  ],
+  "15": [
+   "infantry",
+   "vehicles"
+  ],
+  "16": [
+   "infantry"
+  ],
+  "17": [
+   "infantry"
+  ],
+  "18": [
+   "armour",
+   "infantry"
+  ],
+  "19": [
+   "armour",
+   "infantry",
+   "vehicles"
+  ],
+  "2": [
+   "infantry",
+   "vehicles"
+  ],
+  "20": [
+   "armour",
+   "infantry",
+   "vehicles"
+  ],
+  "21": [
+   "armour",
+   "infantry"
+  ],
+  "22": [
+   "armour",
+   "infantry"
+  ],
+  "23": [
+   "helicopter",
+   "infantry"
+  ],
+  "24": [
+   "armour",
+   "infantry",
+   "vehicles"
+  ],
+  "25": [
+   "armour",
+   "infantry",
+   "vehicles"
+  ],
+  "26": [
+   "armour",
+   "infantry",
+   "vehicles"
+  ],
+  "27": [
+   "armour",
+   "infantry"
+  ],
+  "28": [
+   "armour",
+   "infantry",
+   "vehicles"
+  ],
+  "29": [
+   "armour",
+   "infantry",
+   "vehicles"
+  ],
+  "3": [
+   "infantry",
+   "vehicles"
+  ],
+  "30": [
+   "infantry",
+   "vehicles"
+  ],
+  "31": [
+   "armour",
+   "infantry"
+  ],
+  "32": [
+   "armour",
+   "infantry"
+  ],
+  "33": [
+   "armour",
+   "infantry",
+   "vehicles"
+  ],
+  "34": [
+   "armour",
+   "infantry",
+   "vehicles"
+  ],
+  "35": [
+   "armour",
+   "infantry",
+   "vehicles"
+  ],
+  "36": [
+   "armour",
+   "infantry",
+   "vehicles"
+  ],
+  "37": [
+   "infantry"
+  ],
+  "38": [
+   "infantry",
+   "vehicles"
+  ],
+  "39": [
+   "armour",
+   "infantry"
+  ],
+  "4": [
+   "armour",
+   "infantry",
+   "vehicles"
+  ],
+  "40": [
+   "armour",
+   "infantry"
+  ],
+  "5": [
+   "armour",
+   "infantry",
+   "vehicles"
+  ],
+  "6": [
+   "armour",
+   "infantry"
+  ],
+  "7": [
+   "armour",
+   "infantry",
+   "vehicles"
+  ],
+  "8": [
+   "armour",
+   "infantry",
+   "vehicles"
+  ],
+  "9": [
+   "armour",
+   "infantry"
+  ]
+ },
+ "wave_units": {
+  "1": {
+   "ifv": 1,
+   "regular": 3
+  },
+  "10": {
+   "buggy": 1,
+   "recruit": 5,
+   "regular": 1,
+   "van": 1
+  },
+  "11": {
+   "buggy": 1,
+   "recruit": 5,
+   "regular": 1,
+   "van": 1
+  },
+  "12": {
+   "mrap": 1,
+   "regular": 13,
+   "van": 1
+  },
+  "13": {
+   "buggy": 1,
+   "recruit": 5,
+   "regular": 1,
+   "van": 1
+  },
+  "14": {
+   "motorbike": 2,
+   "old_tank": 1,
+   "regular": 4
+  },
+  "15": {
+   "motorbike": 2,
+   "recruit": 5,
+   "regular": 1,
+   "van": 1
+  },
+  "16": {
+   "regular": 20
+  },
+  "17": {
+   "regular": 4,
+   "special_forces": 1
+  },
+  "18": {
+   "modern_tank": 2,
+   "old_tank": 2,
+   "regular": 26
+  },
+  "19": {
+   "modern_tank": 1,
+   "motorbike": 6,
+   "old_tank": 1,
+   "regular": 12
+  },
+  "2": {
+   "buggy": 1,
+   "motorbike": 2,
+   "recruit": 5,
+   "van": 1
+  },
+  "20": {
+   "ifv": 1,
+   "motorbike": 1,
+   "regular": 3
+  },
+  "21": {
+   "modern_tank": 1,
+   "mrap": 1,
+   "regular": 16
+  },
+  "22": {
+   "mrap": 1,
+   "regular": 15
+  },
+  "23": {
+   "helicopter": 1,
+   "recruit": 10
+  },
+  "24": {
+   "old_tank": 1,
+   "regular": 7,
+   "special_forces": 1,
+   "van": 1
+  },
+  "25": {
+   "motorbike": 3,
+   "old_tank": 1,
+   "regular": 3
+  },
+  "26": {
+   "mrap": 2,
+   "old_tank": 4,
+   "regular": 30,
+   "special_forces": 2,
+   "van": 10
+  },
+  "27": {
+   "old_tank": 1,
+   "regular": 18
+  },
+  "28": {
+   "buggy": 3,
+   "mrap": 1,
+   "regular": 8
+  },
+  "29": {
+   "modern_tank": 2,
+   "motorbike": 10,
+   "old_tank": 1,
+   "regular": 30,
+   "special_forces": 1
+  },
+  "3": {
+   "buggy": 1,
+   "motorbike": 1,
+   "recruit": 6,
+   "van": 1
+  },
+  "30": {
+   "buggy": 8,
+   "regular": 18,
+   "special_forces": 2
+  },
+  "31": {
+   "modern_tank": 1,
+   "mrap": 1,
+   "regular": 23
+  },
+  "32": {
+   "ifv": 1,
+   "regular": 3
+  },
+  "33": {
+   "modern_tank": 1,
+   "motorbike": 9,
+   "old_tank": 1,
+   "regular": 10
+  },
+  "34": {
+   "buggy": 1,
+   "old_tank": 1,
+   "regular": 4
+  },
+  "35": {
+   "motorbike": 4,
+   "mrap": 1,
+   "regular": 8
+  },
+  "36": {
+   "buggy": 3,
+   "mrap": 1,
+   "regular": 8
+  },
+  "37": {
+   "regular": 15,
+   "special_forces": 1
+  },
+  "38": {
+   "motorbike": 9,
+   "regular": 10,
+   "van": 4
+  },
+  "39": {
+   "old_tank": 1,
+   "regular": 5
+  },
+  "4": {
+   "buggy": 1,
+   "ifv": 1,
+   "regular": 2
+  },
+  "40": {
+   "modern_tank": 2,
+   "old_tank": 1,
+   "regular": 30
+  },
+  "5": {
+   "motorbike": 3,
+   "old_tank": 1,
+   "regular": 3
+  },
+  "6": {
+   "modern_tank": 1,
+   "regular": 16,
+   "special_forces": 1
+  },
+  "7": {
+   "buggy": 5,
+   "modern_tank": 1,
+   "regular": 17
+  },
+  "8": {
+   "modern_tank": 2,
+   "motorbike": 10,
+   "mrap": 1,
+   "regular": 26
+  },
+  "9": {
+   "ifv": 2,
+   "modern_tank": 3,
+   "old_tank": 1,
+   "regular": 30,
+   "special_forces": 3
+  }
+ }
+}
